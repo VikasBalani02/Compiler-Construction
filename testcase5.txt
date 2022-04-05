@@ -1,0 +1,14 @@
+_function6
+input parameter list [real r1, real r2]
+output parameter list [real r3, real r4];
+r3<---r1+1.35-r2;
+r4<---r3+20;
+return [r3, r4];
+end
+_main
+type real: b4d333;
+type real : c3ddd34; type real:c2d3; type real c2d4;
+read(b4d333); read(c3ddd34);
+[c2d3, c2d4]<--- call _function1 with parameters [b4d333, c3ddd34];
+write(c2d3); write(c2d4);
+end

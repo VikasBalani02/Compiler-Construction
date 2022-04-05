@@ -1,0 +1,32 @@
+
+               lexeme         CurrentNodeSymbol lineNum value (0 if not num)          parentNodeSymbol isLeafNode    Rule No
+
+                 ----                       eps      -1                    0            otherFunctions        yes          0
+                 ----            otherFunctions      -1                    0                   program         no          3
+                 ----                   program      -1                    0                                   no          1
+                _main                   TK_MAIN       1                    0              mainFunction        yes          0
+                 ----              mainFunction      -1                    0                   program         no          4
+                 ----                       eps      -1                    0           typeDefinitions        yes          0
+                 ----           typeDefinitions      -1                    0                     stmts         no         21
+                 ----                     stmts      -1                    0              mainFunction         no         19
+                 type                   TK_TYPE       2                    0               declaration        yes          0
+                 ----               declaration      -1                    0              declarations         no         34
+                  int                    TK_INT       2                    0         primitiveDatatype        yes          0
+                 ----         primitiveDatatype      -1                    0                  dataType         no         12
+                 ----                  dataType      -1                    0               declaration         no         10
+                    :                  TK_COLON       2                    0               declaration        yes          0
+                   b3                     TK_ID       2                    0               declaration        yes          0
+                 ----                       eps      -1                    0             global_or_not        yes          0
+                 ----             global_or_not      -1                    0               declaration         no         36
+                    ;                    TK_SEM       2                    0               declaration        yes          0
+                 ----              declarations      -1                    0                     stmts         no         32
+                 ----                       eps      -1                    0              declarations        yes          0
+                 ----              declarations      -1                    0              declarations         no         33
+                 ----                       eps      -1                    0                otherStmts        yes          0
+                 ----                otherStmts      -1                    0                     stmts         no         38
+               return                 TK_RETURN       3                    0                returnStmt        yes          0
+                 ----                returnStmt      -1                    0                     stmts         no         87
+                 ----                       eps      -1                    0            optionalReturn        yes          0
+                 ----            optionalReturn      -1                    0                returnStmt         no         89
+                    ;                    TK_SEM       3                    0                returnStmt        yes          0
+                  end                    TK_END       4                    0              mainFunction        yes          0

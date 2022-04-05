@@ -1,0 +1,6 @@
+_main
+type int: b7;
+b7 <--- 3;
+write(b7);
+return;
+end

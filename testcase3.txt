@@ -1,0 +1,4 @@
+_main
+	type int :b3;
+	return;
+end
