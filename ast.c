@@ -1,10 +1,27 @@
 #include <stdio.h>
-#include "astDef.h"
+#include "ast.h"
+
+ast_node* makeNode(CONSTRUCT c, ast_node** a, int no_children, struct node_info* n_info){
+    struct ast_node* new_node= (ast_node*)malloc(sizeof(ast_node));
+    new_node->construct=c;
+    new_node->firstChild= (a==NULL)?NULL:*a;
+    new_node->nextSib=NULL;
+    new_node->ninf=n_info;
+    for(int i=0;i<no_children-1;i++){
+        struct ast_node* temp= a[i]; 
+        //this is when we have to add an entire list of children to the ast children
+        while(temp && temp->nextSib!=NULL){
+            temp=temp->nextSib;
+        }
+        temp->nextSib=a[i+1];
+    }
+    return new_node;
+}
 
 struct ast_node *return_child(tNode *node, int n)
 {
     tNode *child_ptr = node->child_first;
-    for (int i = 0; i < n; i++)
+    for (int i = 1; i < n; i++)
     {
         child_ptr = child_ptr->next_sibling;
     }
@@ -176,7 +193,7 @@ void ast_r11(tNode *dataType_tnode)
 void ast_r12(tNode *primitiveDatatype_tnode)
 {
     struct primitive_type_struct *info = (struct primitive_type_struct *)malloc(sizeof(struct primitive_type_struct));
-    info->lineNum = primitiveDatatype_tnode->lex_token->lineNo;
+    info->lineNum = primitiveDatatype_tnode->child_first->lex_token->lineNo;
     info->int_or_real = TK_INT;
     primitiveDatatype_tnode->addr = makeNode(primitiveDatatype_, NULL, 0, (struct node_info *)info);
 }
@@ -269,7 +286,7 @@ void ast_r19(tNode *stmts_tnode)
     arr = (ast_node **)malloc(4 * sizeof(struct ast_node *));
     arr[0] = typeDefinition_anode;
     arr[1] = declarations_anode;
-    arr[2] = (otherStmts_anode->firstChild);
+    arr[2] = (otherStmts_anode);
     arr[3] = returnStmt_anode;
 
     stmts_tnode->addr = makeNode(stmts_, arr, 4, NULL);
@@ -590,12 +607,16 @@ void ast_r49(tNode *option_single_constructed_tNode)
 // free(TK_ID)
 void ast_r50(tNode *singleOrRecId_tNode)
 {
+    ast_node *option_single_constructed_anode = return_child(singleOrRecId_tNode, 2);
     Token TKID = singleOrRecId_tNode->child_first->lex_token;
     struct id_struct *info = (struct id_struct *)malloc(sizeof(struct id_struct));
     info->isGlobal = 0;
     info->lexID = TKID->lexeme;
     info->lineNum = TKID->lineNo;
-    singleOrRecId_tNode->addr = makeNode(singleOrRecId_, NULL, 0, (struct node_info *)info);
+    ast_node **arr;
+    arr = (ast_node **)malloc(1 * sizeof(struct ast_node *));
+    arr[0] = option_single_constructed_anode;
+    singleOrRecId_tNode->addr = makeNode(singleOrRecId_, arr, 1, (struct node_info *)info);
 }
 
 // <funCallStmt> ===> <outputParameters> TK_CALL TK_FUNID TK_WITH TK_PARAMETERS <inputParameters> TK_SEM
@@ -676,11 +697,12 @@ void ast_r55(tNode *iterativeStmt_tNode)
     ast_node *stmt_anode = return_child(iterativeStmt_tNode, 5);
     ast_node *otherStmts_anode = return_child(iterativeStmt_tNode, 6);
     ast_node **arr;
-    arr = (ast_node **)malloc(3 * sizeof(struct ast_node *));
+    stmt_anode->nextSib=otherStmts_anode->firstChild;
+    otherStmts_anode->firstChild=stmt_anode;
+    arr = (ast_node **)malloc(2 * sizeof(struct ast_node *));
     arr[0] = booleanExpression_anode;
-    arr[1] = stmt_anode;
-    arr[2] = (otherStmts_anode->firstChild);
-    iterativeStmt_tNode->addr = makeNode(iterativeStmt_, arr, 3, NULL);
+    arr[1] = (otherStmts_anode);
+    iterativeStmt_tNode->addr = makeNode(iterativeStmt_, arr, 2, NULL);
 }
 
 // <conditionalStmt> ===> TK_IF TK_OP <booleanExpression> TK_CL TK_THEN <stmt> <otherStmts> <elsePart>
@@ -699,10 +721,13 @@ void ast_r56(tNode *conditionalStmt_tNode)
     ast_node *stmt_anode = return_child(conditionalStmt_tNode, 6);
     ast_node *otherStmts_anode = return_child(conditionalStmt_tNode, 7);
     ast_node *elsePart_anode = return_child(conditionalStmt_tNode, 8);
-    arr[0] = stmt_anode;
-    arr[1] = otherStmts_anode->firstChild;
+
+    stmt_anode->nextSib=otherStmts_anode->firstChild;
+    otherStmts_anode->firstChild=stmt_anode;
+    arr[0] = otherStmts_anode;
+    arr[1] = NULL;
     arr[2] = NULL;
-    ast_node *thenPart_anode = makeNode(thenStmts_, arr, 2, NULL);
+    ast_node *thenPart_anode = makeNode(thenStmts_, arr, 1, NULL);
     arr[0] = booleanExpression_anode;
     arr[1] = thenPart_anode;
     arr[2] = elsePart_anode;
@@ -720,10 +745,11 @@ void ast_r57(tNode *elsePart_tNode)
     ast_node *stmt_anode = return_child(elsePart_tNode, 2);
     ast_node *otherStmts_anode = return_child(elsePart_tNode, 3);
     ast_node **arr;
-    arr = (ast_node **)malloc(2 * sizeof(struct ast_node *));
-    arr[0] = stmt_anode;
-    arr[1] = (otherStmts_anode->firstChild);
-    elsePart_tNode->addr = makeNode(elsePart_, arr, 2, NULL);
+    stmt_anode->nextSib=otherStmts_anode->firstChild;
+    otherStmts_anode->firstChild=stmt_anode;
+    arr = (ast_node **)malloc(1 * sizeof(struct ast_node *));
+    arr[0] = otherStmts_anode;
+    elsePart_tNode->addr = makeNode(elsePart_, arr, 1, NULL);
 }
 
 // <elsePart> ===> TK_ENDIF
@@ -1253,4 +1279,5 @@ void ast_create(tNode *root)
         child_ptr = child_ptr->next_sibling;
     }
     printf("%s\n", non_terminal_map[root->nt]);
+    func_ptr[root->rule_no - 1](root);
 }
