@@ -143,22 +143,7 @@ struct A{
 //     return new_node;
 // }
 
-ast_node* makeNode(CONSTRUCT c, ast_node** a, int no_children, struct node_info* n_info){
-    struct ast_node* new_node= (ast_node*)malloc(sizeof(ast_node));
-    new_node->construct=c;
-    new_node->firstChild= (a==NULL)?NULL:*a;
-    new_node->nextSib=NULL;
-    new_node->ninf=n_info;
-    for(int i=0;i<no_children-1;i++){
-        struct ast_node* temp= a[i]; 
-        //this is when we have to add an entire list of children to the ast children
-        while(temp->nextSib!=NULL){
-            temp=temp->nextSib;
-        }
-        temp->nextSib=a[i+1];
-    }
-    return new_node;
-}
+
 
 
 
