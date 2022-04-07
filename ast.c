@@ -858,7 +858,7 @@ void ast_r66(tNode *highPrecedenceOperators_tnode)
     Token mult = highPrecedenceOperators_tnode->child_first->lex_token;
     Tokentype op_ = highPrecedenceOperators_tnode->child_first->t;
     info->lineno = mult->lineNo;
-    info->op = op_;
+    info->op = TK_MUL;
     highPrecedenceOperators_tnode->addr = makeNode(highPrecedenceOperators_, NULL, 0, (struct node_info *)info);
 }
 
@@ -871,7 +871,7 @@ void ast_r67(tNode *highPrecedenceOperators_tnode)
     Token div = highPrecedenceOperators_tnode->child_first->lex_token;
     Tokentype op_ = highPrecedenceOperators_tnode->child_first->t;
     info->lineno = div->lineNo;
-    info->op = op_;
+    info->op = TK_DIV;
     highPrecedenceOperators_tnode->addr = makeNode(highPrecedenceOperators_, NULL, 0, (struct node_info *)info);
 }
 
@@ -884,7 +884,7 @@ void ast_r68(tNode *lowPrecedenceOperators_tnode)
     Token plus = lowPrecedenceOperators_tnode->child_first->lex_token;
     Tokentype op_ = lowPrecedenceOperators_tnode->child_first->t;
     info->lineno = plus->lineNo;
-    info->op = op_;
+    info->op = TK_PLUS;
     lowPrecedenceOperators_tnode->addr = makeNode(lowPrecedenceOperators_, NULL, 0, (struct node_info *)info);
 }
 
@@ -897,7 +897,7 @@ void ast_r69(tNode *lowPrecedenceOperators_tnode)
     Token minus = lowPrecedenceOperators_tnode->child_first->lex_token;
     Tokentype op_ = lowPrecedenceOperators_tnode->child_first->t;
     info->lineno = minus->lineNo;
-    info->op = op_;
+    info->op = TK_MINUS;
     lowPrecedenceOperators_tnode->addr = makeNode(lowPrecedenceOperators_, NULL, 0, (struct node_info *)info);
 }
 
@@ -909,11 +909,17 @@ void ast_r69(tNode *lowPrecedenceOperators_tnode)
 
 void ast_r70(tNode *ioStmt_tnode)
 {
+    ast_node *var_anode = return_child(ioStmt_tnode, 3);
     struct io_struct *info = (struct io_struct *)malloc(sizeof(struct io_struct));
     Token ioread = ioStmt_tnode->child_first->lex_token;
     info->lineNum = ioread->lineNo;
     info->read_or_write = TK_READ;
-    ioStmt_tnode->addr = makeNode(ioStmt_, NULL, 0, (struct node_info *)info);
+
+    ast_node **arr;
+    arr = (ast_node **)malloc(1 * sizeof(struct ast_node *));
+    arr[0] = var_anode;
+
+    ioStmt_tnode->addr = makeNode(ioStmt_, arr, 1, (struct node_info *)info);
 }
 
 // <ioStmt> ===> TK_WRITE TK_OP <var> TK_CL TK_SEM
@@ -924,11 +930,17 @@ void ast_r70(tNode *ioStmt_tnode)
 
 void ast_r71(tNode *ioStmt_tnode)
 {
+    ast_node *var_anode = return_child(ioStmt_tnode, 3);
     struct io_struct *info = (struct io_struct *)malloc(sizeof(struct io_struct));
     Token iowrite = ioStmt_tnode->child_first->lex_token;
     info->lineNum = iowrite->lineNo;
     info->read_or_write = TK_WRITE;
-    ioStmt_tnode->addr = makeNode(ioStmt_, NULL, 0, (struct node_info *)info);
+
+    ast_node **arr;
+    arr = (ast_node **)malloc(1 * sizeof(struct ast_node *));
+    arr[0] = var_anode;
+
+    ioStmt_tnode->addr = makeNode(ioStmt_, arr, 1, (struct node_info *)info);
 }
 
 // <arithmeticExpression> ===> <term> <expPrime>
@@ -975,6 +987,16 @@ void ast_r73(tNode *booleanExpression_tnode)
 
 void ast_r74(tNode *booleanExpression_tnode)
 {
+    ast_node *var_anode1 = return_child(booleanExpression_tnode, 1);
+    ast_node *relationalOp_anode = return_child(booleanExpression_tnode, 2);
+    ast_node *var_anode2 = return_child(booleanExpression_tnode, 3);
+
+    ast_node **arr;
+    arr = (ast_node **)malloc(3 * sizeof(struct ast_node *));
+    arr[0] = var_anode1;
+    arr[1] = relationalOp_anode;
+    arr[2] = var_anode2;
+    booleanExpression_tnode->addr = makeNode(booleanExpression_, arr, 3, NULL);
 }
 
 // <booleanExpression> ===> TK_NOT TK_OP <booleanExpression1> TK_CL
@@ -985,10 +1007,21 @@ void ast_r74(tNode *booleanExpression_tnode)
 
 void ast_r75(tNode *booleanExpression_tnode)
 {
+
 }
+
+
+// <var> ===> <singleOrRecId>
+// var.addr=singleOrRecId.addr
 
 void ast_r76(tNode *var_tnode)
 {
+    ast_node *singleOrRecId_anode = return_child(var_tnode, 1);
+
+    ast_node **arr;
+    arr = (ast_node **)malloc(1 * sizeof(struct ast_node *));
+    arr[0] = singleOrRecId_anode;
+    var_tnode->addr = makeNode(var_, arr, 1, NULL);
 }
 
 void ast_r77(tNode *var_node)
