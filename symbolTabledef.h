@@ -19,6 +19,15 @@ struct record_field{
 	struct record_field * next;
 	int line_no;
 };
+typedef struct typeInfo{
+	Type type;
+	char * type_ruid;
+	struct typeInfo * next;
+}typeInfo;
+struct function_field{
+	typeInfo *InputHead;
+	typeInfo *OutputHead;
+};
 struct symbolTableRecord{
 
 	//Lexeme will be in it only
@@ -35,7 +44,7 @@ struct symbolTableRecord{
 	struct record_field * recordFields;
     SymbolTableRecord* next;
 	struct symbolTable *global;
-
+	struct function_field * function_field;
 	//Whether the declared variable has been assigned some value or not
 	//int assigned;
 
