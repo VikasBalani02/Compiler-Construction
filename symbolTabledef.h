@@ -65,6 +65,7 @@ struct symbolTableSlot{
 };
 typedef struct symbolTableSlot symbolTableSlot;
 struct symbolTable{
+	int currentOffset;
 	symbolTableSlot **list;
 	int no_slots;
 };	
