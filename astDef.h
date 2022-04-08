@@ -65,14 +65,34 @@ enum CONSTRUCT
     defineMapping_,
     A_,
     more_ids_,
-    thenStmts_
+    thenStmts_,
+    INTNUM_,
+    REALNUM_
 };
 typedef enum CONSTRUCT CONSTRUCT;
+
+typedef enum TYPE{
+	INT,
+	REAL,
+	RECORD,
+	UNION,
+	RUID,
+    BOOL,
+    VOID,
+    ERROR,
+    EMPTY //to be used in case A->eps
+}Type;
+
+typedef struct type_struct{
+    Type type;
+    char* ruid;
+} type_struct;
 
 struct ast_node {
     struct ast_node *firstChild;
     struct ast_node *nextSib;
     struct node_info *ninf;
+    type_struct* node_type; //to be populated during type checking
     CONSTRUCT construct;
 };
 typedef struct ast_node ast_node;
@@ -122,6 +142,7 @@ struct num_struct{
     int lineno;
     Tokentype type;
     union number * value;
+    int tag;
 };
 struct defineType_struct{
     struct constructed_type_struct * from;

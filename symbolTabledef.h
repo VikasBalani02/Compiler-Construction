@@ -1,14 +1,15 @@
-#include "parser.h"
+#include "ast.h"
 
 /********Actual Symbol Structure*******/
 
-typedef enum TYPE{
-	INT,
-	REAL,
-	RECORD,
-	UNION,
-	RUID,
-}Type;
+//declared Type in astDef.h for use in ast_node
+// typedef enum TYPE{
+// 	INT,
+// 	REAL,
+// 	RECORD,
+// 	UNION,
+// 	RUID,
+// }Type;
 
 struct record_field{
 	char * lexeme;

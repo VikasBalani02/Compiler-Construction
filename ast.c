@@ -457,7 +457,7 @@ void ast_r33(tNode *declarations_node)
 
 void ast_r34(tNode *declaration_node)
 {
-    ast_node *dataType = return_child(declaration_node, 2);
+    ast_node *dataType_anode = return_child(declaration_node, 2);
     ast_node *global_or_not = return_child(declaration_node, 5);
     struct id_struct *info = (struct id_struct *)malloc(sizeof(struct id_struct));
     Token ID = declaration_node->child_first->next_sibling->next_sibling->next_sibling->lex_token;
@@ -468,7 +468,7 @@ void ast_r34(tNode *declaration_node)
 
     ast_node **arr;
     arr = (ast_node **)malloc(1 * sizeof(struct ast_node *));
-    arr[0] = dataType;
+    arr[0] = dataType_anode;
 
     declaration_node->addr = makeNode(declaration_, arr, 1, (struct node_info *)info);
 }
@@ -559,7 +559,7 @@ void ast_r44(tNode *assignmentStmt_tNode)
     arr[0] = singleOrRecId_anode;
     arr[1] = arithmeticExpression_anode;
 
-    assignmentStmt_tNode->addr = makeNode(function_, arr, 2, NULL);
+    assignmentStmt_tNode->addr = makeNode(assignmentStmt_, arr, 2, NULL);
 }
 
 // <oneExpansion> ===> TK_DOT TK_FIELDID
@@ -768,10 +768,11 @@ void ast_r57(tNode *elsePart_tNode)
     ast_node *stmt_anode = return_child(elsePart_tNode, 2);
     ast_node *otherStmts_anode = return_child(elsePart_tNode, 3);
     ast_node **arr;
-    stmt_anode->nextSib=otherStmts_anode->firstChild;
-    otherStmts_anode->firstChild=stmt_anode;
-    arr = (ast_node **)malloc(1 * sizeof(struct ast_node *));
-    arr[0] = otherStmts_anode;
+    // stmt_anode->nextSib=otherStmts_anode->firstChild;
+    // otherStmts_anode->firstChild=stmt_anode;
+    arr = (ast_node **)malloc(2 * sizeof(struct ast_node *));
+    arr[0]= stmt_anode;
+    arr[1] = otherStmts_anode->firstChild;
     elsePart_tNode->addr = makeNode(elsePart_, arr, 1, NULL);
 }
 
@@ -836,9 +837,9 @@ void ast_r62(tNode *termPrime_tnode)
     arr = (ast_node **)malloc(3 * sizeof(struct ast_node *));
     arr[0] = highP;
     arr[1] = fact;
-    arr[2] = termP->firstChild;
+    arr[2] = termP;
     termPrime_tnode->addr = makeNode(termPrime_, arr, 3, NULL);
-    free(termP);
+    // free(termP);
 }
 
 // <termPrime> ===> eps
@@ -1039,12 +1040,7 @@ void ast_r75(tNode *booleanExpression_tnode)
 
 void ast_r76(tNode *var_tnode)
 {
-    ast_node *singleOrRecId_anode = return_child(var_tnode, 1);
-
-    ast_node **arr;
-    arr = (ast_node **)malloc(1 * sizeof(struct ast_node *));
-    arr[0] = singleOrRecId_anode;
-    var_tnode->addr = makeNode(var_, arr, 1, NULL);
+    var_tnode->addr=return_child(var_tnode,1);
 }
 
 void ast_r77(tNode *var_node)
@@ -1054,7 +1050,8 @@ void ast_r77(tNode *var_node)
     info->lineno = NUM->lineNo;
     info->type = TK_NUM;
     info->value = NUM->val;
-    var_node->addr = makeNode(var_, NULL, 0, (struct node_info *)info);
+    info->tag=NUM->tag;
+    var_node->addr = makeNode(INTNUM_, NULL, 0, (struct node_info *)info);
 }
 void ast_r78(tNode *var_node)
 {
@@ -1063,7 +1060,8 @@ void ast_r78(tNode *var_node)
     info->lineno = NUM->lineNo;
     info->type = TK_RNUM;
     info->value = NUM->val;
-    var_node->addr = makeNode(var_, NULL, 0, (struct node_info *)info);
+    info->tag=NUM->tag;
+    var_node->addr = makeNode(REALNUM_, NULL, 0, (struct node_info *)info);
 }
 void ast_r79(tNode *logicalOp_node)
 {
