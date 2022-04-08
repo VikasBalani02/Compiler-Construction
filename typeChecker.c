@@ -1,8 +1,9 @@
+#include <stdarg.h>
 #include "typeChecker.h"
 #include "symbolTabledef.h"
 #include "ast.h"
 #include "astDef.h"
-
+#include "string.h"
 typeInfo *get_typeInfo(Type type, char *ruid)
 {
     typeInfo *temp = (typeInfo *)malloc(sizeof(typeInfo));
@@ -61,9 +62,14 @@ void check_assign_stmt(ast_node *node, Error *err_list)
     typeInfo *lhs_type = lhs->node_type;
     typeInfo *rhs_type = rhs->node_type;
 
-    if (lhs_type->type == ERROR_ || rhs_type->type == ERROR_ || lhs_type->type != rhs_type->type)
+    if (lhs_type->type == ERROR_ || rhs_type->type == ERROR_)
     {
         node->node_type = get_typeInfo(ERROR_, NULL);
+        return;
+    }
+    else if(lhs_type->type!=rhs_type->type){
+        node->node_type = get_typeInfo(ERROR_, NULL);
+        log_error(err_list,"Line Number %d: Type Mismatch between id and expression in assignment statement",((struct id_struct*)(lhs->ninf))->lineNum);
     }
     else
     {
@@ -72,7 +78,7 @@ void check_assign_stmt(ast_node *node, Error *err_list)
             if (strcmp(lhs_type->type_ruid, rhs_type->type_ruid) != 0)
             {
                 node->node_type = get_typeInfo(ERROR_, NULL);
-                // add error in the list for type mismatch
+                log_error(err_list,"Line Number %d: Type Mismatch between id and expression in assignment statement",((struct id_struct*)(lhs->ninf))->lineNum);
             }
         }
         else
@@ -90,25 +96,23 @@ void check_io_stmt(ast_node *node, Error *err_list)
     {
         node->node_type = get_typeInfo(VOID, NULL);
     }
-    else if (var_node->construct == singleOrRecId_)
+    else if(var_node->construct == singleOrRecId_)
     {
         if (var_node->node_type->type == ERROR_)
         {
             node->node_type = get_typeInfo(ERROR_, NULL);
         }
-        else
+        else if(var_node->node_type->type==RECORD || var_node->node_type->type==UNION)
         {
+            log_error(err_list,"Line Number %d: Cannot read values into a Record/Union",((struct constructed_type_struct*)(var_node->ninf))->lineNum);
+            node->node_type = get_typeInfo(ERROR_, NULL);
+        }
+        else{
             node->node_type = get_typeInfo(VOID, NULL);
         }
     }
-    else
-    {
-        // This will never be executed after syntax check
-        // error about variable not declared handled in get_id_type
-        node->node_type = get_typeInfo(ERROR_, NULL);
-    }
 }
-int compare_list(ast_node *node, typeInfo *formalParamList, Error *err_list)
+int compare_list(struct func_struct *info, ast_node *node, typeInfo *formalParamList, Error *err_list)
 {
     // return 1 on no errors
     if (node->node_type->type == ERROR_)
@@ -126,6 +130,7 @@ int compare_list(ast_node *node, typeInfo *formalParamList, Error *err_list)
     {
         if (list1->type != list2->type)
         {
+            log_error(err_list,"Line Number %d: Parameter type mismatch in call to %s",info->lineNum,info->funID);
             return 0;
         }
         list1 = list1->next;
@@ -133,6 +138,7 @@ int compare_list(ast_node *node, typeInfo *formalParamList, Error *err_list)
     }
     if ((list1 == NULL) ^ (list2 == NULL))
     {
+        log_error(err_list,"Line Number %d: Number of parameters mismatch in call to %s",info->lineNum,info->funID);
         return 0;
     }
     return 1;
@@ -143,8 +149,8 @@ void check_funCall_stmt(ast_node *node, Error *err_list, symbolTable table)
     struct symbolTableRecord *func_record = get_function_type(info->funID, err_list, table);
     ast_node *outputParameters_anode = node->firstChild;
     ast_node *inputParameters_anode = outputParameters_anode->nextSib;
-    int error_free_out = compare_param_list(outputParameters_anode, func_record->function_field->OutputHead, err_list);
-    int error_free_in = compare_param_list(inputParameters_anode, func_record->function_field->InputHead, err_list);
+    int error_free_out = compare_param_list(info, outputParameters_anode, func_record->function_field->OutputHead, err_list);
+    int error_free_in = compare_param_list(info, inputParameters_anode, func_record->function_field->InputHead, err_list);
     if (error_free_in + error_free_out != 2)
     {
         node->node_type = get_typeInfo(ERROR_, NULL);
@@ -219,6 +225,7 @@ void check_arithmeticExpression(ast_node *node, Error *err_list)
         if (expPrime_node->node_type->type == ERROR_ || term_node->node_type->type == ERROR_ || term_node->node_type->type != expPrime_node->node_type->type)
         {
             // add type mismatch error
+            // log_error(err_list,"Line Number %d: Type Mismatch for arithmetic expression",)
             node->node_type = get_typeInfo(ERROR_, NULL);
         }
         else
@@ -397,5 +404,27 @@ void check_id_list(ast_node *node, Error *err_list)
     {
         temp->node_type->next = temp->nextSib->node_type;
         temp = temp->nextSib;
+    }
+}
+
+void log_error(Error* err_list,const char *fmt, ...){
+    Error* new_error=(Error*)malloc(sizeof(Error));
+    new_error->next=NULL;
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(new_error->description,DESCRIPTION_SIZE,fmt,args);
+    va_end(args);
+    Error* ptr=err_list;
+    while(ptr->next!=NULL){
+        ptr=ptr->next;
+    }    
+    ptr->next=new_error;
+}
+
+void print_error_list(Error* err_list){
+    Error* ptr= err_list;
+    while(ptr){
+        printf("ERROR: %s",ptr->description);
+        ptr=ptr->next;
     }
 }
