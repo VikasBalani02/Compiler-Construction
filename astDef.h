@@ -79,7 +79,7 @@ typedef enum TYPE{
 	RUID,
     BOOL,
     VOID,
-    ERROR,
+    ERROR_,
     EMPTY //to be used in case A->eps
 }Type;
 

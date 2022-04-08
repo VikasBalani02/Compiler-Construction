@@ -17,7 +17,7 @@ void *populate_Identifier_type(ast_node *id_node, Error *err_list, symbolTable t
     // called on Identifiers_ , singleOrRecId_
     // Functionalities: Given a singleorRecId node fetch the type for the variable from the symbol table
     // important: if type is ruid: need to resolve it and return the corresponding TK_RECORD + declaration RUID
-    // if there is no corresponding entry in the symbol table corresponding to the occurence of the name or if there is an attempt to use oneExpansion on a real or int then return type as ERROR
+    // if there is no corresponding entry in the symbol table corresponding to the occurence of the name or if there is an attempt to use oneExpansion on a real or int then return type as ERROR_
     // struct id_struct* id_info=(struct id_struct*)id_node->ninf;
 }
 
@@ -61,9 +61,9 @@ void check_assign_stmt(ast_node *node, Error *err_list)
     typeInfo *lhs_type = lhs->node_type;
     typeInfo *rhs_type = rhs->node_type;
 
-    if (lhs_type->type == ERROR || rhs_type->type == ERROR || lhs_type->type != rhs_type->type)
+    if (lhs_type->type == ERROR_ || rhs_type->type == ERROR_ || lhs_type->type != rhs_type->type)
     {
-        node->node_type = get_typeInfo(ERROR, NULL);
+        node->node_type = get_typeInfo(ERROR_, NULL);
     }
     else
     {
@@ -71,7 +71,7 @@ void check_assign_stmt(ast_node *node, Error *err_list)
         {
             if (strcmp(lhs_type->type_ruid, rhs_type->type_ruid) != 0)
             {
-                node->node_type = get_typeInfo(ERROR, NULL);
+                node->node_type = get_typeInfo(ERROR_, NULL);
                 // add error in the list for type mismatch
             }
         }
@@ -92,9 +92,9 @@ void check_io_stmt(ast_node *node, Error *err_list)
     }
     else if (var_node->construct == singleOrRecId_)
     {
-        if (var_node->node_type->type == ERROR)
+        if (var_node->node_type->type == ERROR_)
         {
-            node->node_type = get_typeInfo(ERROR, NULL);
+            node->node_type = get_typeInfo(ERROR_, NULL);
         }
         else
         {
@@ -105,13 +105,13 @@ void check_io_stmt(ast_node *node, Error *err_list)
     {
         // This will never be executed after syntax check
         // error about variable not declared handled in get_id_type
-        node->node_type = get_typeInfo(ERROR, NULL);
+        node->node_type = get_typeInfo(ERROR_, NULL);
     }
 }
 int compare_list(ast_node *node, typeInfo *formalParamList, Error *err_list)
 {
     // return 1 on no errors
-    if (node->node_type->type == ERROR)
+    if (node->node_type->type == ERROR_)
     {
         return 0;
     }
@@ -147,7 +147,7 @@ void check_funCall_stmt(ast_node *node, Error *err_list, symbolTable table)
     int error_free_in = compare_param_list(inputParameters_anode, func_record->function_field->InputHead, err_list);
     if (error_free_in + error_free_out != 2)
     {
-        node->node_type = get_typeInfo(ERROR, NULL);
+        node->node_type = get_typeInfo(ERROR_, NULL);
     }
     else
     {
@@ -161,17 +161,17 @@ void check_iterative_stmt(ast_node *node, Error *err_list)
     ast_node *stmts_to_repeat = node->firstChild->nextSib;
 
     // Check if the boolean expression has no errors
-    if (bool_condition->node_type->type == ERROR)
+    if (bool_condition->node_type->type == ERROR_)
     {
-        node->node_type = get_typeInfo(ERROR, NULL);
+        node->node_type = get_typeInfo(ERROR_, NULL);
     }
     else
     {
         // The rule was <iterativeStmt> ===> TK_WHILE TK_OP <booleanExpression> TK_CL <stmt> <otherStmts> TK_ENDWHILE
         // stmts to repeat node is an otherstmts node
-        if (stmts_to_repeat->node_type->type == ERROR)
+        if (stmts_to_repeat->node_type->type == ERROR_)
         {
-            node->node_type = get_typeInfo(ERROR, NULL);
+            node->node_type = get_typeInfo(ERROR_, NULL);
         }
         else
         {
@@ -187,15 +187,15 @@ void check_conditional_stmt(ast_node *node, Error *err_list)
     ast_node *elsePart_node = thenStmts_node->nextSib;
 
     node->node_type = get_typeInfo(VOID, NULL); // if there is any error we will assign error to stmts
-    if (booleanExpression_node->node_type->type == ERROR || thenStmts_node->node_type->type == ERROR || elsePart_node->node_type->type == ERROR)
+    if (booleanExpression_node->node_type->type == ERROR_ || thenStmts_node->node_type->type == ERROR_ || elsePart_node->node_type->type == ERROR_)
     {
-        node->node_type = get_typeInfo(ERROR, NULL);
+        node->node_type = get_typeInfo(ERROR_, NULL);
     }
 }
 void check_return_stmt(ast_node *node, Error *err_list)
 {
     ast_node *optionalReturn_anode = node->firstChild;
-    if (optionalReturn_anode->node_type->type == EMPTY || optionalReturn_anode->node_type->type != ERROR)
+    if (optionalReturn_anode->node_type->type == EMPTY || optionalReturn_anode->node_type->type != ERROR_)
     {
         // optional return derived eps or there are no errors in output params
         node->node_type = get_typeInfo(VOID, NULL);
@@ -203,7 +203,7 @@ void check_return_stmt(ast_node *node, Error *err_list)
     else
     {
         // error in optionalReturn
-        node->node_type = get_typeInfo(ERROR, NULL);
+        node->node_type = get_typeInfo(ERROR_, NULL);
     }
 }
 void check_arithmeticExpression(ast_node *node, Error *err_list)
@@ -216,10 +216,10 @@ void check_arithmeticExpression(ast_node *node, Error *err_list)
     }
     else
     {
-        if (expPrime_node->node_type->type == ERROR || term_node->node_type->type == ERROR || term_node->node_type->type != expPrime_node->node_type->type)
+        if (expPrime_node->node_type->type == ERROR_ || term_node->node_type->type == ERROR_ || term_node->node_type->type != expPrime_node->node_type->type)
         {
             // add type mismatch error
-            node->node_type = get_typeInfo(ERROR, NULL);
+            node->node_type = get_typeInfo(ERROR_, NULL);
         }
         else
         {
@@ -239,17 +239,17 @@ void check_term(ast_node *node, Error *err_list)
     }
     else
     {
-        if (termPrime_node->node_type->type == ERROR || factor_node->node_type->type == ERROR || termPrime_node->node_type->type != factor_node->node_type->type)
+        if (termPrime_node->node_type->type == ERROR_ || factor_node->node_type->type == ERROR_ || termPrime_node->node_type->type != factor_node->node_type->type)
         {
             // add type mismatch error
-            node->node_type = get_typeInfo(ERROR, NULL);
+            node->node_type = get_typeInfo(ERROR_, NULL);
         }
         else
         {
             if (factor_node->node_type->type == RECORD || factor_node->node_type->type == UNION)
             {
                 // error: multiplication and division not supported on constructed data types
-                node->node_type = get_typeInfo(ERROR, NULL);
+                node->node_type = get_typeInfo(ERROR_, NULL);
             }
             node->node_type = factor_node->node_type;
         }
@@ -278,17 +278,17 @@ void check_termPrime(ast_node *node, Error *err_list)
         }
         else
         {
-            if (termPrime_node->node_type->type == ERROR || factor_node->node_type->type == ERROR || termPrime_node->node_type->type != factor_node->node_type->type)
+            if (termPrime_node->node_type->type == ERROR_ || factor_node->node_type->type == ERROR_ || termPrime_node->node_type->type != factor_node->node_type->type)
             {
                 // add type mismatch error
-                node->node_type = get_typeInfo(ERROR, NULL);
+                node->node_type = get_typeInfo(ERROR_, NULL);
             }
             else
             {
                 if (factor_node->node_type->type == RECORD || factor_node->node_type->type == UNION)
                 {
                     // error: multiplication and division not supported on constructed data types
-                    node->node_type = get_typeInfo(ERROR, NULL);
+                    node->node_type = get_typeInfo(ERROR_, NULL);
                 }
                 node->node_type = factor_node->node_type;
             }
@@ -312,10 +312,10 @@ void check_expPrime(ast_node *node, Error *err_list)
         }
         else
         {
-            if (expPrime_node->node_type->type == ERROR || term_node->node_type->type == ERROR || term_node->node_type->type != expPrime_node->node_type->type)
+            if (expPrime_node->node_type->type == ERROR_ || term_node->node_type->type == ERROR_ || term_node->node_type->type != expPrime_node->node_type->type)
             {
                 // add type mismatch error
-                node->node_type = get_typeInfo(ERROR, NULL);
+                node->node_type = get_typeInfo(ERROR_, NULL);
             }
             else
             {
@@ -332,9 +332,9 @@ void check_stmt_group(ast_node *node, Error *err_list)
     ast_node *temp = node->firstChild;
     while (temp)
     {
-        if (temp->node_type->type == ERROR)
+        if (temp->node_type->type == ERROR_)
         {
-            node->node_type = get_typeInfo(ERROR, NULL);
+            node->node_type = get_typeInfo(ERROR_, NULL);
         }
         temp = temp->nextSib;
     }
@@ -351,10 +351,10 @@ void check_boolean_exp(ast_node *node, Error *err_list)
     }
     ast_node *bool_exp2 = bool_exp1->nextSib->nextSib;
 
-    if (bool_exp1->node_type->type == ERROR || bool_exp1->node_type->type == ERROR)
+    if (bool_exp1->node_type->type == ERROR_ || bool_exp1->node_type->type == ERROR_)
     {
         // 1. boolexp==>boolexp relop boolexp 2. boolexp==>var relop var
-        node->node_type = get_typeInfo(ERROR, NULL);
+        node->node_type = get_typeInfo(ERROR_, NULL);
         return;
     }
     if (bool_exp1->construct != booleanExpression_)
@@ -362,8 +362,8 @@ void check_boolean_exp(ast_node *node, Error *err_list)
         // rule of form boolexp==>var relop var
         if ((bool_exp1->construct == singleOrRecId_ && bool_exp1->node_type->type == RECORD) || (bool_exp1->construct == singleOrRecId_ && bool_exp1->node_type->type == UNION) || (bool_exp2->construct == singleOrRecId_ && bool_exp2->node_type->type == RECORD) || (bool_exp2->construct == singleOrRecId_ && bool_exp2->node_type->type == UNION))
         {
-            // ERROR: records and unions cannot be used in relational operators
-            node->node_type = get_typeInfo(ERROR, NULL);
+            // ERROR_: records and unions cannot be used in relational operators
+            node->node_type = get_typeInfo(ERROR_, NULL);
             return;
         }
     }
@@ -380,9 +380,9 @@ void check_id_list(ast_node *node, Error *err_list)
     }
     while (temp)
     {
-        if (temp->node_type->type == ERROR || temp->node_type->type == RECORD || temp->node_type->type == UNION)
+        if (temp->node_type->type == ERROR_ || temp->node_type->type == RECORD || temp->node_type->type == UNION)
         {
-            node->node_type = get_typeInfo(ERROR, NULL);
+            node->node_type = get_typeInfo(ERROR_, NULL);
             if (temp->node_type->type == UNION || temp->node_type->type == RECORD)
             {
                 // Error: idList cannot have identifier of a record or a union
