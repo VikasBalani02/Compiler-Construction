@@ -1,4 +1,4 @@
-#include "ast.h"
+#include "astDef.h"
 
 /********Actual Symbol Structure*******/
 
@@ -20,11 +20,7 @@ struct record_field{
 	struct record_field * next;
 	int line_no;
 };
-typedef struct typeInfo{
-	Type type;
-	char * type_ruid;
-	struct typeInfo * next;
-}typeInfo;
+
 struct function_field{
 	typeInfo *InputHead;
 	typeInfo *OutputHead;

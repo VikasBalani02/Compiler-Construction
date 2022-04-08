@@ -994,9 +994,9 @@ void ast_r72(tNode *arithmeticExpression_tnode)
 
 void ast_r73(tNode *booleanExpression_tnode)
 {
-    ast_node *booleanExpression_anode1 = return_child(booleanExpression_tnode, 1);
-    ast_node *logicalOp_anode = return_child(booleanExpression_tnode, 2);
-    ast_node *booleanExpression_anode2 = return_child(booleanExpression_tnode, 3);
+    ast_node *booleanExpression_anode1 = return_child(booleanExpression_tnode, 2);
+    ast_node *logicalOp_anode = return_child(booleanExpression_tnode, 4);
+    ast_node *booleanExpression_anode2 = return_child(booleanExpression_tnode, 6);
 
     ast_node **arr;
     arr = (ast_node **)malloc(3 * sizeof(struct ast_node *));
@@ -1032,7 +1032,14 @@ void ast_r74(tNode *booleanExpression_tnode)
 
 void ast_r75(tNode *booleanExpression_tnode)
 {
-
+    ast_node *booleanExpression_anode1 = return_child(booleanExpression_tnode, 3);
+    ast_node **arr;
+    arr = (ast_node **)malloc(1 * sizeof(struct ast_node *));
+    arr[0] = booleanExpression_anode1;
+    struct operator_struct* info=(struct operator_struct*)malloc(sizeof(struct operator_struct));
+    info->lineno=booleanExpression_tnode->child_first->lex_token->lineNo;
+    info->op=TK_NOT;
+    booleanExpression_tnode->addr=makeNode(booleanExpression_,arr,1,(struct node_info*)info);
 }
 
 
@@ -1136,7 +1143,7 @@ void ast_r87(tNode *returnStmt_node)
 
     ast_node **arr;
     arr = (ast_node **)malloc(1 * sizeof(ast_node *));
-    arr[0] = optionalReturn->firstChild;
+    arr[0] = optionalReturn;
     returnStmt_node->addr = makeNode(returnStmt_, arr, 1, NULL);
     // free(optionalReturn);
 }
@@ -1164,20 +1171,24 @@ void ast_r90(tNode *idList_node)
     Token ID = idList_node->child_first->lex_token;
     info->lexID = ID->lexeme;
     info->lineNum = ID->lineNo;
+    ast_node* Identifier_anode=makeNode(Identifier_,NULL,0,(struct node_info*) info);
     ast_node **arr;
-    arr = (ast_node **)malloc(1 * sizeof(ast_node *));
-    arr[0] = more_ids->firstChild;
+    arr = (ast_node **)malloc(2 * sizeof(ast_node *));
+    arr[0]= Identifier_anode;
+    arr[1] = more_ids->firstChild;
     idList_node->addr = makeNode(idList_, arr, 1, (struct node_info *)info);
     // free(more_ids);
 }
 void ast_r91(tNode *more_ids_node)
 {
-    ast_node *idList = return_child(more_ids_node, 2);
+    ast_node *idList_anode = return_child(more_ids_node, 2);
+    // ast_node **arr;
+    // arr = (ast_node **)malloc(1 * sizeof(ast_node *));
+    // arr[0] = idList_anode->firstChild;
+    // more_ids_node->addr = makeNode(more_ids_, arr, 1, NULL);
 
-    ast_node **arr;
-    arr = (ast_node **)malloc(1 * sizeof(ast_node *));
-    arr[0] = idList->firstChild;
-    more_ids_node->addr = makeNode(more_ids_, arr, 1, NULL);
+    //To space optimize:
+    more_ids_node->addr=idList_anode;
     // free(idList);
 }
 

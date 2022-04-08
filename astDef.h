@@ -83,16 +83,19 @@ typedef enum TYPE{
     EMPTY //to be used in case A->eps
 }Type;
 
-typedef struct type_struct{
-    Type type;
-    char* ruid;
-} type_struct;
+typedef struct typeInfo{
+	Type type;
+	char * type_ruid;
+	struct typeInfo * next;
+}typeInfo;
+
 
 struct ast_node {
     struct ast_node *firstChild;
     struct ast_node *nextSib;
     struct node_info *ninf;
-    type_struct* node_type; //to be populated during type checking
+    typeInfo* node_type; //to be populated during type checking 
+    //next field is populated for outputParameters_ inputParameters_ optionalReturn_
     CONSTRUCT construct;
 };
 typedef struct ast_node ast_node;
