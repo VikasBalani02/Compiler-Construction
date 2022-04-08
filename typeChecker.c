@@ -1,8 +1,5 @@
 #include <stdarg.h>
 #include "typeChecker.h"
-#include "symbolTabledef.h"
-#include "ast.h"
-#include "astDef.h"
 #include "string.h"
 typeInfo *get_typeInfo(Type type, char *ruid)
 {

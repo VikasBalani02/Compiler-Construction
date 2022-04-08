@@ -1,4 +1,4 @@
-#include "symbolTabledef.h"
+#include "symbolTable.h"
 typedef struct Error{
     char description[100];
     struct Error* next;

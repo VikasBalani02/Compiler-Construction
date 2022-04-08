@@ -1,8 +1,13 @@
 %Test Case 5: The following source code is expected to be syntactically correct as per the modified grammar.
 %If any line has syntax error, please inform me as that error needs to be fixed in this test case.
 
-_unionfunction  input parameter list [record #two d5cc34, #point p]  
+_unionfunction  input parameter list [record #two d5cc34, #point b2d567]  
 output parameter list[real d3];
+	record #one
+		type real:x;
+		type real:y;
+	endrecord	
+	definetype record #one as #point
 
 	record #two
 		type #point: beginpoint;
@@ -10,7 +15,7 @@ output parameter list[real d3];
 	endrecord
 
 
-	type record #two : b5b567, c6;
+	type record #two : b5b567;
 	type record #one : b3;
 	type #point: d5;
 	b5b567 <--- c6*2;
@@ -25,22 +30,17 @@ end
 % type checking will be required in stage 2. Despite some type errors, undeclared variables etc the code is syntactically correct
 %in this function.
 _main 
-	record #one
-		type real:x;
-		type real:y;
-	endrecord	
-	definetype record #one as #point
 	definetype record #two as #line
-	union #four
-		type #line : ln; 
-		type #point: pt; 
-		type #traingle:tr;
-	endunion;
-        definetype record #three as #triangle  
 	record #three 
 		type #line: base;
 		type #line: height;
 	endrecord
+	definetype record #three as #triangle
+	union #four
+		type #line : ln; 
+		type #point: pt; 
+		type #triangle:tr;
+	endunion
 	definetype union #four as #shape
 	record #variantrecord
 		type int: tag;

@@ -227,7 +227,7 @@ void ast_r12(tNode *primitiveDatatype_tnode)
 void ast_r13(tNode *primitiveDatatype_tnode)
 {
     struct primitive_type_struct *info = (struct primitive_type_struct *)malloc(sizeof(struct primitive_type_struct));
-    info->lineNum = primitiveDatatype_tnode->lex_token->lineNo;
+    info->lineNum = primitiveDatatype_tnode->child_first->lex_token->lineNo;
     info->int_or_real = TK_REAL;
     primitiveDatatype_tnode->addr = makeNode(primitiveDatatype_, NULL, 0, (struct node_info *)info);
 }
@@ -1215,10 +1215,13 @@ void ast_r93(tNode *definetypestmt_node)
     to->ruid = (RUID2->lexeme);
     to->union_or_record = -1;
 
+    info->from = from;
+    info->to = to;
+
     // ast_node** arr;
     // arr = (ast_node **) malloc (1*sizeof(ast_node*));
     // arr[0] =A;
-    definetypestmt_node->addr = makeNode(definetypestmt_, NULL, 0, NULL);
+    definetypestmt_node->addr = makeNode(definetypestmt_, NULL, 0, (struct node_info *) info);
     // free(A);
 }
 

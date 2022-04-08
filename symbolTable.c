@@ -5,8 +5,7 @@
 #include <string.h>
 #include <math.h>
 
-#include "symbolTabledef.h"
-#include "astDef.h"
+#include "symbolTable.h"
 extern char* LabelMap[];
 extern char* TerminalMap[];
 extern char* NonTerminalMap[];
@@ -25,23 +24,9 @@ symbolTable* newSymbolTable(int no_slots){
 	for(int i=0;i<no_slots;i++){
 		table->list[i] = (symbolTableSlot*)malloc(sizeof(symbolTableSlot));
 		table->list[i]->head = NULL;
-		table->no_slots = 0;
 	}
 
 	return table;
-}
-
-void addSymbol(symbolTable* symbolTable, char* key, SymbolTableRecord* symbol){
-    //Keep the current offset stored in symbol table, assign that offset to any symbol added and update the offset
-    int offset = symbolTable->currentOffset;
-    symbol->offset = offset;
-    symbolTable->currentOffset = symbolTable->currentOffset + symbol->width;
-
-	int hash =  hashFunction(key,symbolTable->no_slots);
-	symbol->next = symbolTable->list[hash]->head;
-	symbolTable->list[hash]->head = symbol;
-
-	symbolTable->list[hash]->noOfRecords++;
 }
 
 int hashFunction(char* key, int no_of_slots){
@@ -57,7 +42,18 @@ int hashFunction(char* key, int no_of_slots){
 	return hash;
 }
 
+void addSymbol(symbolTable* symbolTable, char* key, SymbolTableRecord* symbol){
+    //Keep the current offset stored in symbol table, assign that offset to any symbol added and update the offset
+    int offset = symbolTable->currentOffset;
+    symbol->offset = offset;
+    symbolTable->currentOffset = symbolTable->currentOffset + symbol->width;
 
+	int hash =  hashFunction(key,symbolTable->no_slots);
+	symbol->next = symbolTable->list[hash]->head;
+	symbolTable->list[hash]->head = symbol;
+
+	symbolTable->list[hash]->noOfRecords++;
+}
 
 SymbolTableRecord* getSymbolInfo(char* key, symbolTable* symbolTable){
 	int hash = hashFunction(key, symbolTable->no_slots);
@@ -81,7 +77,7 @@ typeInfo* add_function_par(typeInfo * typeInfoList, Type type, char *ruid){
     if(iterator==NULL) {
         return typeInfoNode;
     } 
-    while(iterator->next==NULL){
+    while(iterator->next!=NULL){
         iterator=iterator->next;
     }
     iterator->next = typeInfoNode;
@@ -101,29 +97,29 @@ void add_record_field (SymbolTableRecord * record, struct record_field * field){
     }
 }
 void traverseNode(ast_node * current, symbolTable* global){
-    if(current->construct== typeDefinition){
+    if(current->construct== typeDefinition_){
         struct constructed_type_struct * info = (struct constructed_type_struct *)current->ninf;
         SymbolTableRecord * temp = (SymbolTableRecord*) malloc(sizeof(SymbolTableRecord));
-        if(info->union_or_record = TK_RECORD){
+        if(info->union_or_record == TK_RECORD){
             temp->type = RECORD;
             temp->lexeme = info->ruid;
             temp->line_no = info->lineNum;
             temp->recordFields = NULL;
 
             int offset =0; //for calculting the offset of fields relative to the base of the record definition
-
+            //typedefinitions -> fielddefiniitions->fielddefinition
             //child == **fieldDefinition**
-            ast_node * child = current->firstChild; 
+            ast_node * child = current->firstChild->firstChild; 
             while(child != NULL){ 
                 //for each field definition create a record field * and attach it to linked list
                 struct record_field *field = (struct record_field *)malloc(sizeof(struct record_field));
-                struct field_id_struct * info2 = child->ninf;
+                struct field_id_struct * info2 = (struct field_id_struct *)child->ninf;
                 field->lexeme = info2->fieldid;
                 field->line_no = info2->lineNum;
 
-                if(child->firstChild->construct == primitiveDatatype){
+                if(child->firstChild->construct == primitiveDatatype_){
                     struct ast_node * primitive = child->firstChild; //primitive datatype node
-                    struct primitive_type_struct * info3 = primitive->ninf;
+                    struct primitive_type_struct * info3 = (struct primitive_type_struct *)primitive->ninf;
                     if(info3->int_or_real == TK_INT){
                         field->type = INT;
                         field->width = 4 ;
@@ -139,16 +135,16 @@ void traverseNode(ast_node * current, symbolTable* global){
                         add_record_field(temp,field);
                     }   
                 }
-                else if (child->firstChild->construct == fieldtype){
+                else if (child->firstChild->construct == fieldtype_){
                     struct record_field *field = (struct record_field *)malloc(sizeof(struct record_field));
                     struct ast_node * constructed = child->firstChild;
-                    struct constructed_type_struct * info2 = constructed->ninf;
+                    struct constructed_type_struct * info2 = ( struct constructed_type_struct *)constructed->ninf;
                     field->lexeme = info2->ruid;
                     field->line_no = info->lineNum;
                     SymbolTableRecord* record_ruid = getSymbolInfo(info2->ruid,global);
                     if(record_ruid == NULL)
                      if(record_ruid==NULL) {
-                        printf("Line NO: %d, Error: The ruid used in the field declaration has not been defined till now.",info2->ruid);
+                        printf("Line NO: %d, Error: The ruid used in the field declaration has not been defined till now. %s",info2->lineNum,info2->ruid);
                         exit(0);
                     }
                     SymbolTableRecord* record_original = getSymbolInfo(record_ruid->type_ruid, global);
@@ -172,7 +168,7 @@ void traverseNode(ast_node * current, symbolTable* global){
                 child = child->nextSib;
             }
             temp->width = offset;
-            addSymbol(temp,temp->lexeme,global);
+            addSymbol(global,temp->lexeme,temp);
         }
         else if (info->union_or_record = TK_UNION){
             temp->type = UNION;
@@ -183,17 +179,17 @@ void traverseNode(ast_node * current, symbolTable* global){
             int offset =0; //for calculting the offset of fields relative to the base of the record definition
 
             //child == **fieldDefinition**
-            ast_node * child = current->firstChild; 
+            ast_node * child = current->firstChild->firstChild; 
             while(child != NULL){ 
                 //for each field definition create a record field * and attach it to linked list
                 struct record_field *field = (struct record_field *)malloc(sizeof(struct record_field));
-                struct field_id_struct * info2 = child->ninf;
+                struct field_id_struct * info2 = (struct field_id_struct *)child->ninf;
                 field->lexeme = info2->fieldid;
                 field->line_no = info2->lineNum;
 
-                if(child->firstChild->construct == primitiveDatatype){
+                if(child->firstChild->construct == primitiveDatatype_){
                     struct ast_node * primitive = child->firstChild; //primitive datatype node
-                    struct primitive_type_struct * info3 = primitive->ninf;
+                    struct primitive_type_struct * info3 = (struct primitive_type_struct *)primitive->ninf;
                     if(info3->int_or_real == TK_INT){
                         field->type = INT;
                         field->width = 4 ;
@@ -209,16 +205,16 @@ void traverseNode(ast_node * current, symbolTable* global){
                         add_record_field(temp,field);
                     }   
                 }
-                else if (child->firstChild->construct == fieldtype){
+                else if (child->firstChild->construct == fieldtype_){
                     struct record_field *field = (struct record_field *)malloc(sizeof(struct record_field));
                     struct ast_node * constructed = child->firstChild;
-                    struct constructed_type_struct * info2 = constructed->ninf;
+                    struct constructed_type_struct * info2 = (struct constructed_type_struct *)constructed->ninf;
                     field->lexeme = info2->ruid;
                     field->line_no = info->lineNum;
                     SymbolTableRecord* record_ruid = getSymbolInfo(info2->ruid,global);
                     if(record_ruid == NULL)
                      if(record_ruid==NULL) {
-                        printf("Line NO: %d, Error: The ruid used in the field declaration has not been defined till now.",info2->ruid);
+                        printf("Line NO: %d, Error: The ruid used in the field declaration has not been defined till now. %s",info2->lineNum,info2->ruid);
                         exit(0);
                     }
                     SymbolTableRecord* record_original = getSymbolInfo(record_ruid->type_ruid, global);
@@ -242,12 +238,12 @@ void traverseNode(ast_node * current, symbolTable* global){
                 child = child->nextSib;
             }
             temp->width = offset;
-            addSymbol(temp,temp->lexeme,global);
+            addSymbol(global,temp->lexeme,temp);
         }
     }
 
     else if (current->construct == definetypestmt_){
-        struct defineType_struct *info = current->ninf;
+        struct defineType_struct *info = (struct defineType_struct *)current->ninf;
         struct constructed_type_struct *from = info->from;
         struct constructed_type_struct *to = info->to;
         SymbolTableRecord * entry = (SymbolTableRecord*) malloc(sizeof(SymbolTableRecord));
@@ -255,7 +251,7 @@ void traverseNode(ast_node * current, symbolTable* global){
         entry->type = RUID;
         entry->type_ruid = from->ruid;
         entry->line_no = to->lineNum;
-        addSymbol(entry,entry->lexeme,global);
+        addSymbol(global,entry->lexeme,entry);
     }
     ast_node * child = current->firstChild;
     while(child!=NULL){
@@ -276,8 +272,8 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
             int width;
             char * ruid = NULL;
             int lineNo;
-            if(child->construct==primitiveDatatype){
-                struct primitive_type_struct * info = (struct primitive_type_struct *)current->ninf;
+            if(child->construct==primitiveDatatype_){
+                struct primitive_type_struct * info = (struct primitive_type_struct *)child->ninf;
                 if(info->int_or_real==TK_INT){
                     type = INT;
                     width = 4;
@@ -286,8 +282,8 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
 
                 lineNo = info->lineNum;
             }
-            else if (child->construct==constructedDatatype){
-                struct constructed_type_struct * info = (struct  constructed_type_struct*)current->ninf;
+            else if (child->construct==constructedDatatype_){
+                struct constructed_type_struct * info = (struct  constructed_type_struct*)child->ninf;
                 ruid = info->ruid;
                 if(info->union_or_record==TK_RECORD){
                     type = RECORD;
@@ -303,7 +299,7 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
                 width = entry->width;
             }
             child = child->nextSib;
-            struct id_struct * info = (struct  id_struct*)current->ninf;
+            struct id_struct * info = (struct  id_struct*)child->ninf;
             char * lexeme = info->lexID;
             record->type = type;
             record->lexeme = lexeme;
@@ -316,16 +312,17 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
               function->function_field->OutputHead = add_function_par(function->function_field->OutputHead,record->type,record->type_ruid);   
             }
             addSymbol(global,record->lexeme,record);
+            child = child->nextSib;
         }
     }
-    if(current->construct == declaration){
+    if(current->construct == declaration_){
         SymbolTableRecord * temp = (SymbolTableRecord*) malloc(sizeof(SymbolTableRecord));
         struct id_struct * info = (struct id_struct *)current->ninf;
         temp->lexeme = info->lexID;
         temp->line_no = info->lineNum;
         ast_node * dataType = current->firstChild;
         if(dataType->construct == primitiveDatatype_){
-            struct primitive_type_struct *info = dataType->ninf;
+            struct primitive_type_struct *info =(struct primitive_type_struct *) dataType->ninf;
             temp->line_no = info->lineNum;
             if(info->int_or_real==TK_INT){
                 temp->type = INT;
@@ -337,7 +334,7 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
             }
         }
         else if (dataType->construct==constructedDatatype_){
-            struct constructed_type_struct *info = dataType->ninf;
+            struct constructed_type_struct *info = (struct constructed_type_struct *)dataType->ninf;
             if(info->union_or_record==TK_UNION){
                 temp->type = UNION;
                 SymbolTableRecord * entry = getSymbolInfo(info->ruid,global);
@@ -365,7 +362,7 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
                     return 1;
                 }
                 temp->type = entry->type;
-                temp->type = entry->type_ruid;
+                temp->type_ruid = entry->type_ruid;
                 temp->line_no = info->lineNum;
             }
         }
@@ -382,20 +379,21 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
     return 0;
 }
 
-void populateSymbolTable(ast_node * root){
-    symbolTable * globalTable = (symbolTable *) malloc(sizeof(symbolTable));
+symbolTable * populateSymbolTable(ast_node * root){
+    symbolTable * globalTable = newSymbolTable(SLOTS);
     traverseNode(root,globalTable);
     ast_node * function = root->firstChild;
     while(function!=NULL){
         SymbolTableRecord * FunEntry = (SymbolTableRecord*) malloc(sizeof(SymbolTableRecord));
-        struct func_struct *info = function->ninf;
+        struct func_struct *info = (struct func_struct *)function->ninf;
         FunEntry->lexeme = info->funID;
         FunEntry->line_no = info->lineNum;
         FunEntry->type = FUNCTION;
-        symbolTable * funTable = (symbolTable *) malloc(sizeof(symbolTable));
+        symbolTable * funTable = newSymbolTable(SLOTS);
         FunEntry->functionTable = funTable;
         addSymbol(globalTable,FunEntry->lexeme,FunEntry);
         traverseNodeFunction(function,funTable,globalTable,FunEntry);
         function = function->nextSib;
     }
+    return globalTable;
 }
