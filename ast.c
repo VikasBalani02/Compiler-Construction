@@ -1347,3 +1347,80 @@ void ast_create(tNode *root)
     printf("%s\n", non_terminal_map[root->nt]);
     func_ptr[root->rule_no - 1](root);
 }
+
+char* construct_map[] = {
+    "program",
+    "otherFunctions",
+    "mainFunction",
+    "function",
+    "input_par",
+    "output_par",
+    "parameter_list",
+    "Identifier",
+    "dataType",
+    "primitiveDatatype",
+    "constructedDatatype",
+    "remaining_list",
+    "stmts",
+    "typeDefinitions",
+    "typeDefinitionStmts",
+    "typeDefinition",
+    "actualOrRedefined",
+    "fieldDefinitions",
+    "fieldDefinition",
+    "moreFields",
+    "fieldtype",
+    "declarations",
+    "declaration",
+    "global_or_not",
+    "otherStmts",
+    "stmt",
+    "assignmentStmt",
+    "oneExpansion",
+    "moreExpansions",
+    "option_single_constructed",
+    "singleOrRecId",
+    "funCallStmt",
+    "outputParameters",
+    "inputParameters",
+    "iterativeStmt",
+    "conditionalStmt",
+    "elsePart",
+    "expPrime",
+    "term",
+    "termPrime",
+    "factor",
+    "highPrecedenceOperators",
+    "lowPrecedenceOperators",
+    "ioStmt",
+    "arithmeticExpression",
+    "booleanExpression",
+    "var",
+    "logicalOp",
+    "relationalOp",
+    "returnStmt",
+    "optionalReturn",
+    "idList",
+    "definetypestmt",
+    "defineMapping",
+    "A",
+    "more_ids",
+    "thenStmts",
+    "INTNUM",
+    "REALNUM"
+};
+
+void print_ast(ast_node *root, int depth) {
+    if (root==NULL) return;
+    for(int i=0;i<depth;i++) {
+        if(i==depth-1) {printf("       ======>");}
+        else {printf("      ");}
+    }
+    printf("%-26s\n", construct_map[root->construct]);
+    // printf("\t%d\n", depth);
+    if(root->firstChild!=NULL) {
+        print_ast(root->firstChild, depth+1);
+    }
+    if(root->nextSib==NULL) return;
+    print_ast(root->nextSib, depth);
+}

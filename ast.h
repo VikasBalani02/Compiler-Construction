@@ -98,3 +98,4 @@ void ast_r95(tNode* A_node);
 void ast_create(tNode* root);
 ast_node* makeNode(CONSTRUCT c, ast_node** a, int no_children, struct node_info* n_info);
 struct ast_node *return_child(tNode *node, int n);
+void print_ast(ast_node *root, int depth);

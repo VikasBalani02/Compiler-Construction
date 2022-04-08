@@ -164,6 +164,9 @@ int main(int argc, char **argv)
         case 7:
             ast_create(tr->root);
         break;
+        case 8:
+            print_ast(tr->root->addr, 0);
+        break;
         default:
             printf("\nIncorrect option.");
             break;
