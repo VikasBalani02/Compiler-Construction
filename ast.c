@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "ast.h"
 
+//trial push changes
 ast_node* makeNode(CONSTRUCT c, ast_node** a, int no_children, struct node_info* n_info){
     struct ast_node* new_node= (ast_node*)malloc(sizeof(ast_node));
 
