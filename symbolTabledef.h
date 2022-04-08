@@ -40,7 +40,7 @@ struct symbolTableRecord{
 	int offset;	
 	struct record_field * recordFields;
     SymbolTableRecord* next;
-	struct symbolTable *global;
+	struct symbolTable *functionTable;
 	struct function_field * function_field;
 	//Whether the declared variable has been assigned some value or not
 	//int assigned;

@@ -77,6 +77,7 @@ typedef enum TYPE{
 	RECORD,
 	UNION,
 	RUID,
+    FUNCTION,
     BOOL,
     VOID,
     ERROR_,
