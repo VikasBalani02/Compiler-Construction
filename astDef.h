@@ -98,6 +98,8 @@ struct ast_node {
     typeInfo* node_type; //to be populated during type checking 
     //next field is populated for outputParameters_ inputParameters_ optionalReturn_
     CONSTRUCT construct;
+    char * code;
+    char * place;
 };
 typedef struct ast_node ast_node;
 
