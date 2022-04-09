@@ -442,7 +442,7 @@ symbolTable * populateSymbolTable(ast_node * root){
 //     SymbolTableRecord * entry = table->list[i];
 
 // }
-}
+// }
 // void printSymbolTable(symbolTable * global){
 
 // }
