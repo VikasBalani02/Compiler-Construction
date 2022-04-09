@@ -57,7 +57,7 @@ void createIR(ast_node* root){
 }
 void generate(ast_node* root, char ** arr, int no_to_add){
     for(int i=0;i<no_to_add;i++){
-        update_code(root->code, arr[i]);
+        update_code(root, arr[i]);
     }
     return;
 }
@@ -67,7 +67,7 @@ void IR_for_astnode(ast_node* root){
 	}
 }
 
-IR_boolean_expression(ast_node* root){
+void IR_boolean_expression(ast_node* root){
     ast_node *bool_exp1 = root->firstChild;
     if (bool_exp1->nextSib == NULL)
     {
