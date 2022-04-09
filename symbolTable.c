@@ -96,7 +96,7 @@ void add_record_field (SymbolTableRecord * record, struct record_field * field){
         temp->next = field;
     }
 }
-void traverseNode(ast_node * current, symbolTable* global){
+int traverseNode(ast_node * current, symbolTable* global){
     if(current->construct== typeDefinition_){
         struct constructed_type_struct * info = (struct constructed_type_struct *)current->ninf;
         SymbolTableRecord * temp = (SymbolTableRecord*) malloc(sizeof(SymbolTableRecord));
@@ -168,6 +168,11 @@ void traverseNode(ast_node * current, symbolTable* global){
                 child = child->nextSib;
             }
             temp->width = offset;
+            SymbolTableRecord * entry = getSymbolInfo(temp->lexeme,global);
+            if(entry != NULL){
+                printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d", temp->line_no, temp->lexeme, entry->line_no);
+                return 1;
+            }
             addSymbol(global,temp->lexeme,temp);
         }
         else if (info->union_or_record = TK_UNION){
@@ -238,6 +243,11 @@ void traverseNode(ast_node * current, symbolTable* global){
                 child = child->nextSib;
             }
             temp->width = offset;
+            SymbolTableRecord * entry = getSymbolInfo(temp->lexeme,global);
+            if(entry != NULL){
+                printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d", temp->line_no, temp->lexeme, entry->line_no);
+                return 1;
+            }
             addSymbol(global,temp->lexeme,temp);
         }
     }
@@ -251,20 +261,21 @@ void traverseNode(ast_node * current, symbolTable* global){
         entry->type = RUID;
         entry->type_ruid = from->ruid;
         entry->line_no = to->lineNum;
+        SymbolTableRecord * entry2 = getSymbolInfo(entry->lexeme,global);
+            if(entry2 != NULL){
+                printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d", entry->line_no, entry->lexeme, entry2->line_no);
+                return 1;
+            }
         addSymbol(global,entry->lexeme,entry);
     }
     ast_node * child = current->firstChild;
     while(child!=NULL){
-        traverseNode(child,global);
+        if(traverseNode(child,global)==1) return 1;
         child=child->nextSib;
     }
 }
 int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* global, SymbolTableRecord * function){ //returns 0 if no error
     if(current->construct == input_par_ || current->construct == output_par_){
-        function->function_field = (struct function_field *)malloc(sizeof(struct function_field));
-        function->function_field->InputHead = NULL;
-        function->function_field->OutputHead=NULL;
-        function->width =0;
         ast_node * child = current->firstChild;
         while(child!=NULL){
             SymbolTableRecord * record = (SymbolTableRecord*) malloc(sizeof(SymbolTableRecord));
@@ -311,7 +322,12 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
             }else{
               function->function_field->OutputHead = add_function_par(function->function_field->OutputHead,record->type,record->type_ruid);   
             }
-            addSymbol(global,record->lexeme,record);
+            SymbolTableRecord * entry = getSymbolInfo(record->lexeme,table);
+            if(entry != NULL){
+                printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d", record->line_no, record->lexeme, entry->line_no);
+                return 1;
+            }
+            addSymbol(table,record->lexeme,record);
             child = child->nextSib;
         }
     }
@@ -327,21 +343,25 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
             if(info->int_or_real==TK_INT){
                 temp->type = INT;
                 temp->type_ruid = NULL;
+                temp->width = 4;
             }
             else if(info->int_or_real==TK_REAL){
                 temp->type=REAL;
                 temp->type_ruid = NULL;
+                temp->width = 8;
             }
         }
         else if (dataType->construct==constructedDatatype_){
             struct constructed_type_struct *info = (struct constructed_type_struct *)dataType->ninf;
             if(info->union_or_record==TK_UNION){
-                temp->type = UNION;
+                
                 SymbolTableRecord * entry = getSymbolInfo(info->ruid,global);
                 if(entry == NULL){
                     printf("Line No: %d, No type definition found corresponding to this type %s\n",info->lineNum,info->ruid);
                     return 1;
                 }
+                temp->type = UNION;
+                temp->width = entry->width;
                 temp->type_ruid = info->ruid;
                 temp->line_no = info->lineNum;
             }
@@ -354,6 +374,7 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
                 temp->type = RECORD;
                 temp->type_ruid = info->ruid;
                 temp->line_no = info->lineNum;
+                temp->width = entry->width;
             }
             else if (info->union_or_record == -1){
                 SymbolTableRecord * entry = getSymbolInfo(info->ruid,global);
@@ -364,12 +385,25 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
                 temp->type = entry->type;
                 temp->type_ruid = entry->type_ruid;
                 temp->line_no = info->lineNum;
+                temp->width = entry->width;
             }
         }
         if(info->isGlobal){
+            SymbolTableRecord * entry = getSymbolInfo(temp->lexeme,global);
+            if(entry != NULL){
+                printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d", temp->line_no, temp->lexeme, entry->line_no);
+                return 1;
+            }
             addSymbol(global,temp->lexeme, temp);
         }
-        else addSymbol(table,temp->lexeme, temp);
+        else {
+            SymbolTableRecord * entry = getSymbolInfo(temp->lexeme,table);
+            if(entry != NULL){
+                printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d", temp->line_no, temp->lexeme, entry->line_no);
+                return 1;
+            }
+            addSymbol(table,temp->lexeme, temp);
+            }
     }
     ast_node * child = current->firstChild;
     while(child!=NULL){
@@ -392,8 +426,23 @@ symbolTable * populateSymbolTable(ast_node * root){
         symbolTable * funTable = newSymbolTable(SLOTS);
         FunEntry->functionTable = funTable;
         addSymbol(globalTable,FunEntry->lexeme,FunEntry);
+        FunEntry->function_field = (struct function_field *)malloc(sizeof(struct function_field));
+        FunEntry->function_field->InputHead = NULL;
+        FunEntry->function_field->OutputHead=NULL;
+        FunEntry->width =0;
         traverseNodeFunction(function,funTable,globalTable,FunEntry);
         function = function->nextSib;
     }
     return globalTable;
 }
+// printSymbolTable(symbolTable * table, char * name){
+// printf("**************%s Symbol Table*****************",name);
+// printf("Current Offset (Or Size): %d", table->currentOffset);
+// for(int i=0;i<table->no_slots;i++){
+//     SymbolTableRecord * entry = table->list[i];
+
+// }
+}
+// void printSymbolTable(symbolTable * global){
+
+// }
