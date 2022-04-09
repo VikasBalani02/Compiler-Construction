@@ -121,6 +121,9 @@ void check_type(ast_node *node, Error *err_list, symbolTable* table)
 {
     switch (node->construct)
     {
+    case Identifier_:
+    case singleOrRecId_:
+        populate_Identifier_type(node,err_list,table);
     case assignmentStmt_:
         check_assign_stmt(node, err_list);
         break;
