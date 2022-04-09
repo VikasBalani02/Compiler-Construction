@@ -624,8 +624,8 @@ void ast_r49(tNode *option_single_constructed_tNode)
     arr = (ast_node **)malloc(2 * sizeof(struct ast_node *));
     arr[0] = oneExpansion_anode;
     arr[1] = moreExpansions_anode->firstChild;
-    option_single_constructed_tNode->addr = makeNode(moreExpansions_, arr, 2, NULL);
-    free(moreExpansions_anode);
+    option_single_constructed_tNode->addr = makeNode(option_single_constructed_, arr, 2, NULL);
+    //free(moreExpansions_anode);
 }
 
 // <singleOrRecId> ===> TK_ID <option_single_constructed>
@@ -642,7 +642,7 @@ void ast_r50(tNode *singleOrRecId_tNode)
     info->lineNum = TKID->lineNo;
     ast_node **arr;
     arr = (ast_node **)malloc(1 * sizeof(struct ast_node *));
-    arr[0] = option_single_constructed_anode;
+    arr[0] = option_single_constructed_anode->firstChild;
     singleOrRecId_tNode->addr = makeNode(singleOrRecId_, arr, 1, (struct node_info *)info);
 }
 

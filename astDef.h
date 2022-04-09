@@ -81,7 +81,8 @@ typedef enum TYPE{
     BOOL,
     VOID,
     ERROR_,
-    EMPTY //to be used in case A->eps
+    EMPTY, //to be used in case A->eps
+    UNDEFINED //if there is no type associated with an ast node.
 }Type;
 
 typedef struct typeInfo{
