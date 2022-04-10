@@ -72,11 +72,64 @@ void IR_for_astnode(ast_node* root){
     else if(root->construct == factor_){
         IR_factor(root);
     }
-    else if(root->construct == )
+    else if(root->construct == termPrime_){
+        IR_termprime(root, list);
+    }
+    else if(root->construct == expPrime_){
+        IR_expPrime(root, list);
+    }
     else if(root->construct==arithmeticExpression_){
         IR_arithematic_statement(root, list);
     }
+    else{
+        
+    }
 
+}
+void IR_termprime(ast_node* root, TupleList* list){
+    // termPrime gives an epsilon
+    if(root->firstChild == NULL){
+        root->place = NULL;
+        root->tuple = NULL;
+    }
+    // termPrime gives HPO factor termPrime
+    else{
+        root->place = newtemp();
+        Tuple* temp = root->firstChild->nextSib->nextSib->tuple;
+        Tokentype op = ((struct operator_struct *)(root->firstChild->ninf))->op;
+        Tuple* t;
+        if(op == TK_MUL)
+            t = makeTuple(MUL, root->firstChild->nextSib->place, NULL, root->place, root->firstChild->nextSib, NULL, node, 0);
+        else
+            t = makeTuple(DIV, root->firstChild->nextSib->place, NULL, root->place, root->firstChild->nextSib, NULL, node, 0);
+        if(temp)
+            temp->next = t;
+        add_to_list(t, list);
+        root->tuple = t;
+    }
+}
+
+void IR_expPrime(ast_node* root, TupleList* list){
+    // expPrime gives an epsilon
+    if(root->firstChild == NULL){
+        root->place = NULL;
+        root->tuple = NULL;
+    }
+    // expPrime gives LPO factor termPrime
+    else{
+        root->place = newtemp();
+        Tuple* temp = root->firstChild->nextSib->nextSib->tuple;
+        Tokentype op = ((struct operator_struct *)(root->firstChild->ninf))->op;
+        Tuple* t;
+        if(op == TK_PLUS)
+            t = makeTuple(PLUS, root->firstChild->nextSib->place, NULL, root->place, root->firstChild->nextSib, NULL, node, 0);
+        else
+            t = makeTuple(MINUS, root->firstChild->nextSib->place, NULL, root->place, root->firstChild->nextSib, NULL, node, 0);
+        if(temp)
+            temp->next = t;
+        add_to_list(t, list);
+        root->tuple = t;
+    }
 }
 void IR_factor(ast_node* root){
     // factor gives arithematic expression
