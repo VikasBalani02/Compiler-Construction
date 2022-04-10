@@ -799,9 +799,18 @@ void ast_r59(tNode *expPrime_tNode)
     ast_node **arr;
     arr = (ast_node **)malloc(3 * sizeof(struct ast_node *));
     arr[0] = lowPrecedenceOperators_anode;
-    arr[1] = term_anode;
-    arr[2] = expPrime1_anode;
-    expPrime_tNode->addr = makeNode(expPrime_, arr, 3, NULL);
+    if(expPrime1_anode->firstChild==NULL){
+        arr[1] = term_anode;
+        expPrime_tNode->addr=makeNode(expPrime_,arr,2,NULL);
+    }
+    else{
+        arr[0]=term_anode;
+        arr[1]=expPrime1_anode->firstChild->nextSib;
+        ast_node* new_subtree=makeNode(lowPrecedenceTerm_,arr,2,expPrime1_anode->firstChild->ninf);
+        arr[0]=lowPrecedenceOperators_anode;
+        arr[1]=new_subtree;
+        expPrime_tNode->addr=makeNode(expPrime_,arr,2,NULL);
+    }
 }
 // <expPrime> ===> eps
 // expPrime.addr = makeNode(expPrime,NULL)
@@ -817,14 +826,21 @@ void ast_r60(tNode *expPrime_tnode)
 
 void ast_r61(tNode *term_tnode)
 {
-    ast_node *fct = return_child(term_tnode, 1);
-    ast_node *trmp = return_child(term_tnode, 2);
-
+    ast_node *fact = return_child(term_tnode, 1);
+    ast_node *termP = return_child(term_tnode, 2);
+    
     ast_node **arr;
     arr = (ast_node **)malloc(2 * sizeof(struct ast_node *));
-    arr[0] = fct;
-    arr[1] = trmp;
-    term_tnode->addr = makeNode(term_, arr, 2, NULL);
+
+    if(termP->firstChild==NULL){
+        term_tnode->addr=fact;
+    }
+    else{
+        arr[0]=fact;
+        arr[1]=termP->firstChild->nextSib;
+        ast_node* new_subtree=makeNode(highPrecedenceTerm_,arr,2,termP->firstChild->ninf);
+        term_tnode->addr=new_subtree;
+    }
 }
 
 // <termPrime> ===> <highPrecedenceOperators> <factor> <termPrime>
@@ -836,13 +852,25 @@ void ast_r62(tNode *termPrime_tnode)
     ast_node *highP = return_child(termPrime_tnode, 1);
     ast_node *fact = return_child(termPrime_tnode, 2);
     ast_node *termP = return_child(termPrime_tnode, 3);
-
+    
     ast_node **arr;
     arr = (ast_node **)malloc(3 * sizeof(struct ast_node *));
     arr[0] = highP;
-    arr[1] = fact;
-    arr[2] = termP;
-    termPrime_tnode->addr = makeNode(termPrime_, arr, 3, NULL);
+    if(termP->firstChild == NULL){
+       arr[1] = fact;
+       termPrime_tnode->addr = makeNode(termPrime_, arr, 2, NULL);
+    }
+    else{
+        //have fun visualising this
+        ast_node* highPrecSubtree=termP->firstChild->nextSib;
+        arr[0]=fact;
+        arr[1]=highPrecSubtree;
+        ast_node* new_subtree=makeNode(highPrecedenceTerm_,arr,2,termP->firstChild->ninf);
+        arr[0]=highP;
+        arr[1]=new_subtree;
+        termPrime_tnode->addr=makeNode(termPrime_,arr,2,NULL);
+        free(termP);
+    }
     // free(termP);
 }
 
@@ -982,9 +1010,14 @@ void ast_r72(tNode *arithmeticExpression_tnode)
 
     ast_node **arr;
     arr = (ast_node **)malloc(2 * sizeof(struct ast_node *));
-    arr[0] = term_anode;
-    arr[1] = expPrime_anode;
-    arithmeticExpression_tnode->addr = makeNode(arithmeticExpression_, arr, 2, NULL);
+    if(expPrime_anode->firstChild==NULL){
+        arithmeticExpression_tnode->addr=term_anode;
+    }
+    else{
+        arr[0] = term_anode;
+        arr[1] = expPrime_anode->firstChild->nextSib;
+        arithmeticExpression_tnode->addr=makeNode(lowPrecedenceTerm_,arr,2,expPrime_anode->firstChild->ninf);
+    }
 }
 
 // <booleanExpression> ===> TK_OP <booleanExpression1> TK_CL <logicalOp> TK_OP <booleanExpression2> TK_CL
@@ -1002,11 +1035,10 @@ void ast_r73(tNode *booleanExpression_tnode)
     ast_node *booleanExpression_anode2 = return_child(booleanExpression_tnode, 6);
 
     ast_node **arr;
-    arr = (ast_node **)malloc(3 * sizeof(struct ast_node *));
+    arr = (ast_node **)malloc(2 * sizeof(struct ast_node *));
     arr[0] = booleanExpression_anode1;
-    arr[1] = logicalOp_anode;
-    arr[2] = booleanExpression_anode2;
-    booleanExpression_tnode->addr = makeNode(booleanExpression_, arr, 3, NULL);
+    arr[1] = booleanExpression_anode2;
+    booleanExpression_tnode->addr = makeNode(booleanExpression_, arr, 2, logicalOp_anode->ninf);
 }
 
 // <booleanExpression> ===> <var1> <relationalOp> <var2>
@@ -1022,9 +1054,8 @@ void ast_r74(tNode *booleanExpression_tnode)
     ast_node **arr;
     arr = (ast_node **)malloc(3 * sizeof(struct ast_node *));
     arr[0] = var_anode1;
-    arr[1] = relationalOp_anode;
-    arr[2] = var_anode2;
-    booleanExpression_tnode->addr = makeNode(booleanExpression_, arr, 3, NULL);
+    arr[1] = var_anode2;
+    booleanExpression_tnode->addr = makeNode(booleanExpression_, arr, 2, relationalOp_anode->ninf);
 }
 
 // <booleanExpression> ===> TK_NOT TK_OP <booleanExpression1> TK_CL

@@ -67,7 +67,9 @@ enum CONSTRUCT
     more_ids_,
     thenStmts_,
     INTNUM_,
-    REALNUM_
+    REALNUM_,
+    highPrecedenceTerm_,
+    lowPrecedenceTerm_
 };
 typedef enum CONSTRUCT CONSTRUCT;
 
