@@ -1535,7 +1535,9 @@ char* construct_map[] = {
     "more_ids",
     "thenStmts",
     "INTNUM",
-    "REALNUM"
+    "REALNUM",
+    "highPrecedenceTerm",
+    "lowPrecedenceTerm"
 };
 
 void print_ast(ast_node *root, int depth) {
