@@ -1054,6 +1054,10 @@ void ast_r76(tNode *var_tnode)
     var_tnode->addr=return_child(var_tnode,1);
 }
 
+// <var> ===> TK_NUM
+// var.addr = makeNode(var, struct{TK_NUM, TK_NUM.val, lineNo},NULL)
+// free(TK_NUM.addr)
+
 void ast_r77(tNode *var_node)
 {
     struct num_struct *info = (struct num_struct *)malloc(sizeof(struct num_struct));
@@ -1064,6 +1068,11 @@ void ast_r77(tNode *var_node)
     info->tag=NUM->tag;
     var_node->addr = makeNode(INTNUM_, NULL, 0, (struct node_info *)info);
 }
+
+// <var> ===> TK_RNUM
+// var.addr = makeNode(var, struct{TK_RNUM, TK_RNUM.val, lineNo},NULL)
+// free(TK_RNUM.addr)
+
 void ast_r78(tNode *var_node)
 {
     struct num_struct *info = (struct num_struct *)malloc(sizeof(struct num_struct));
@@ -1074,6 +1083,11 @@ void ast_r78(tNode *var_node)
     info->tag=NUM->tag;
     var_node->addr = makeNode(REALNUM_, NULL, 0, (struct node_info *)info);
 }
+
+// <logicalOp> ===> TK_AND
+// logicalOp.addr = makeNode(logicalOp, struct{TK_AND},NULL)
+// free(TK_AND.addr)
+
 void ast_r79(tNode *logicalOp_node)
 {
     struct operator_struct *info = (struct operator_struct *)malloc(sizeof(struct operator_struct));
@@ -1082,6 +1096,11 @@ void ast_r79(tNode *logicalOp_node)
     info->op = Operator->type;
     logicalOp_node->addr = makeNode(logicalOp_, NULL, 0, (struct node_info *)info);
 }
+
+// <logicalOp> ===> TK_OR
+// logicalOp.addr = makeNode(logicalOp, struct{TK_OR},NULL)
+// free(TK_OR.addr)
+
 void ast_r80(tNode *logicalOp_node)
 {
     struct operator_struct *info = (struct operator_struct *)malloc(sizeof(struct operator_struct));
@@ -1090,6 +1109,11 @@ void ast_r80(tNode *logicalOp_node)
     info->op = Operator->type;
     logicalOp_node->addr = makeNode(logicalOp_, NULL, 0, (struct node_info *)info);
 }
+
+// <relationalOp> ===> TK_LT
+// relationalOp.addr = makeNode(relationalOp, struct{TK_LT},NULL)
+// free(TK_LT.addr)
+
 void ast_r81(tNode *relationalOp_node)
 {
     struct operator_struct *info = (struct operator_struct *)malloc(sizeof(struct operator_struct));
@@ -1098,6 +1122,11 @@ void ast_r81(tNode *relationalOp_node)
     info->op = Operator->type;
     relationalOp_node->addr = makeNode(relationalOp_, NULL, 0, (struct node_info *)info);
 }
+
+// <relationalOp> ===> TK_LE
+// relationalOp.addr = makeNode(relationalOp, struct{TK_LE},NULL)
+// free(TK_LE.addr)
+
 void ast_r82(tNode *relationalOp_node)
 {
     struct operator_struct *info = (struct operator_struct *)malloc(sizeof(struct operator_struct));
@@ -1106,6 +1135,11 @@ void ast_r82(tNode *relationalOp_node)
     info->op = Operator->type;
     relationalOp_node->addr = makeNode(relationalOp_, NULL, 0, (struct node_info *)info);
 }
+
+// <relationalOp> ===> TK_EQ
+// relationalOp.addr = makeNode(relationalOp, struct{TK_EQ},NULL)
+// free(TK_EQ.addr)
+
 void ast_r83(tNode *relationalOp_node)
 {
     struct operator_struct *info = (struct operator_struct *)malloc(sizeof(struct operator_struct));
@@ -1114,6 +1148,11 @@ void ast_r83(tNode *relationalOp_node)
     info->op = Operator->type;
     relationalOp_node->addr = makeNode(relationalOp_, NULL, 0, (struct node_info *)info);
 }
+
+// <relationalOp> ===> TK_GT
+// relationalOp.addr = makeNode(relationalOp, struct{TK_GT},NULL)
+// free(TK_GT.addr)
+
 void ast_r84(tNode *relationalOp_node)
 {
     struct operator_struct *info = (struct operator_struct *)malloc(sizeof(struct operator_struct));
@@ -1122,6 +1161,11 @@ void ast_r84(tNode *relationalOp_node)
     info->op = Operator->type;
     relationalOp_node->addr = makeNode(relationalOp_, NULL, 0, (struct node_info *)info);
 }
+
+// <relationalOp> ===> TK_GE
+// relationalOp.addr = makeNode(relationalOp, struct{TK_GE},NULL)
+// free(TK_GE.addr)
+
 void ast_r85(tNode *relationalOp_node)
 {
     struct operator_struct *info = (struct operator_struct *)malloc(sizeof(struct operator_struct));
@@ -1131,6 +1175,10 @@ void ast_r85(tNode *relationalOp_node)
     relationalOp_node->addr = makeNode(relationalOp_, NULL, 0, (struct node_info *)info);
 }
 
+// <relationalOp> ===> TK_NE
+// relationalOp.addr = makeNode(relationalOp, struct{TK_NE},NULL)
+// free(TK_NE.addr)
+
 void ast_r86(tNode *relationalOp_node)
 {
     struct operator_struct *info = (struct operator_struct *)malloc(sizeof(struct operator_struct));
@@ -1139,6 +1187,12 @@ void ast_r86(tNode *relationalOp_node)
     info->op = Operator->type;
     relationalOp_node->addr = makeNode(relationalOp_, NULL, 0, (struct node_info *)info);
 }
+
+// <returnStmt> ===> TK_RETURN <optionalReturn> TK_SEM
+// //WHILE IMPLEMENTING OPTIONAL CHILDREN IS THE ONLY CHILD OF RETURN STMT. 
+// optionalReturn’s children are not transferred directly to returnStmt
+// returnStmt.addr = makeNode(returnStmt, optionalReturn.children)
+// free(optionalReturn.addr)
 
 void ast_r87(tNode *returnStmt_node)
 {
@@ -1151,6 +1205,12 @@ void ast_r87(tNode *returnStmt_node)
     // free(optionalReturn);
 }
 
+// <optionalReturn> ===> TK_SQL <idList> TK_SQR
+// optionalReturn.addr = makeNode(optionalReturn, idList.children)
+// free(idList.addr)
+// free(TK_SQL)
+// free(TK_SQR)
+
 void ast_r88(tNode *optionalReturn_node)
 {
     ast_node *idList = return_child(optionalReturn_node, 2);
@@ -1162,10 +1222,19 @@ void ast_r88(tNode *optionalReturn_node)
     // free(idList);
 }
 
+// <optionalReturn> ===> eps
+// optionalReturn.addr=makeNode(optionalReturn,NULL)
+
 void ast_r89(tNode *optionalReturn_node)
 {
     optionalReturn_node->addr = makeNode(optionalReturn_, NULL, 0, NULL);
 }
+
+// <idList> ===> TK_ID <more_ids>
+// idList.addr=makeNode(idList,NULL)
+// Identifier.addr = makeNode(Identifier, struct{TK_ID, TK_ID.entry, lineno}, NULL)
+// idList.children=list(Identifier.addr,more_ids.children) //Identifier is TK_ID
+// free(more_ids.addr)
 
 void ast_r90(tNode *idList_node)
 {
@@ -1182,6 +1251,12 @@ void ast_r90(tNode *idList_node)
     idList_node->addr = makeNode(idList_, arr, 1, (struct node_info *)info);
     // free(more_ids);
 }
+
+// <more_ids> ===> TK_COMMA <idList>
+// more_ids.addr= makeNode(more_ids,NULL)
+// more_ids.children=idList.children
+// free(TK_COMMA)
+
 void ast_r91(tNode *more_ids_node)
 {
     ast_node *idList_anode = return_child(more_ids_node, 2);
@@ -1195,6 +1270,9 @@ void ast_r91(tNode *more_ids_node)
     // free(idList);
 }
 
+// <more_ids> ===> eps
+// more_ids.addr = makeNode(more_ids,NULL)
+
 void ast_r92(tNode *more_ids_node)
 {
     more_ids_node->addr = makeNode(more_ids_, NULL, 0, NULL);
@@ -1203,6 +1281,13 @@ void ast_r92(tNode *more_ids_node)
 // ***************************************
 // DOUBTFUL THST THIS WOULD WORK AT ALL
 
+// <definetypestmt> ===> TK_DEFINETYPE <A> TK_RUID1 TK_AS TK_RUID2
+// definetypestmt.addr = makeNode(definetypestmt,NULL)
+// defineMapping.addr = makeNode(defineMapping, struct{TK_RUID1, TK_RUID1.entry, lineno}, struct{TK_RUID2, TK_RUID2.entry, lineno}
+// definetypestmt.children = list(A.addr, defineMapping.addr)
+// free(parameter_list.addr)
+// free(TK_RUID1)
+// free(TK_RUID2)
 void ast_r93(tNode *definetypestmt_node)
 {
     ast_node *A = return_child(definetypestmt_node, 2);
@@ -1228,12 +1313,18 @@ void ast_r93(tNode *definetypestmt_node)
     // free(A);
 }
 
+// <A> ===> TK_RECORD
+// A.addr=makeNode(A, struct{TK_RECORD},NULL)
+
 void ast_r94(tNode *A_node)
 {
     struct A *info = (struct A *)malloc(sizeof(struct A));
     info->UnionOrRecord = TK_RECORD;
     A_node->addr = makeNode(A_, NULL, 0, (struct node_info *)info);
 }
+
+// <A> ===> TK_UNION
+// A.addr=makeNode(A, struct{TK_UNION},NULL)
 
 void ast_r95(tNode *A_node)
 {
