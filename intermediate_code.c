@@ -119,23 +119,23 @@ void IR_for_astnode(ast_node *root, tupleList *list)
 
     else if (root->construct == factor_)
     {
-        IR_factor(root, list);
+        IR_factor(root);
     }
-    else if (root->construct == termPrime_)
-    {
-        IR_termprime(root, list);
-    }
-    else if (root->construct == expPrime_)
-    {
-        IR_expPrime(root, list);
-    }
+    // else if (root->construct == termPrime_)
+    // {
+    //     IR_termprime(root, list);
+    // }
+    // else if (root->construct == expPrime_)
+    // {
+    //     IR_expPrime(root, list);
+    // }
     else if (root->construct == arithmeticExpression_)
     {
-        IR_arithematic_statement(root, list);
+        IR_arithematic_statement(root);
     }
     else if (root->construct == ioStmt_)
     {
-        IR_io_statement(root, list);
+        IR_io_statement(root);
     }
     else
     {
@@ -147,7 +147,7 @@ void IR_singleOrRecId(ast_node *root)
     ast_node *temp = root->firstChild;
     while (temp != NULL)
     {
-        if (((struct field_id_struct *)(temp->ninf))->lexID != NULL)
+        if (((struct field_id_struct *)(temp->ninf))->fieldid != NULL)
         {
             lexeme = concat(lexeme, ((struct field_id_struct *)(temp->ninf))->fieldid);
         }
@@ -302,18 +302,18 @@ void IR_highPrecedenceTerm(ast_node *root)
 // }
 void IR_factor(ast_node *root)
 {
-    // factor gives arithematic expression
-    if (root->firstChild->construct == arithmeticExpression_)
-    {
-        root->place = root->firstChild->place;
-        root->tuple = root->firstChild.tuple;
-    }
-    // factor gives var
-    else
-    {
-        root->place = root->firstChild->place;
-        root.tuple = root->firstChild->tuple;
-    }
+    // // factor gives arithematic expression
+    // if (root->firstChild->construct == arithmeticExpression_)
+    // {
+    //     root->place = root->firstChild->place;
+    //     root->tuple = root->firstChild.tuple;
+    // }
+    // // factor gives var
+    // else
+    // {
+    //     root->place = root->firstChild->place;
+    //     root.tuple = root->firstChild->tuple;
+    // }
 }
 
 void IR_boolean_expression(ast_node *root)
@@ -398,10 +398,87 @@ void IR_boolean_expression(ast_node *root)
         }
     }
 }
-void IR_arithematic_statement(ast_node *root, TupleList *list)
+void IR_arithematic_statement(ast_node *root)
 {
-    root->place = newtemp();
-    Tuple *t = make_new_Tuple()
-        add_to_list(t, list);
-    root->tuple = t;
+   
+}
+
+void IR_conditional(ast_node* root) {
+
+    if (root->firstChild == NULL) {
+        root->place = NULL;
+        root->list = NULL;
+    }
+
+    ast_node* boolExp = root->firstChild;
+    tupleList* boollist = boolExp->list;
+    char* elselabel = newlabel();
+    char* afterlabel = newlabel();
+
+    tuple* t1 = newTuple(IF, boolExp->place, NULL, NULL, NULL);
+    tuple* t2 = newTuple(GOTO, elselabel, NULL, NULL, NULL);
+    tuple* t3 = newTuple(GOTO, afterlabel, NULL, NULL, NULL);
+    tuple* t4 = newTuple(LABEL, elselabel, NULL, NULL, NULL);
+    tuple* t5 = newTuple(LABEL, afterlabel, NULL, NULL, NULL);
+
+    root->list->head = boollist->head;
+    // tuple* temp = boollist->tail->next;
+    boollist->tail->next = t1;
+    t1->next = t2;
+    // t2->next = temp;
+
+    ast_node* then = boolExp->nextSib;
+    tupleList* thenlist = then->list;
+
+    t2->next = thenlist->head;
+    thenlist->tail->next = t3;
+    t3->next = t4;
+    
+    ast_node* elseExp = then->nextSib;
+    tupleList* elselist = elseExp->list;
+
+    t4->next = elselist->head;
+    elselist->tail->next = t5;
+
+    t5->next = NULL;
+
+    root->list->head = boollist->head;
+    root->list->tail = t5;
+    // root->list->no_tuples = boollist->no_tuples + thenlist->no_tuples + elselist->no_tuples + 5;
+    
+}
+
+void IR_iterative(ast_node* root) {
+    if (root->firstChild == NULL) {
+        root->place = NULL;
+        root->list = NULL;
+    }
+
+    ast_node* boolExp = root->firstChild;
+    tupleList* boollist = boolExp->list;
+    char* beginlabel = newlabel();
+    char* afterlabel = newlabel();
+
+    tuple *t1 = newTuple(LABEL, beginlabel, NULL, NULL, NULL);
+    tuple *t2 = newTuple(IF, boolExp->place, NULL, NULL, NULL);
+    tuple *t3 = newTuple(GOTO, afterlabel, NULL, NULL, NULL);
+    tuple *t4 = newTuple(GOTO, beginlabel, NULL, NULL, NULL);
+    tuple *t5 = newTuple(LABEL, afterlabel, NULL, NULL, NULL);
+
+    t1->next = boollist->head;
+    boollist->tail = t2;
+    t2->next = t3;
+
+    ast_node* otherExp = boolExp->nextSib;
+    tupleList* otherlist = otherExp->list;
+
+    t3->next = otherlist->head;
+    otherlist->tail = t4;
+    
+    t4->next = t5;
+    t5->next = NULL;
+
+    root->list->head = t1;
+    root->list->tail = t5;
+
 }
