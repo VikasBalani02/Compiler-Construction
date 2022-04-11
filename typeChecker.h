@@ -22,3 +22,6 @@ void check_id_list(ast_node *node, Error *err_list);
 void check_num_type(ast_node *node, Error *err_list);
 void log_error(Error* err_list,const char *fmt, ...);
 void print_error_list(Error* err_list);
+void check_highPrecedenceTerm(ast_node* node,Error* err_list);
+void check_lowPrecedenceTerm(ast_node* node,Error* err_list);
+int find_if_assigned(ast_node* stmt_list,char* lex);

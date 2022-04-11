@@ -888,10 +888,7 @@ void ast_r63(tNode *termPrime_tnode)
 void ast_r64(tNode *factor_tnode)
 {
     ast_node *arithmeticExpression_anode = return_child(factor_tnode, 2);
-    ast_node **arr;
-    arr = (ast_node **)malloc(1 * sizeof(struct ast_node *));
-    arr[0] = arithmeticExpression_anode;
-    factor_tnode->addr = makeNode(factor_, arr, 1, NULL);
+    factor_tnode->addr = arithmeticExpression_anode;
 }
 
 // <factor> ===> <var>
