@@ -332,7 +332,17 @@ void IR_boolean_expression(ast_node *root)
         // ADD TO SYMBOL TABLE
 
         tupleList* t1 = root->firstChild->list;
-        tuple* newT = newTuple(NOT, )
+        tuple* newT = newTuple(NOT, arg1, NULL, res, NULL);
+        if(t1 == NULL){
+            tupleList *newL = newList();
+            addTupleEnd(newL, newT);
+            root->list = newL;
+        }
+        else{
+            t1->tail->next = newT;
+            t1->tail = newT;
+            root->list = t1;
+        }
     }
     else
     {
