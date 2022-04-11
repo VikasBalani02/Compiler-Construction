@@ -102,7 +102,9 @@ typedef enum OP{
     GT,
     GE,
     NOT,
-    LABEL
+    LABEL,
+    UNSET,
+    SET
 }OP;
 struct tuple
 {
