@@ -8,7 +8,5 @@ char* newtemp();
 tuple* newTuple(OP op, char* arg1, char* arg2, char* arg3, tuple* next);
 void addTuple(tupleList* list, tuple* t);
 tupleList* newList();
-void addTupleEnd(tupleList *list, tuple *t);
-void IR_singleOrRecId(ast_node *root);
 
 // void update_code(ast_node* t, char* str);

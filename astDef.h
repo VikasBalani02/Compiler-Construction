@@ -100,8 +100,7 @@ typedef enum OP{
     NE,
     GT,
     GE,
-    NOT,
-    LABEL
+    NOT
 }OP;
 struct tuple
 {
