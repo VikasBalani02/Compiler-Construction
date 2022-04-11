@@ -77,6 +77,7 @@ typedef enum TYPE{
 	INT,
 	REAL,
 	RECORD,
+    VARIANTRECORD,
 	UNION,
 	RUID,
     FUNCTION,
@@ -109,7 +110,7 @@ struct tuple
     char* arg1; //first operand
     char* arg2; //second operand
     char* arg3; //result
-    tuple* next;
+    struct tuple* next;
 };
 typedef struct tuple tuple;
 struct tupleList{

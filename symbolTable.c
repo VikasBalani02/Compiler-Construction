@@ -44,10 +44,12 @@ int hashFunction(char* key, int no_of_slots){
 
 void addSymbol(symbolTable* symbolTable, char* key, SymbolTableRecord* symbol){
     //Keep the current offset stored in symbol table, assign that offset to any symbol added and update the offset
+    if(symbol->width!=-1){
     int offset = symbolTable->currentOffset;
     symbol->offset = offset;
     symbolTable->currentOffset = symbolTable->currentOffset + symbol->width;
-
+    }
+    
 	int hash =  hashFunction(key,symbolTable->no_slots);
 	symbol->next = symbolTable->list[hash]->head;
 	symbolTable->list[hash]->head = symbol;
@@ -105,14 +107,15 @@ int traverseNode(ast_node * current, symbolTable* global){
             temp->lexeme = info->ruid;
             temp->line_no = info->lineNum;
             temp->recordFields = NULL;
-
-            int offset =0; //for calculting the offset of fields relative to the base of the record definition
+            temp->width =-1;
+            // int offset =0; //for calculting the offset of fields relative to the base of the record definition
             //typedefinitions -> fielddefiniitions->fielddefinition
             //child == **fieldDefinition**
             ast_node * child = current->firstChild->firstChild; 
             while(child != NULL){ 
                 //for each field definition create a record field * and attach it to linked list
                 struct record_field *field = (struct record_field *)malloc(sizeof(struct record_field));
+                field->next = NULL;
                 struct field_id_struct * info2 = (struct field_id_struct *)child->ninf;
                 field->lexeme = info2->fieldid;
                 field->line_no = info2->lineNum;
@@ -122,52 +125,51 @@ int traverseNode(ast_node * current, symbolTable* global){
                     struct primitive_type_struct * info3 = (struct primitive_type_struct *)primitive->ninf;
                     if(info3->int_or_real == TK_INT){
                         field->type = INT;
-                        field->width = 4 ;
-                        field->offset = offset;
-                        offset += field->width;
+                        // field->width = 4 ;
+                        // field->offset = offset;
+                        // offset += field->width;
                         add_record_field(temp,field);
                     }
                     else {
                         field->type = REAL;
-                        field->width = 8 ;
-                        field->offset = offset;
-                        offset += field->width;
+                        // field->width = 8 ;
+                        // field->offset = offset;
+                        // offset += field->width;
                         add_record_field(temp,field);
                     }   
                 }
                 else if (child->firstChild->construct == fieldtype_){
-                    struct record_field *field = (struct record_field *)malloc(sizeof(struct record_field));
                     struct ast_node * constructed = child->firstChild;
                     struct constructed_type_struct * info2 = ( struct constructed_type_struct *)constructed->ninf;
-                    field->lexeme = info2->ruid;
-                    field->line_no = info->lineNum;
-                    SymbolTableRecord* record_ruid = getSymbolInfo(info2->ruid,global);
-                    if(record_ruid == NULL)
-                     if(record_ruid==NULL) {
-                        printf("Line NO: %d, Error: The ruid used in the field declaration has not been defined till now. %s",info2->lineNum,info2->ruid);
-                        exit(0);
-                    }
-                    SymbolTableRecord* record_original = getSymbolInfo(record_ruid->type_ruid, global);
-                   if(record_original==NULL){
-                       printf("LINENO: %d, Error: There is no record corresponding to the ruid %s",info2->lineNum,record_ruid->type_ruid);
-                   }
-                    if (record_original->type == RECORD){
-                        field->type = RECORD;
-                        field->width = record_original->width;
-                        field->offset = offset;
-                        offset += field->width;
-                    }
-                    else if(record_original->type == UNION){
-                        field->type = UNION;
-                        field->width = record_original->width;
-                        field->offset=offset;
-                        offset = field->width + offset;
-                    }
+                    field->ruid = info2->ruid;
+                    field->type = RUID;
+                //     SymbolTableRecord* record_ruid = getSymbolInfo(info2->ruid,global);
+                //     if(record_ruid == NULL)
+                //      if(record_ruid==NULL) {
+                //         printf("Line NO: %d, Error: The ruid used in the field declaration has not been defined till now. %s",info2->lineNum,info2->ruid);
+                //         exit(0);
+                //     }
+                //     SymbolTableRecord* record_original = getSymbolInfo(record_ruid->type_ruid, global);
+                //    if(record_original==NULL){
+                //        printf("LINENO: %d, Error: There is no record corresponding to the ruid %s",info2->lineNum,record_ruid->type_ruid);
+                //    }
+                //     if (record_original->type == RECORD){
+                //         field->type = RECORD;
+                //         field->width = record_original->width;
+                //         field->offset = offset;
+                //         offset += field->width;
+                //     }
+                //     else if(record_original->type == UNION){
+                //         field->type = UNION;
+                //         field->width = record_original->width;
+                //         field->offset=offset;
+                //         offset = field->width + offset;
+                //     }
                     add_record_field(temp,field);
                 }
                 child = child->nextSib;
             }
-            temp->width = offset;
+            // temp->width = offset;
             SymbolTableRecord * entry = getSymbolInfo(temp->lexeme,global);
             if(entry != NULL){
                 printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d", temp->line_no, temp->lexeme, entry->line_no);
@@ -181,7 +183,7 @@ int traverseNode(ast_node * current, symbolTable* global){
             temp->line_no = info->lineNum;
             temp->recordFields = NULL;
 
-            int offset =0; //for calculting the offset of fields relative to the base of the record definition
+            // int offset =0; //for calculting the offset of fields relative to the base of the record definition
 
             //child == **fieldDefinition**
             ast_node * child = current->firstChild->firstChild; 
@@ -191,58 +193,58 @@ int traverseNode(ast_node * current, symbolTable* global){
                 struct field_id_struct * info2 = (struct field_id_struct *)child->ninf;
                 field->lexeme = info2->fieldid;
                 field->line_no = info2->lineNum;
-
+                field->next = NULL;
                 if(child->firstChild->construct == primitiveDatatype_){
                     struct ast_node * primitive = child->firstChild; //primitive datatype node
                     struct primitive_type_struct * info3 = (struct primitive_type_struct *)primitive->ninf;
                     if(info3->int_or_real == TK_INT){
                         field->type = INT;
-                        field->width = 4 ;
-                        field->offset = 0;
-                        offset = (offset > field->width ? offset: field->width);
+                        // field->width = 4 ;
+                        // field->offset = 0;
+                        // offset = (offset > field->width ? offset: field->width);
                         add_record_field(temp,field);
                     }
                     else {
                         field->type = REAL;
-                        field->width = 8 ;
-                        field->offset = 0;
-                        offset = (offset > field->width ? offset: field->width);
+                        // field->width = 8 ;
+                        // field->offset = 0;
+                        // offset = (offset > field->width ? offset: field->width);
                         add_record_field(temp,field);
                     }   
                 }
                 else if (child->firstChild->construct == fieldtype_){
-                    struct record_field *field = (struct record_field *)malloc(sizeof(struct record_field));
                     struct ast_node * constructed = child->firstChild;
                     struct constructed_type_struct * info2 = (struct constructed_type_struct *)constructed->ninf;
-                    field->lexeme = info2->ruid;
-                    field->line_no = info->lineNum;
-                    SymbolTableRecord* record_ruid = getSymbolInfo(info2->ruid,global);
-                    if(record_ruid == NULL)
-                     if(record_ruid==NULL) {
-                        printf("Line NO: %d, Error: The ruid used in the field declaration has not been defined till now. %s",info2->lineNum,info2->ruid);
-                        exit(0);
-                    }
-                    SymbolTableRecord* record_original = getSymbolInfo(record_ruid->type_ruid, global);
-                   if(record_original==NULL){
-                       printf("LINENO: %d, Error: There is no record corresponding to the ruid %s",info2->lineNum,record_ruid->type_ruid);
-                   }
-                    if (record_original->type == RECORD){
-                        field->type = RECORD;
-                        field->width = record_original->width;
-                        field->offset = 0;
-                        offset = (offset > field->width ? offset: field->width);
-                    }
-                    else if(record_original->type == UNION){
-                        field->type = UNION;
-                        field->width = record_original->width;
-                        field->offset = 0;
-                        offset = (offset > field->width ? offset: field->width);
-                    }
+                    field->ruid = info2->ruid;
+                    field->next = NULL;
+                    field->type = RUID;
+                //     SymbolTableRecord* record_ruid = getSymbolInfo(info2->ruid,global);
+                //     if(record_ruid == NULL)
+                //      if(record_ruid==NULL) {
+                //         printf("Line NO: %d, Error: The ruid used in the field declaration has not been defined till now. %s",info2->lineNum,info2->ruid);
+                //         exit(0);
+                //     }
+                //     SymbolTableRecord* record_original = getSymbolInfo(record_ruid->type_ruid, global);
+                //    if(record_original==NULL){
+                //        printf("LINENO: %d, Error: There is no record corresponding to the ruid %s",info2->lineNum,record_ruid->type_ruid);
+                //    }
+                //     if (record_original->type == RECORD){
+                //         field->type = RECORD;
+                //         field->width = record_original->width;
+                //         field->offset = 0;
+                //         offset = (offset > field->width ? offset: field->width);
+                //     }
+                //     else if(record_original->type == UNION){
+                //         field->type = UNION;
+                //         field->width = record_original->width;
+                //         field->offset = 0;
+                //         offset = (offset > field->width ? offset: field->width);
+                //     }
                     add_record_field(temp,field);
                 }
                 child = child->nextSib;
             }
-            temp->width = offset;
+            temp->width = -1;
             SymbolTableRecord * entry = getSymbolInfo(temp->lexeme,global);
             if(entry != NULL){
                 printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d", temp->line_no, temp->lexeme, entry->line_no);
@@ -274,6 +276,149 @@ int traverseNode(ast_node * current, symbolTable* global){
         child=child->nextSib;
     }
 }
+int checkTagValue(symbolTable * global, SymbolTableRecord * entry){
+    struct record_field* field_ptr = entry->recordFields;
+    int flag =0;
+    while(field_ptr != NULL){
+        if(strcmp(field_ptr->lexeme,"tagvalue")==0 && field_ptr->type == INT){
+            flag = 1;
+            break;
+        }
+        field_ptr = field_ptr->next;
+    }
+    if(flag ==1) return 0;
+    printf("Line No: %d, ERROR: Variant Records must have a tagvalue field of type int",entry->line_no);
+    return -1;
+}
+int calculateWidth(symbolTable * global, SymbolTableRecord * entry){
+    if(entry->type == RECORD){
+        struct record_field* field_ptr = entry->recordFields;
+        int offset = 0;
+        while(field_ptr != NULL){
+            if(field_ptr->type == INT){
+                field_ptr->width = 4 ;
+                field_ptr->offset = offset;
+                offset += field_ptr->width;
+            }
+            else if (field_ptr->type == REAL){
+                field_ptr->width = 8 ;
+                field_ptr->offset = offset;
+                offset += field_ptr->width;
+            }
+            else if (field_ptr->type == RUID){
+                SymbolTableRecord * recordEntryRUID = getSymbolInfo(field_ptr->ruid,global);
+                if(recordEntryRUID==NULL){
+                    printf("Line No:%d, ERROR : No definition found for the field type %s", field_ptr->line_no, field_ptr->ruid);
+                    return -1;
+                }
+                SymbolTableRecord* ruidOriginal = getSymbolInfo(recordEntryRUID->type_ruid, global);
+                if(ruidOriginal==NULL){
+                    printf("Line No:%d, ERROR :Error: There is no record definition corresponding to the ruid %s", field_ptr->line_no, recordEntryRUID->type_ruid);
+                    return -1;
+                }
+
+                int w;
+                if(ruidOriginal->width == -1){
+                    w = calculateWidth(global,ruidOriginal);
+                    if(w==-1) return -1;
+                }
+                else w = ruidOriginal->width;
+
+                if(recordEntryRUID->width == -1){
+                    recordEntryRUID->width = ruidOriginal->width;
+                }
+
+                if(ruidOriginal->type == RECORD){
+                    field_ptr->type = RECORD;
+                    field_ptr->width = w;
+                    field_ptr->offset = offset;
+                    offset += field_ptr->width;
+                }
+                else if(ruidOriginal->type == UNION){
+                    entry->type = VARIANTRECORD;
+                    field_ptr->type = UNION;
+                    field_ptr->width = w;
+                    field_ptr->offset = offset;
+                    offset += field_ptr->width;
+                    if(checkTagValue(global,entry)==-1)return -1;
+                }                 
+            }
+            field_ptr = field_ptr->next;
+        }
+        entry->width = offset;
+    }
+    if(entry->type == UNION){
+        struct record_field* field_ptr = entry->recordFields;
+        int offset = 0;
+        while(field_ptr != NULL){
+            if(field_ptr->type == INT){
+                field_ptr->width = 4 ;
+                field_ptr->offset = offset;
+                offset = (offset > field_ptr->width ? offset: field_ptr->width);
+            }
+            else if (field_ptr->type == REAL){
+                field_ptr->width = 8 ;
+                field_ptr->offset = offset;
+                offset = (offset > field_ptr->width ? offset: field_ptr->width);
+            }
+            else if (field_ptr->type == RUID){
+                SymbolTableRecord * recordEntryRUID = getSymbolInfo(field_ptr->ruid,global);
+                if(recordEntryRUID==NULL){
+                    printf("Line No:%d, ERROR : No definition found for the field type %s", field_ptr->line_no, field_ptr->ruid);
+                    return -1;
+                }
+                SymbolTableRecord* ruidOriginal = getSymbolInfo(recordEntryRUID->type_ruid, global);
+                if(ruidOriginal==NULL){
+                    printf("Line No:%d, ERROR :Error: There is no record definition corresponding to the ruid %s", field_ptr->line_no, recordEntryRUID->type_ruid);
+                    return -1;
+                }
+
+                int w;
+                if(ruidOriginal->width == -1){
+                    w = calculateWidth(global,ruidOriginal);
+                    if(w==-1) return -1;
+                }
+                else w = ruidOriginal->width;
+
+                if(recordEntryRUID->width == -1){
+                    recordEntryRUID->width = ruidOriginal->width;
+                }
+
+                if(ruidOriginal->type == RECORD){
+                    field_ptr->type = RECORD;
+                    field_ptr->width = w;
+                    field_ptr->offset = offset;
+                    offset = (offset > field_ptr->width ? offset: field_ptr->width);
+                }
+                else if(ruidOriginal->type == UNION){
+                    field_ptr->type = UNION;
+                    field_ptr->width = w;
+                    field_ptr->offset = offset;
+                    offset = (offset > field_ptr->width ? offset: field_ptr->width);
+                }                 
+            }
+            field_ptr = field_ptr->next;
+        }
+        entry->width = offset;
+    }
+    return 0;
+}
+int traverseSymbolTable(symbolTable * global){
+    for(int i=0; i<global->no_slots ; i++){
+        symbolTableSlot * slot = global->list[i];
+        SymbolTableRecord * entry = slot->head;
+        while(entry != NULL){
+            if(entry->type == RECORD || entry->type == UNION){
+                if(entry->width == -1){
+                    if(calculateWidth(global, entry)==-1) return -1;
+                }
+            }
+            entry = entry->next;
+        }
+    }
+    return 0;
+}
+
 int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* global, SymbolTableRecord * function){ //returns 0 if no error
     if(current->construct == input_par_ || current->construct == output_par_){
         ast_node * child = current->firstChild;
@@ -416,6 +561,7 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
 symbolTable * populateSymbolTable(ast_node * root){
     symbolTable * globalTable = newSymbolTable(SLOTS);
     traverseNode(root,globalTable);
+    if(traverseSymbolTable(globalTable)==-1) return NULL;
     ast_node * function = root->firstChild;
     while(function!=NULL){
         SymbolTableRecord * FunEntry = (SymbolTableRecord*) malloc(sizeof(SymbolTableRecord));
@@ -430,7 +576,7 @@ symbolTable * populateSymbolTable(ast_node * root){
         FunEntry->function_field->InputHead = NULL;
         FunEntry->function_field->OutputHead=NULL;
         FunEntry->width =0;
-        traverseNodeFunction(function,funTable,globalTable,FunEntry);
+        if(traverseNodeFunction(function,funTable,globalTable,FunEntry)==1) exit(0);
         function = function->nextSib;
     }
     return globalTable;

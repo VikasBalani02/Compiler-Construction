@@ -101,7 +101,6 @@ int main(int argc, char **argv)
     Tree *tr = parseInputSourceCode(argv[1], pt);
     ast_create(tr->root);
     symbolTable * global;
-    global = populateSymbolTable(tr->root->addr);
     end_time = clock();
     total_CPU_time = (double)(end_time - start_time);
     total_CPU_time_in_seconds = total_CPU_time / CLOCKS_PER_SEC;
@@ -166,6 +165,10 @@ int main(int argc, char **argv)
         case 7:
             print_ast(tr->root->addr, 0);
         break;
+        case 8: 
+            global = populateSymbolTable(tr->root->addr);
+            if(global == NULL) exit(0);
+            break;
         default:
             printf("\nIncorrect option.");
             break;

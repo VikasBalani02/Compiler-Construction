@@ -1,0 +1,21 @@
+%VARIANT RECORD CHECK - SEMANTICALLY CORRECT
+_function1 input parameter list [int d2]
+output parameter list [int d4];
+    record #two
+		type int : tagvalue;
+		type #point: beginpoint;
+	endrecord
+    
+
+d4 <--- d3+d2;
+return [d4];
+end
+
+_main
+    union #one
+		type real:x;
+		type real:y;
+	endunion	
+	definetype record #one as #point
+return;
+end

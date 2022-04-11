@@ -1,0 +1,20 @@
+_function1 input parameter list [int d2]
+output parameter list [int d4];
+    record #two
+		type #point: beginpoint;
+		type #point: endpoint;
+	endrecord
+    
+
+d4 <--- d3+d2;
+return [d4];
+end
+
+_main
+    record #one
+		type real:x;
+		type real:y;
+	endrecord	
+	definetype record #one as #point
+return;
+end
