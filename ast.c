@@ -10,7 +10,7 @@ ast_node* makeNode(CONSTRUCT c, ast_node** a, int no_children, struct node_info*
     new_node->ninf=n_info;
 
     new_node->place = NULL;
-    new_node->code = NULL;
+    new_node->list = NULL;
 
     int i= 0;
     if(a==NULL) {

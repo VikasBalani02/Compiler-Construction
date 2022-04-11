@@ -87,6 +87,31 @@ typedef enum TYPE{
     UNDEFINED //if there is no type associated with an ast node.
 }Type;
 
+typedef enum OP{
+    MUL,
+    DIV,
+    PLUS,
+    MINUS,
+    IF,
+    GOTO
+}OP;
+struct tuple
+{
+    OP op;
+    char* arg1; //first operand
+    char* arg2; //second operand
+    char* arg3; //result
+    tuple* next;
+};
+typedef struct tuple tuple;
+struct tupleList{
+    tuple* head;
+    tuple* tail;
+    tuple* no_tuples;
+};
+typedef struct tupleList tupleList;
+
+
 typedef struct typeInfo{
 	Type type;
 	char * type_ruid;
@@ -101,8 +126,8 @@ struct ast_node {
     typeInfo* node_type; //to be populated during type checking 
     //next field is populated for outputParameters_ inputParameters_ optionalReturn_
     CONSTRUCT construct;
-    char * code;
-    char * place;
+    char* place;
+    tupleList* list;
 };
 typedef struct ast_node ast_node;
 
@@ -160,6 +185,7 @@ struct defineType_struct{
 struct A{
     Tokentype UnionOrRecord;
 };
+
 
 // ast_node* makeNode(CONSTRUCT c, ast_node** a, int no_children, struct node_info* n_info){
 //     struct ast_node* new_node= (ast_node*)malloc(sizeof(ast_node));

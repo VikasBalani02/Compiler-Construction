@@ -2,34 +2,33 @@
 #include <string.h>
 #include <stdlib.h>
 #include "ast.h"
-
-// void update_code(ast_node* t, char* str){
-//     int l1= 0;
-//     if(t->code == NULL){
-//         l1=0;
-//         t->code = str;
-//         // free(str);
-//         return;
-//     }
-//     else
-//         l1=strlen(t->code);
-//     int l2 =0;
-//     if(str == NULL){
-//         return;
-//     }
-//     else
-//         l2= strlen(str);
-//     l1+=(l2+10);
-//     char* temp;
-//     temp = (char*) malloc(l1 * sizeof(char));
-//     memset(temp,'\0',sizeof(temp));
-//     temp = strcat(temp,t->code);
-//     temp = strcat(temp,str);
-//     free(t->code);
-//     free(str);
-//     t->code = temp;
-//     return;
-// }
+tuple* newTuple(OP op, char* arg1, char* arg2, char* arg3, tuple* next){
+	tuple* t = (tuple*) malloc(sizeof(tuple));
+	t->op = op;
+	t->arg1 = arg1;
+	t->arg2 = arg2;
+	t->arg3 = arg3;
+    t->next = next;
+	return t;
+}
+void addTuple(tupleList* list, tuple* t){
+	if(list->head==NULL){
+		list->head = t;
+		list->tail = t;
+	}
+	else{
+		list->tail->next = t;
+		list->tail = t;
+	}
+	list->no_tuples++;
+}
+tupleList* newList(){
+	tupleList* list = (tupleList*) malloc(sizeof(tupleList));
+    list->no_tuples = 0;
+	list->head = NULL;
+	list->tail = NULL;
+	return list;
+}
 char* newtemp(){
     static temp_no = 0;
 	char* str = (char*)malloc(20 * sizeof(char));
@@ -37,7 +36,6 @@ char* newtemp(){
 	temp_no = temp_no + 1;
 	return str;
 }
-
 char* newlabel(){
     static label_no = 0;
 	char* str = (char*)malloc(20 * sizeof(char));
@@ -47,30 +45,28 @@ char* newlabel(){
 }
 
 // postorder traversal
-void createIR(ast_node* root){
+tupleList* get_intermediate_list(ast_node* root){
+    tupleList* list = newList();
+    createIR(root, list);
+    return list;
+}
+void createIR(ast_node* root, tupleList* list){
 	if(root==NULL)
 		return;
 	ast_node* temp = root->firstChild;
     while(temp!=NULL){
-        createIR(temp);
+        createIR(temp, list);
         temp = temp->nextSib;
     }
-	IR_for_astnode(root);
+	IR_for_astnode(root, list);
 }
-// void generate(ast_node* root, char ** arr, int no_to_add){
-//     for(int i=0;i<no_to_add;i++){
-//         update_code(root, arr[i]);
-//     }
-//     return;
-// }
-
 // this is for a specific node
-void IR_for_astnode(ast_node* root){
+void IR_for_astnode(ast_node* root, tupleList* list){
 	if(root->construct==booleanExpression_){
-		IR_boolean_expression(root);
+		IR_boolean_expression(root, list);
 	}
     else if(root->construct == factor_){
-        IR_factor(root);
+        IR_factor(root, list);
     }
     else if(root->construct == termPrime_){
         IR_termprime(root, list);
@@ -80,6 +76,9 @@ void IR_for_astnode(ast_node* root){
     }
     else if(root->construct==arithmeticExpression_){
         IR_arithematic_statement(root, list);
+    }
+    else if(root->construct == ioStmt_){
+        IR_io_statement(root, list);
     }
     else{
         
@@ -145,22 +144,6 @@ void IR_factor(ast_node* root){
 }
 
 void IR_boolean_expression(ast_node* root){
-    // ast_node *bool_exp1 = root->firstChild;
-    // if (bool_exp1->nextSib == NULL)
-    // {
-    //     // <booleanExpression> ===> TK_NOT TK_OP <booleanExpression1> TK_CL
-    //     // booleanExpression.addr = makeNode(booleanExpression, struct{TK_NOT}, booleanExpression1.addr)
-    //     root->place = newtemp();
-    //     char** arr= (char**) malloc(5*sizeof(char*));
-    //     arr[0] = bool_exp1->code;
-    //     arr[1] = root->place;
-    //     arr[2] = " := NOT ";
-    //     arr[3] = bool_exp1->place;
-    //     arr[4] = "\n";
-    //     generate(root, arr, 5);
-    //     return;
-    // }
-    // ast_node *bool_exp2 = bool_exp1->nextSib->nextSib;
 }
 void IR_arithematic_statement(ast_node* root, TupleList* list){
     root->place = newtemp();
@@ -168,15 +151,3 @@ void IR_arithematic_statement(ast_node* root, TupleList* list){
     add_to_list(t, list);
     root->tuple = t;
 }
-// void main(){
-//     node* t = (node*) malloc(sizeof(node));
-//     t->place = newtemp();
-//     update_code(t,t->place);
-//     printf("%s\n", t->code);
-//     update_code(t," ");
-//     update_code(t,newtemp());
-//     update_code(t," hello from the other side\nAtleast i can say that i tried\n");
-//     update_code(t,newlabel());
-//     update_code(t,":\nThis is new world!!\n");
-//     printf("%s\n", t->code);
-// }
