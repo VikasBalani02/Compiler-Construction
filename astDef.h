@@ -93,7 +93,14 @@ typedef enum OP{
     PLUS,
     MINUS,
     IF,
-    GOTO
+    GOTO,
+    LT,
+    LE,
+    EQ,
+    NE,
+    GT,
+    GE,
+    NOT
 }OP;
 struct tuple
 {
@@ -107,7 +114,6 @@ typedef struct tuple tuple;
 struct tupleList{
     tuple* head;
     tuple* tail;
-    tuple* no_tuples;
 };
 typedef struct tupleList tupleList;
 
