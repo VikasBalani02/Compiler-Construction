@@ -10,7 +10,11 @@
 // 	UNION,
 // 	RUID,
 // }Type;
-
+typedef enum variableUsage{
+	LOCAL,
+	INPUTPAR,
+	OUTPUTPAR
+} variableUsage;
 struct record_field{
 	char * lexeme;
 	Type type;
@@ -42,6 +46,7 @@ struct symbolTableRecord{
     struct symbolTableRecord* next;
 	struct symbolTable *functionTable;
 	struct function_field * function_field;
+	variableUsage usage;
 	//Whether the declared variable has been assigned some value or not
 	//int assigned;
 

@@ -9,10 +9,11 @@
 extern char* LabelMap[];
 extern char* TerminalMap[];
 extern char* NonTerminalMap[];
-
+#define INTWIDTH 2
+#define REALWIDTH 4
 #define SLOTS 8
 
-
+char * usageMAP[] = {"Local", "INPUTPAR", "OUTPUTPAR"};
 symbolTable* newSymbolTable(int no_slots){
 	
 	symbolTable* table =  (symbolTable *)malloc(sizeof(symbolTable));
@@ -296,12 +297,12 @@ int calculateWidth(symbolTable * global, SymbolTableRecord * entry){
         int offset = 0;
         while(field_ptr != NULL){
             if(field_ptr->type == INT){
-                field_ptr->width = 4 ;
+                field_ptr->width = INTWIDTH ;
                 field_ptr->offset = offset;
                 offset += field_ptr->width;
             }
             else if (field_ptr->type == REAL){
-                field_ptr->width = 8 ;
+                field_ptr->width = REALWIDTH ;
                 field_ptr->offset = offset;
                 offset += field_ptr->width;
             }
@@ -352,12 +353,12 @@ int calculateWidth(symbolTable * global, SymbolTableRecord * entry){
         int offset = 0;
         while(field_ptr != NULL){
             if(field_ptr->type == INT){
-                field_ptr->width = 4 ;
+                field_ptr->width = INTWIDTH ;
                 field_ptr->offset = offset;
                 offset = (offset > field_ptr->width ? offset: field_ptr->width);
             }
             else if (field_ptr->type == REAL){
-                field_ptr->width = 8 ;
+                field_ptr->width = REALWIDTH;
                 field_ptr->offset = offset;
                 offset = (offset > field_ptr->width ? offset: field_ptr->width);
             }
@@ -432,9 +433,9 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
                 struct primitive_type_struct * info = (struct primitive_type_struct *)child->ninf;
                 if(info->int_or_real==TK_INT){
                     type = INT;
-                    width = 4;
+                    width = INTWIDTH;
                 }
-                else {type = REAL; width = 8;}
+                else {type = REAL; width = REALWIDTH;}
 
                 lineNo = info->lineNum;
             }
@@ -464,8 +465,10 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
             record->width = width;
             if(current->construct==input_par_){
                 function->function_field->InputHead = add_function_par(function->function_field->InputHead,record->type,record->type_ruid);
+                record->usage = INPUTPAR;
             }else{
               function->function_field->OutputHead = add_function_par(function->function_field->OutputHead,record->type,record->type_ruid);   
+                record->usage = OUTPUTPAR;
             }
             SymbolTableRecord * entry = getSymbolInfo(record->lexeme,table);
             if(entry != NULL){
@@ -485,15 +488,16 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
         if(dataType->construct == primitiveDatatype_){
             struct primitive_type_struct *info =(struct primitive_type_struct *) dataType->ninf;
             temp->line_no = info->lineNum;
+            temp->usage = LOCAL;
             if(info->int_or_real==TK_INT){
                 temp->type = INT;
                 temp->type_ruid = NULL;
-                temp->width = 4;
+                temp->width = INTWIDTH;
             }
             else if(info->int_or_real==TK_REAL){
                 temp->type=REAL;
                 temp->type_ruid = NULL;
-                temp->width = 8;
+                temp->width = REALWIDTH;
             }
         }
         else if (dataType->construct==constructedDatatype_){
@@ -516,21 +520,22 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
                     printf("Line No: %d, No type definition found corresponding to this type %s\n",info->lineNum,info->ruid);
                     return 1;
                 }
-                temp->type = RECORD;
+                temp->type = entry->type;
                 temp->type_ruid = info->ruid;
                 temp->line_no = info->lineNum;
                 temp->width = entry->width;
             }
             else if (info->union_or_record == -1){
                 SymbolTableRecord * entry = getSymbolInfo(info->ruid,global);
-                if(entry==NULL){
+                if(entry==NULL || entry->type !=RUID){
                     printf("Line No: %d, No type definition found corresponding to this type %s\n",info->lineNum,info->ruid);
                     return 1;
                 }
                 temp->type = entry->type;
                 temp->type_ruid = entry->type_ruid;
+                SymbolTableRecord * entry2 = getSymbolInfo(entry->type_ruid,global);
                 temp->line_no = info->lineNum;
-                temp->width = entry->width;
+                temp->width = entry2->width;
             }
         }
         if(info->isGlobal){
@@ -581,14 +586,134 @@ symbolTable * populateSymbolTable(ast_node * root){
     }
     return globalTable;
 }
-// printSymbolTable(symbolTable * table, char * name){
-// printf("**************%s Symbol Table*****************",name);
-// printf("Current Offset (Or Size): %d", table->currentOffset);
-// for(int i=0;i<table->no_slots;i++){
-//     SymbolTableRecord * entry = table->list[i];
+void printTypeExpression(SymbolTableRecord * entry, symbolTable * global){
+    if(entry->type == RUID|| entry->type_ruid !=NULL){
+        SymbolTableRecord * original = getSymbolInfo(entry->type_ruid, global);
+        printTypeExpression(original,global);
+    }
+    else if(entry->type == RECORD || entry->type == VARIANTRECORD){
+        printf("<");
+        struct record_field * field = entry->recordFields;
+        while(field!=NULL){
+            if(field->type == RECORD || field->type == UNION){
+                SymbolTableRecord * record = getSymbolInfo(field->ruid,global);
+                printTypeExpression(record,global);
+            }
+            else if (field->type == INT){
+                printf(" int ");
+            }
+            else if (field->type == REAL){
+                printf(" real ");
+            }
+            field = field->next;
+            if(field!=NULL) printf(",");
+        }
+        printf(">");
+    }
+    else if(entry->type == INT){
+        printf(" int ");
+    }
+    else if(entry->type == REAL){
+        printf(" real ");
+    }
+    else if(entry->type == FUNCTION){
+        printf(" function ");
+    }
+    else if(entry->type == UNION){
+        printf("<");
+        struct record_field * field = entry->recordFields;
+        while(field!=NULL){
+            if(field->type == RECORD || field->type == UNION){
+                SymbolTableRecord * record = getSymbolInfo(field->ruid,global);
+                printTypeExpression(record,global);
+            }
+            else if (field->type == INT){
+                printf(" int ");
+            }
+            else if (field->type == REAL){
+                printf(" real ");
+            }
+            field = field->next;
+            if(field!=NULL) printf("|");
+        }
+        printf(">");
+    }
+}
 
-// }
-// }
-// void printSymbolTable(symbolTable * global){
+void printSymbolTableFunction(symbolTable * table, char * name, symbolTable * global){
+printf("**************%s Symbol Table*****************\n",name);
+for(int i=0;i<table->no_slots;i++){
+    SymbolTableRecord * entry = table->list[i]->head;
+    while(entry!=NULL){
+            printf("Name: %s\n",entry->lexeme);
 
-// }
+            printf("Scope: %s\n", name);
+            if(entry->type == RECORD || entry->type == VARIANTRECORD || entry->type == RUID){
+                if(entry->type_ruid !=NULL)
+                printf("TypeName : %s\n", entry->type_ruid);
+            }
+            printf("Type Expression: ");
+            printTypeExpression(entry, global);
+            printf("\n");
+
+            if(entry->type == INT || entry->type == REAL || entry->type == RECORD||entry->type == VARIANTRECORD || entry->type == UNION || entry->type == RUID){
+                printf("Width: ");
+                printf("%d\n",entry->width);
+            }
+
+            printf("isGlobal : ---\n");
+
+            if(entry->type == INT || entry->type == REAL || entry->type == RECORD || entry->type == UNION || entry->type == VARIANTRECORD || entry->type == RUID)
+            printf("Offset: %d\n", entry->offset);
+
+            printf("Variable Usage : %s\n", usageMAP[entry->usage]);
+            printf("******************************************************************\n");
+            entry = entry->next;
+        }
+}
+printf("\n\n");
+}
+void printSymbolTable(symbolTable * global){
+    for(int i=0;i<global->no_slots;i++){
+        SymbolTableRecord * entry = global->list[i]->head;
+        while(entry!=NULL){
+            printf("Name: %s\n",entry->lexeme);
+
+            printf("Scope: GLOBAL\n");
+
+            if(entry->type == RECORD || entry->type == VARIANTRECORD || entry->type == RUID){
+                if(entry->type_ruid !=NULL)
+                printf("TypeName : %s\n", entry->type_ruid);
+            }
+
+            printf("Type Expression: ");
+            printTypeExpression(entry, global);
+            printf("\n");
+
+            if(entry->type == INT || entry->type == REAL || entry->type == RECORD||entry->type == VARIANTRECORD || entry->type == UNION || entry->type == RUID){
+                printf("Width: ");
+                printf("%d\n",entry->width);
+            }
+
+            printf("isGlobal : global\n");
+
+            if(entry->type == INT || entry->type == REAL || entry->type == RECORD || entry->type == UNION)
+            printf("Offset: %d\n", entry->offset);
+
+            printf("Variable Usage : ---\n");
+            printf("******************************************************************\n");
+            entry = entry->next;
+        }
+    }
+
+    for(int i=0;i<global->no_slots;i++){
+        SymbolTableRecord *  entry = global->list[i]->head;
+        while(entry!=NULL){
+            if(entry->type == FUNCTION){
+                printSymbolTableFunction(entry->functionTable, entry->lexeme, global);
+            }
+            entry = entry->next;
+        }
+    }
+
+}

@@ -168,6 +168,7 @@ int main(int argc, char **argv)
         case 8: 
             global = populateSymbolTable(tr->root->addr);
             if(global == NULL) exit(0);
+            printSymbolTable(global);
             break;
         default:
             printf("\nIncorrect option.");

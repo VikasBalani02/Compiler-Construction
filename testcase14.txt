@@ -17,5 +17,8 @@ _main
 		type real:y;
 	endunion	
 	definetype record #one as #point
+
+	type #point: b2d;
+	type record #two: b3d; 
 return;
 end

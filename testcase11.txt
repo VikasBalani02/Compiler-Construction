@@ -43,7 +43,7 @@ _main
 	endunion
 	definetype union #four as #shape
 	record #variantrecord
-		type int: tag;
+		type int: tagvalue;
 		type #shape: s;
 	endrecord
 
