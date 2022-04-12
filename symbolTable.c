@@ -42,6 +42,15 @@ int hashFunction(char* key, int no_of_slots){
 	int hash = sum%no_of_slots;
 	return hash;
 }
+int checkSymbol(symbolTable* symbolTable,char*key){
+    int hash =  hashFunction(key,symbolTable->no_slots);
+	SymbolTableRecord *temp = symbolTable->list[hash]->head;
+    while(temp!=NULL){
+        if(strcmp(temp->lexeme,key)==0)
+        return 1;
+    }
+    return 0;
+}
 
 void addSymbol(symbolTable* symbolTable, char* key, SymbolTableRecord* symbol){
     //Keep the current offset stored in symbol table, assign that offset to any symbol added and update the offset
@@ -87,7 +96,7 @@ int global_check(symbolTable *global, char *key){
 
 typeInfo* add_function_par(typeInfo * typeInfoList, Type type, char* lexeme, char *ruid, symbolTable* global){
     if(global_check(global,lexeme)){
-        printf("Variable already exists");
+        printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d");
         return NULL;
     }
     else{
@@ -592,6 +601,11 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
         }
         else {
             SymbolTableRecord * entry = getSymbolInfo(temp->lexeme,table);
+            SymbolTableRecord * entry_2 = getSymbolInfo(temp->lexeme,global);
+            if(entry != NULL){
+                printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d", temp->line_no, temp->lexeme, entry->line_no);
+                return 1;
+            }
             if(entry != NULL){
                 printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d", temp->line_no, temp->lexeme, entry->line_no);
                 return 1;
@@ -621,6 +635,10 @@ symbolTable * populateSymbolTable(ast_node * root){
         FunEntry->type = FUNCTION;
         symbolTable * funTable = newSymbolTable(SLOTS);
         FunEntry->functionTable = funTable;
+        if(checkSymbol(globalTable,info->funID)){
+            printf("Function already exists");
+            return NULL;
+        }
         addSymbol(globalTable,FunEntry->lexeme,FunEntry);
         FunEntry->function_field = (struct function_field *)malloc(sizeof(struct function_field));
         FunEntry->function_field->InputHead = NULL;
