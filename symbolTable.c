@@ -71,20 +71,43 @@ SymbolTableRecord* getSymbolInfo(char* key, symbolTable* symbolTable){
 	return NULL;
 }
 
-typeInfo* add_function_par(typeInfo * typeInfoList, Type type, char *ruid){
-    typeInfo * typeInfoNode = (typeInfo *) malloc(sizeof(typeInfo));
-    typeInfoNode->type = type;
-    typeInfoNode->type_ruid = ruid;
-    typeInfoNode->next = NULL;
-    typeInfo * iterator = typeInfoList;
-    if(iterator==NULL) {
-        return typeInfoNode;
-    } 
-    while(iterator->next!=NULL){
-        iterator=iterator->next;
+int global_check(symbolTable *global, char *key){
+    int hash=hashFunction(key,global->no_slots);
+    SymbolTableRecord*temp= global->list[hash]->head;
+    while(temp!=NULL){
+		if(strcmp(temp->lexeme,key)==0)
+			return 1;
+		temp = temp->next;
+		
+	}
+	return 0;
+
+
+}
+
+typeInfo* add_function_par(typeInfo * typeInfoList, Type type, char* lexeme, char *ruid, symbolTable* global){
+    if(global_check(global,lexeme)){
+        printf("Variable already exists");
+        return NULL;
     }
-    iterator->next = typeInfoNode;
-    return typeInfoList;
+    else{
+        typeInfo * typeInfoNode = (typeInfo *) malloc(sizeof(typeInfo));
+        typeInfoNode->type = type;
+        typeInfoNode->type_ruid = ruid;
+        typeInfoNode->lexeme=lexeme;
+        typeInfoNode->next = NULL;
+        typeInfo * iterator = typeInfoList;
+        if(iterator==NULL) {
+            return typeInfoNode;
+        } 
+        while(iterator->next!=NULL){
+            iterator=iterator->next;
+        }
+        iterator->next = typeInfoNode;
+        return typeInfoList;
+
+    }
+    
 }
 
 void add_record_field (SymbolTableRecord * record, struct record_field * field){
@@ -485,10 +508,10 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
             record->type_ruid = ruid;
             record->width = width;
             if(current->construct==input_par_){
-                function->function_field->InputHead = add_function_par(function->function_field->InputHead,record->type,record->type_ruid);
+                function->function_field->InputHead = add_function_par(function->function_field->InputHead,record->type,record->lexeme,record->type_ruid,global);
                 record->usage = INPUTPAR;
             }else{
-              function->function_field->OutputHead = add_function_par(function->function_field->OutputHead,record->type,record->type_ruid);   
+              function->function_field->OutputHead = add_function_par(function->function_field->OutputHead,record->type,record->lexeme,record->type_ruid,global);   
                 record->usage = OUTPUTPAR;
             }
             SymbolTableRecord * entry = getSymbolInfo(record->lexeme,table);
@@ -589,6 +612,7 @@ symbolTable * populateSymbolTable(ast_node * root){
     traverseNode(root,globalTable);
     if(traverseSymbolTable(globalTable)==-1) return NULL;
     ast_node * function = root->firstChild;
+    int i=0;
     while(function!=NULL){
         SymbolTableRecord * FunEntry = (SymbolTableRecord*) malloc(sizeof(SymbolTableRecord));
         struct func_struct *info = (struct func_struct *)function->ninf;
@@ -601,6 +625,8 @@ symbolTable * populateSymbolTable(ast_node * root){
         FunEntry->function_field = (struct function_field *)malloc(sizeof(struct function_field));
         FunEntry->function_field->InputHead = NULL;
         FunEntry->function_field->OutputHead=NULL;
+        FunEntry->function_field->num=i;
+        i++;
         FunEntry->width =0;
         if(traverseNodeFunction(function,funTable,globalTable,FunEntry)==1) exit(0);
         function = function->nextSib;
