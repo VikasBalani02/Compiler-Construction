@@ -111,12 +111,13 @@ void createIR(ast_node *root, tupleList *list)
 // this is for a specific node
 void IR_for_astnode(ast_node *root, tupleList *list)
 {
-    if(root->construct == otherStmts_){
-        IR_otherStmts(root);
-    }
-    else if (root->construct == booleanExpression_)
+
+    if (root->construct == booleanExpression_)
     {
         IR_boolean_expression(root);
+    }
+    else if(root->construct == function_ || root->construct == mainFunction_){
+        IR_function(root);
     }
     else if (root->construct == singleOrRecId_)
     {
@@ -144,18 +145,6 @@ void IR_for_astnode(ast_node *root, tupleList *list)
     else if (root->construct == thenStmts_ || root->construct == elsePart_ || root->construct == otherStmts_ || root->construct == stmts_) {
         IR_stmts(root);
     }
-    // else if (root->construct == termPrime_)
-    // {
-    //     IR_termprime(root, list);
-    // }
-    // else if (root->construct == expPrime_)
-    // {
-    //     IR_expPrime(root, list);
-    // }
-    else if (root->construct == arithmeticExpression_)
-    {
-        IR_arithematic_statement(root);
-    }
     else if (root->construct == ioStmt_)
     {
         IR_io_statement(root);
@@ -165,24 +154,26 @@ void IR_for_astnode(ast_node *root, tupleList *list)
         root->list = NULL;
     }
 }
-void IR_otherStmts(ast_node* root){
+void IR_function(ast_node* root){
+    char *fun = ((struct func_struct *)(root->ninf))->funID;
+    tuple* newT1 = newTuple(FUNCT, fun, NULL, NULL, NULL);
+    tuple* newT2 = newTuple(ENDFUNCT, fun, NULL, NULL, NULL);
+
     if(root->firstChild == NULL){
-        root->list = NULL;
+        root->list = newList;
+        addTupleEnd(root->list, newT1);
+        addTupleEnd(root->list, newT2);
         return;
     }
     tupleList* newL = newList();
-
+    addTupleEnd(newL, newT1);
     ast_node* temp;
     temp = root->firstChild;
     while(temp){
         concatLists(newL, temp->list);
         temp = temp->nextSib;
     }
-
-    if(newL->head == NULL){
-        root->list = NULL;
-        return;
-    }
+    addTupleEnd(newL, newT2);
     root->list = newL;
 }
 void IR_singleOrRecId(ast_node *root)
@@ -522,9 +513,6 @@ void IR_boolean_expression(ast_node *root)
         }
     }
 }
-void IR_arithematic_statement(ast_node *root)
-{
-}
 
 void IR_conditional(ast_node *root)
 {
@@ -610,26 +598,45 @@ void IR_iterative(ast_node *root)
 
 // handling thenStmts_ and elsePart_ ,otherStmts_ and stmts_
 void IR_stmts(ast_node* root) {
-    if (root->firstChild == NULL)
-    {
-        root->place = NULL;
+    if(root->firstChild == NULL){
         root->list = NULL;
         return;
     }
-    // first child ast_node
-    root->list = newList();
-    ast_node* curr = root->firstChild;
-    root->list->head = curr->list->head;
-    tupleList* tl = curr->list;
+    tupleList* newL = newList();
 
-    while(curr->nextSib != NULL) {
-        tl = curr->list;
-        ast_node* next = curr->nextSib;
-        tupleList* next_tl = next->list;
-        tl->tail = next_tl->head;
-        curr = curr->nextSib;
+    ast_node* temp;
+    temp = root->firstChild;
+    while(temp){
+        concatLists(newL, temp->list);
+        temp = temp->nextSib;
     }
-    tl->tail = NULL;
+
+    if(newL->head == NULL){
+        root->list = NULL;
+        return;
+    }
+    root->list = newL;
+
+    // if (root->firstChild == NULL)
+    // {
+    //     root->place = NULL;
+    //     root->list = NULL;
+    //     return;
+    // }
+    // // first child ast_node
+    // root->list = newList();
+    // ast_node* curr = root->firstChild;
+    // root->list->head = curr->list->head;
+    // tupleList* tl = curr->list;
+
+    // while(curr->nextSib != NULL) {
+    //     tl = curr->list;
+    //     ast_node* next = curr->nextSib;
+    //     tupleList* next_tl = next->list;
+    //     tl->tail = next_tl->head;
+    //     curr = curr->nextSib;
+    // }
+    // tl->tail = NULL;
 }
 
 void IR_iostmt(ast_node *root) {
