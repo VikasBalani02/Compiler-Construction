@@ -542,3 +542,26 @@ void IR_iterative(ast_node *root)
     root->list->head = t1;
     root->list->tail = t5;
 }
+
+// handling thenStmts_ and elsePart_ ,otherStmts_ and stmts_
+void IR_stmts(ast_node* root) {
+    if (root->firstChild == NULL)
+    {
+        root->place = NULL;
+        root->list = NULL;
+        return;
+    }
+    // first child ast_node
+    ast_node* curr = root->firstChild;
+    root->list->head = curr->list->head;
+    tupleList* tl = curr->list;
+
+    while(curr->nextSib != NULL) {
+        tl = curr->list;
+        ast_node* next = curr->nextSib;
+        tupleList* next_tl = next->list;
+        tl->tail = next_tl->head;
+        curr = curr->nextSib;
+    }
+    tl->tail = NULL;
+}
