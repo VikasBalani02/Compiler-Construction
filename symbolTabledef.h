@@ -28,6 +28,7 @@ struct record_field{
 struct function_field{
 	typeInfo *InputHead;
 	typeInfo *OutputHead;
+	int num;
 };
 struct symbolTableRecord{
 

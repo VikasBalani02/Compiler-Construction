@@ -125,6 +125,7 @@ typedef struct tupleList tupleList;
 typedef struct typeInfo{
 	Type type;
 	char * type_ruid;
+    char *lexeme;
 	struct typeInfo * next;
 }typeInfo;
 
