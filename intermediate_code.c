@@ -119,6 +119,25 @@ void IR_for_astnode(ast_node *root, tupleList *list)
     else if (root->construct == assignmentStmt_){
         IR_assignmentStmt(root);
     }
+
+    else if (root->construct == factor_)
+    {
+        IR_factor(root);
+    }
+    else if(root->construct == ioStmt_) {
+        IR_iostmt(root);
+    }
+    else if (root->construct == thenStmts_ || root->construct == elsePart_ || root->construct == otherStmts_ || root->construct == stmts_) {
+        IR_stmts(root);
+    }
+    // else if (root->construct == termPrime_)
+    // {
+    //     IR_termprime(root, list);
+    // }
+    // else if (root->construct == expPrime_)
+    // {
+    //     IR_expPrime(root, list);
+    // }
     else if (root->construct == arithmeticExpression_)
     {
         IR_arithematic_statement(root);
@@ -480,7 +499,7 @@ void IR_conditional(ast_node *root)
         root->place = NULL;
         root->list = NULL;
     }
-
+    root->list = newList();
     ast_node *boolExp = root->firstChild;
     tupleList *boollist = boolExp->list;
     char *elselabel = newlabel();
@@ -525,7 +544,7 @@ void IR_iterative(ast_node *root)
         root->place = NULL;
         root->list = NULL;
     }
-
+    root->list = newList();
     ast_node *boolExp = root->firstChild;
     tupleList *boollist = boolExp->list;
     char *beginlabel = newlabel();
@@ -563,6 +582,7 @@ void IR_stmts(ast_node* root) {
         return;
     }
     // first child ast_node
+    root->list = newList();
     ast_node* curr = root->firstChild;
     root->list->head = curr->list->head;
     tupleList* tl = curr->list;
@@ -575,4 +595,26 @@ void IR_stmts(ast_node* root) {
         curr = curr->nextSib;
     }
     tl->tail = NULL;
+}
+
+void IR_iostmt(ast_node *root) {
+    if (root->firstChild == NULL)
+    {
+        root->place = NULL;
+        root->list = NULL;
+    }
+    Tokentype op = ((struct io_struct*)(root->ninf))->read_or_write;
+
+    ast_node* singleOrRecIDNode = root->firstChild;
+    tupleList* newL= newList();
+    tuple* t1;
+    if(op==TK_READ) {
+        t1 = newTuple(READ, singleOrRecIDNode->place, NULL, NULL, NULL);
+    }
+    else {
+        t1 = newTuple(WRITE, singleOrRecIDNode->place, NULL, NULL, NULL);
+    }
+    addTupleEnd(newL, t1);
+    root->list = newL;
+
 }

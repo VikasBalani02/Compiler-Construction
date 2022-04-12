@@ -105,7 +105,9 @@ typedef enum OP{
     LABEL,
     UNSET,
     SET,
-    ASSIGN
+    ASSIGN,
+    READ,
+    WRITE
 }OP;
 struct tuple
 {
