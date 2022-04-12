@@ -116,11 +116,6 @@ void IR_for_astnode(ast_node *root, tupleList *list)
     {
         IR_highPrecedenceTerm(root);
     }
-
-    else if (root->construct == factor_)
-    {
-        IR_factor(root);
-    }
     // else if (root->construct == termPrime_)
     // {
     //     IR_termprime(root, list);
@@ -255,67 +250,6 @@ void IR_highPrecedenceTerm(ast_node *root)
         }
     }
 }
-// void IR_termprime(ast_node* root, TupleList* list){
-//     // termPrime gives an epsilon
-//     if(root->firstChild == NULL){
-//         root->place = NULL;
-//         root->tuple = NULL;
-//     }
-//     // termPrime gives HPO factor termPrime
-//     else{
-//         root->place = newtemp();
-//         Tuple* temp = root->firstChild->nextSib->nextSib->tuple;
-//         Tokentype op = ((struct operator_struct *)(root->firstChild->ninf))->op;
-//         Tuple* t;
-//         if(op == TK_MUL)
-//             t = makeTuple(MUL, root->firstChild->nextSib->place, NULL, root->place, root->firstChild->nextSib, NULL, node, 0);
-//         else
-//             t = makeTuple(DIV, root->firstChild->nextSib->place, NULL, root->place, root->firstChild->nextSib, NULL, node, 0);
-//         if(temp)
-//             temp->next = t;
-//         add_to_list(t, list);
-//         root->tuple = t;
-//     }
-// }
-
-// void IR_expPrime(ast_node* root, TupleList* list){
-//     // expPrime gives an epsilon
-//     if(root->firstChild == NULL){
-//         root->place = NULL;
-//         root->tuple = NULL;
-//     }
-//     // expPrime gives LPO factor termPrime
-//     else{
-//         root->place = newtemp();
-//         Tuple* temp = root->firstChild->nextSib->nextSib->tuple;
-//         Tokentype op = ((struct operator_struct *)(root->firstChild->ninf))->op;
-//         Tuple* t;
-//         if(op == TK_PLUS)
-//             t = makeTuple(PLUS, root->firstChild->nextSib->place, NULL, root->place, root->firstChild->nextSib, NULL, node, 0);
-//         else
-//             t = makeTuple(MINUS, root->firstChild->nextSib->place, NULL, root->place, root->firstChild->nextSib, NULL, node, 0);
-//         if(temp)
-//             temp->next = t;
-//         add_to_list(t, list);
-//         root->tuple = t;
-//     }
-// }
-void IR_factor(ast_node *root)
-{
-    // // factor gives arithematic expression
-    // if (root->firstChild->construct == arithmeticExpression_)
-    // {
-    //     root->place = root->firstChild->place;
-    //     root->tuple = root->firstChild.tuple;
-    // }
-    // // factor gives var
-    // else
-    // {
-    //     root->place = root->firstChild->place;
-    //     root.tuple = root->firstChild->tuple;
-    // }
-}
-
 void IR_boolean_expression(ast_node *root)
 {
     Tokentype op = ((struct operator_struct *)(root->ninf))->op;
@@ -379,8 +313,73 @@ void IR_boolean_expression(ast_node *root)
 
         root->list = newL;
     }
-    else if (op == TK_OR)
-    {
+    else if (op == TK_OR){
+        char *arg1 = root->firstChild->place;
+        char *arg2 = root->firstChild->nextSib->place;
+        char *res = newtemp();
+        root->place = res;
+        // ADD TO SYMBOL TABLE
+
+        tupleList *t1 = root->firstChild->list;
+        tupleList *t2 = root->firstChild->nextSib->list;
+        tuple *newT;
+
+        tuple* newT0 = newTuple(NOT, arg1, NULL, arg1, NULL);
+        tuple* newT1 = newTuple(IF, arg1, NULL, NULL, NULL);
+        char* trueset = newlabel();
+        tuple* newT2 = newTuple(GOTO, trueset, NULL, NULL, NULL);
+        char* after = newlabel();
+        tuple* newT3 = newTuple(GOTO, after, NULL, NULL, NULL);
+        tuple* newT4 = newTuple(LABEL, trueset, NULL, NULL, NULL);
+        tuple* newT5 = newTuple(LABEL, after, NULL, NULL, NULL);
+        tuple* newT6 = newTuple(SET, res, NULL, NULL, NULL);
+        tuple* newT70 = newTuple(NOT, arg2, NULL, arg2, NULL);
+        tuple* newT7 = newTuple(IF, arg2, NULL, NULL, NULL);
+        tuple* newT8 = newTuple(GOTO, trueset, NULL, NULL, NULL);
+        tuple* newT9 = newTuple(UNSET, res, NULL, NULL, NULL);
+
+        tupleList* newL = newList();
+        // t1 followed by NOT t1.place
+        if(t1 != NULL){
+            newL->head = t1->head;
+            newL->tail = t1->tail;
+            newL->tail->next = newT0;
+            newL->tail = newT0;
+        }
+        else{
+            addTupleEnd(newL, newT0);
+        }
+        // if t1.place == false
+        addTupleEnd(newL, newT1);
+
+        // goto trueset
+        addTupleEnd(newL, newT2);
+        
+        // add t2's code
+        if(t2 != NULL){
+            newL->tail->next = t2->head;
+            newL->tail = t2->tail;
+        }
+
+        // NOT t2.place
+        addTupleEnd(newL, newT70);
+        // IF t2.place == false
+        addTupleEnd(newL, newT7);
+        // goto trueset
+        addTupleEnd(newL, newT8);
+        // res = false
+        addTupleEnd(newL, newT9);
+        // goto after
+        addTupleEnd(newL, newT3);
+        // trueset: 
+        addTupleEnd(newL, newT4);
+        // res = true
+        addTupleEnd(newL, newT6);
+        // after: 
+        addTupleEnd(newL, newT5);
+
+        root->list = newL;
+
     }
     else if (op == TK_NOT)
     {
