@@ -104,7 +104,8 @@ typedef enum OP{
     NOT,
     LABEL,
     UNSET,
-    SET
+    SET,
+    ASSIGN
 }OP;
 struct tuple
 {

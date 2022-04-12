@@ -116,14 +116,9 @@ void IR_for_astnode(ast_node *root, tupleList *list)
     {
         IR_highPrecedenceTerm(root);
     }
-    // else if (root->construct == termPrime_)
-    // {
-    //     IR_termprime(root, list);
-    // }
-    // else if (root->construct == expPrime_)
-    // {
-    //     IR_expPrime(root, list);
-    // }
+    else if (root->construct == assignmentStmt_){
+        IR_assignmentStmt(root);
+    }
     else if (root->construct == arithmeticExpression_)
     {
         IR_arithematic_statement(root);
@@ -151,7 +146,23 @@ void IR_singleOrRecId(ast_node *root)
     root->place = lexeme;
     root->list = NULL;
 }
+void IR_assignmentStmt(ast_node* root){
+    char *arg1 = root->firstChild->place;
+    char *arg2 = root->firstChild->nextSib->place;
+    
+    tupleList* t2 = root->firstChild->nextSib->list;
+    tuple* newT = newTuple(ASSIGN, arg2, NULL, arg1, NULL);
 
+    if(t2 == NULL){
+        tupleList* newL = newList();
+        addTupleEnd(newL, newT);
+        t2 = newL;
+    }
+    else{
+        addTupleEnd(t2, newT);
+    }
+    root->list = t2;
+}
 void IR_lowPrecedenceTerm(ast_node *root)
 {
     char *arg1 = root->firstChild->place;
