@@ -612,7 +612,7 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
                 return 1;
             }
             if(entry_2 != NULL){
-                printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d", temp->line_no, temp->lexeme, entry->line_no);
+                printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d", temp->line_no, temp->lexeme, entry_2->line_no);
                 return 1;
             }
             addSymbol(table,temp->lexeme, temp);
