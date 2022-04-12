@@ -323,7 +323,7 @@ int calculateWidth(symbolTable * global, SymbolTableRecord * entry){
                     w = calculateWidth(global,ruidOriginal);
                     if(w==-1) return -1;
                 }
-                else w = ruidOriginal->width;
+                w = ruidOriginal->width;
 
                 if(recordEntryRUID->width == -1){
                     recordEntryRUID->width = ruidOriginal->width;
@@ -379,7 +379,7 @@ int calculateWidth(symbolTable * global, SymbolTableRecord * entry){
                     w = calculateWidth(global,ruidOriginal);
                     if(w==-1) return -1;
                 }
-                else w = ruidOriginal->width;
+                w = ruidOriginal->width;
 
                 if(recordEntryRUID->width == -1){
                     recordEntryRUID->width = ruidOriginal->width;
@@ -444,16 +444,37 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
                 ruid = info->ruid;
                 if(info->union_or_record==TK_RECORD){
                     type = RECORD;
+                    lineNo = info->lineNum;
+                    SymbolTableRecord * entry = getSymbolInfo(ruid,global);
+                    if(entry==NULL){
+                        printf("Line Num: %d, Error: Couldn't find definition for this constructed datatype.",lineNo);
+                        return 1;
+                    }
+                    width = entry->width;
                 }
-                else type = UNION;
-
-                lineNo = info->lineNum;
-                SymbolTableRecord * entry = getSymbolInfo(ruid,global);
-                if(entry==NULL){
-                    printf("Line Num: %d, Error: Couldn't find definition for this constructed datatype.",lineNo);
-                    return 1;
+                else if(info->union_or_record == TK_UNION) 
+                {
+                    type = UNION;
+                    lineNo = info->lineNum;
+                    SymbolTableRecord * entry = getSymbolInfo(ruid,global);
+                    if(entry==NULL){
+                        printf("Line Num: %d, Error: Couldn't find definition for this constructed datatype.",lineNo);
+                        return 1;
+                    }
+                    width = entry->width;
                 }
-                width = entry->width;
+                else if (info->union_or_record == -1){
+                    lineNo = info->lineNum;
+                    SymbolTableRecord * entry = getSymbolInfo(ruid,global);
+                    if(entry==NULL){
+                        printf("Line Num: %d, Error: Couldn't find definition for this constructed datatype.",lineNo);
+                        return 1;
+                    }
+                    type = entry->type;
+                    ruid = entry->type_ruid;
+                    SymbolTableRecord * entry2 = getSymbolInfo(entry->type_ruid,global);
+                    width = entry2->width;
+                }
             }
             child = child->nextSib;
             struct id_struct * info = (struct  id_struct*)child->ninf;
