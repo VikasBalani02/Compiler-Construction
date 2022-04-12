@@ -557,7 +557,7 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
             struct constructed_type_struct *info = (struct constructed_type_struct *)dataType->ninf;
             if(info->union_or_record==TK_UNION){
                 
-                SymbolTableRecord * entry = getSymbolInfo(info->ruid,global);
+                /*SymbolTableRecord * entry = getSymbolInfo(info->ruid,global);
                 if(entry == NULL){
                     printf("Line No: %d, No type definition found corresponding to this type %s\n",info->lineNum,info->ruid);
                     return 1;
@@ -565,7 +565,9 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
                 temp->type = UNION;
                 temp->width = entry->width;
                 temp->type_ruid = info->ruid;
-                temp->line_no = info->lineNum;
+                temp->line_no = info->lineNum;*/
+                printf("Line No: %d, No type definition found corresponding to this type %s\n",info->lineNum,info->ruid);
+
             }
             else if (info->union_or_record==TK_RECORD){
                 SymbolTableRecord * entry = getSymbolInfo(info->ruid,global);
@@ -606,7 +608,7 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
                 printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d", temp->line_no, temp->lexeme, entry->line_no);
                 return 1;
             }
-            if(entry != NULL){
+            if(entry_2 != NULL){
                 printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d", temp->line_no, temp->lexeme, entry->line_no);
                 return 1;
             }
