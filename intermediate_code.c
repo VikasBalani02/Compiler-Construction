@@ -41,6 +41,17 @@ void addTupleEnd(tupleList *list, tuple *t)
         list->tail = t;
     }
 }
+void concatLists(tupleList* l1, tupleList* l2){
+    if(l1 == NULL){
+        l1 = l2;
+        return;
+    }
+    if(l2 == NULL)
+        return;
+    l1->tail->next = l2->head;
+    l1->tail = l2->tail;
+    return;
+}
 void addTupleFront(tupleList *list, tuple *t)
 {
     if (list->head == NULL)
@@ -100,7 +111,10 @@ void createIR(ast_node *root, tupleList *list)
 // this is for a specific node
 void IR_for_astnode(ast_node *root, tupleList *list)
 {
-    if (root->construct == booleanExpression_)
+    if(root->construct == otherStmts_){
+        IR_otherStmts(root);
+    }
+    else if (root->construct == booleanExpression_)
     {
         IR_boolean_expression(root);
     }
@@ -148,7 +162,28 @@ void IR_for_astnode(ast_node *root, tupleList *list)
     }
     else
     {
+        root->list = NULL;
     }
+}
+void IR_otherStmts(ast_node* root){
+    if(root->firstChild == NULL){
+        root->list = NULL;
+        return;
+    }
+    tupleList* newL = newList();
+
+    ast_node* temp;
+    temp = root->firstChild;
+    while(temp){
+        concatLists(newL, temp->list);
+        temp = temp->nextSib;
+    }
+
+    if(newL->head == NULL){
+        root->list = NULL;
+        return;
+    }
+    root->list = newL;
 }
 void IR_singleOrRecId(ast_node *root)
 {
