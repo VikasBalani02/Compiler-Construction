@@ -896,11 +896,8 @@ void ast_r64(tNode *factor_tnode)
 
 void ast_r65(tNode *factor_tnode)
 {
-    ast_node *var_anode = return_child(factor_tnode, 1);
-    ast_node **arr;
-    arr = (ast_node **)malloc(1 * sizeof(struct ast_node *));
-    arr[0] = var_anode;
-    factor_tnode->addr = makeNode(factor_, arr, 1, NULL);
+    ast_node *var_anode= return_child(factor_tnode, 1);
+    factor_tnode->addr = var_anode;
 }
 
 // <highPrecedenceOperators> ===> TK_MUL

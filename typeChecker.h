@@ -1,13 +1,13 @@
 #include "typeCheckerDef.h"
 typeInfo *get_typeInfo(Type type, char *ruid);
-void populate_Identifier_type(ast_node *id_node, Error *err_list, symbolTable* table);
-SymbolTableRecord* get_function_entry(char *funid, Error *err_list, symbolTable* table);
-void type_checker(ast_node* root,Error* err_list,symbolTable* table);
-void check_type(ast_node *node, Error *err_list, symbolTable* table);
+void populate_Identifier_type(ast_node *id_node, Error *err_list, symbolTable* table,symbolTable* global);
+SymbolTableRecord* get_function_entry(char *funid, Error *err_list, symbolTable* table,symbolTable* global);
+void type_checker(ast_node* root,Error* err_list,symbolTable* table,symbolTable* global);
+void check_type(ast_node *node, Error *err_list, symbolTable* table,symbolTable* global);
 void check_assign_stmt(ast_node *node, Error *err_list);
 void check_io_stmt(ast_node *node, Error *err_list);
 int compare_param_list(struct func_struct* info, ast_node *node, typeInfo *formalParamList, Error *err_list);
-void check_funCall_stmt(ast_node *node, Error *err_list, symbolTable* table);
+void check_funCall_stmt(ast_node *node, Error *err_list, symbolTable* table,symbolTable* global);
 void check_iterative_stmt(ast_node *node, Error *err_list);
 void check_conditional_stmt(ast_node *node, Error *err_list);
 void check_return_stmt(ast_node *node, Error *err_list);
