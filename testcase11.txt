@@ -27,6 +27,32 @@ output parameter list[real d3];
 	endwhile
 	return [d3];
 end
+_unionfunction  input parameter list [record #two d5cc34, #point b2d567]  
+output parameter list[real d3];
+	record #one
+		type real:x;
+		type real:y;
+	endrecord	
+	definetype record #one as #point
+
+	record #two
+		type #point: beginpoint;
+		type #point: endpoint;
+	endrecord
+
+
+	type record #two : b5b567;
+	type record #one : b3;
+	type #point: d5;
+	b5b567 <--- c6*2;
+	b3 <--- c6-c3;
+	while ( b5b567 <= d5cc34)
+		read(c3bd);
+		d3 <--- d3 + c3bd;
+		b5b567 <--- b5b567 + 1;
+	endwhile
+	return [d3];
+end
 % type checking will be required in stage 2. Despite some type errors, undeclared variables etc the code is syntactically correct
 %in this function.
 _main 

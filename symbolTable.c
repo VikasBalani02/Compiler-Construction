@@ -46,8 +46,10 @@ int checkSymbol(symbolTable* symbolTable,char*key){
     int hash =  hashFunction(key,symbolTable->no_slots);
 	SymbolTableRecord *temp = symbolTable->list[hash]->head;
     while(temp!=NULL){
-        if(strcmp(temp->lexeme,key)==0)
-        return 1;
+        if(strcmp(temp->lexeme,key)==0){
+             return 1;
+        }
+        temp=temp->next;       
     }
     return 0;
 }
@@ -96,7 +98,8 @@ int global_check(symbolTable *global, char *key){
 
 typeInfo* add_function_par(typeInfo * typeInfoList, Type type, char* lexeme, char *ruid, symbolTable* global){
     if(global_check(global,lexeme)){
-        printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d");
+
+        printf("Redeclaration of global variable %s",lexeme);
         return NULL;
     }
     else{
