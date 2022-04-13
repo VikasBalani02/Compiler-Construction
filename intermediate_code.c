@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "ast.h"
+#include "typeChecker.h"
 char *concat(char *str1, char *str2)
 {
     int l1 = 0;
@@ -90,26 +90,26 @@ char *newlabel()
 }
 
 // postorder traversal
-tupleList *get_intermediate_list(ast_node *root)
+tupleList *get_intermediate_list(ast_node *root, symbolTable* global)
 {
     tupleList *list = newList();
-    createIR(root, list);
+    createIR(root, list, global);
     return list;
 }
-void createIR(ast_node *root, tupleList *list)
+void createIR(ast_node *root, tupleList *list, symbolTable* global)
 {
     if (root == NULL)
         return;
     ast_node *temp = root->firstChild;
     while (temp != NULL)
     {
-        createIR(temp, list);
+        createIR(temp, list, global);
         temp = temp->nextSib;
     }
-    IR_for_astnode(root, list);
+    IR_for_astnode(root, list, global);
 }
 // this is for a specific node
-void IR_for_astnode(ast_node *root, tupleList *list)
+void IR_for_astnode(ast_node *root, tupleList *list, symbolTable* global)
 {
 
     if (root->construct == booleanExpression_)

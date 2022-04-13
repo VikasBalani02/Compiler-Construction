@@ -178,7 +178,10 @@ int main(int argc, char **argv)
             type_checker(tr->root->addr,err,global,global);
             print_error_list(err);
             break;
-            
+        case 10:
+            tupleList* compList = get_intermediate_list(tr->root->addr, global);
+
+            break;
         default:
             printf("\nIncorrect option.");
             break;
