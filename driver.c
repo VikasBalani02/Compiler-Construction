@@ -180,7 +180,7 @@ int main(int argc, char **argv)
             break;
         case 10:
             tupleList* compList = get_intermediate_list(tr->root->addr, global);
-
+            
             break;
         default:
             printf("\nIncorrect option.");
