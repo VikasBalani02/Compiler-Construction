@@ -122,44 +122,40 @@ void IR_for_astnode(ast_node *root, symbolTable* localTable, symbolTable* global
         IR_boolean_expression(root, localTable, global);
     }
     else if(root->construct == function_ || root->construct == mainFunction_){
-        IR_function(root);
+        IR_function(root, localTable, global);
     }
     else if (root->construct == singleOrRecId_)
     {
-        IR_singleOrRecId(root);
+        IR_singleOrRecId(root, localTable, global);
     }
     else if (root->construct == lowPrecedenceTerm_)
     {
-        IR_lowPrecedenceTerm(root);
+        IR_lowPrecedenceTerm(root, localTable, global);
     }
     else if (root->construct == highPrecedenceTerm_)
     {
-        IR_highPrecedenceTerm(root);
+        IR_highPrecedenceTerm(root, localTable, global);
     }
     else if (root->construct == assignmentStmt_){
-        IR_assignmentStmt(root);
+        IR_assignmentStmt(root, localTable, global);
     }
 
-    else if (root->construct == factor_)
-    {
-        IR_factor(root);
-    }
     else if(root->construct == ioStmt_) {
-        IR_iostmt(root);
+        IR_iostmt(root, localTable, global);
     }
     else if (root->construct == thenStmts_ || root->construct == elsePart_ || root->construct == otherStmts_ || root->construct == stmts_) {
-        IR_stmts(root);
+        IR_stmts(root, localTable, global);
     }
     else if (root->construct == ioStmt_)
     {
-        IR_io_statement(root);
+        IR_io_statement(root, localTable, global);
     }
     else
     {
         root->list = NULL;
     }
 }
-void IR_function(ast_node* root, symbolTable* localTable){
+void IR_function(ast_node* root, symbolTable* localTable, symbolTable* global){
     char *fun = ((struct func_struct *)(root->ninf))->funID;
     tuple* newT1 = newTuple(FUNCT, fun, NULL, NULL, NULL);
     tuple* newT2 = newTuple(ENDFUNCT, fun, NULL, NULL, NULL);
@@ -181,7 +177,7 @@ void IR_function(ast_node* root, symbolTable* localTable){
     addTupleEnd(newL, newT2);
     root->list = newL;
 }
-void IR_singleOrRecId(ast_node *root, symbolTable* localTable)
+void IR_singleOrRecId(ast_node *root, symbolTable* localTable, symbolTable* global)
 {
     char *lexeme = ((struct id_struct *)(root->ninf))->lexID;
     ast_node *temp = root->firstChild;
@@ -196,11 +192,54 @@ void IR_singleOrRecId(ast_node *root, symbolTable* localTable)
     root->place = lexeme;
     root->list = NULL;
 }
-insideRecord* getDetails(char* lexeme, insideRecord* head, char* record_name, symbolTable* global){
-    SymbolTableRecord* record_entry = getSymbolInfo(record_name, global);
-    record_field* fields = 
+insideRecord* getInsideRecord(char* lexeme){
+    insideRecord* temp = (insideRecord* )malloc(sizeof(insideRecord));
+    temp->lex = lexeme; 
+    temp->next = NULL;
+    return temp;
 }
-void IR_assignmentStmt(ast_node* root, symbolTable* localTable){
+insideRecord* insertLexeme(insideRecord* head, char* lexeme){
+    insideRecord* newR = getInsideRecord(lexeme);
+    insideRecord* ptr=head;
+    while(ptr->next){
+        ptr=ptr->next;
+    }
+    ptr->next=newR;
+}
+insideRecord* getRecordDetails(char* lexeme, char* record_name, symbolTable* global){
+    insideRecord* list_new=(insideRecord*)malloc(sizeof(insideRecord));
+    getRecordDetails_util(lexeme,list_new,record_name,global);
+    return list_new->next;
+}
+insideRecord* getRecordDetails_util(char* lexeme, insideRecord* head, char* record_name, symbolTable* global){
+    SymbolTableRecord* record_entry = getSymbolInfo(record_name, global);
+    struct record_field* fields = record_entry->recordFields;
+    while(fields){
+
+        char* temp = concat(lexeme, fields->lexeme);
+        if(fields->type == INT || fields->type == REAL){
+            head = insertLexeme(head, temp);
+        }
+        if(fields->type == RUID){
+            char* nested_rec_name=NULL;
+            SymbolTableRecord* sym_info = record_entry;
+            while(sym_info->type == RUID){
+                sym_info = getSymbolInfo(sym_info->type_ruid, global);
+            }
+            if(sym_info->type != RECORD)
+                return;
+            nested_rec_name=sym_info->lexeme;
+            head = getRecordDetails_util(temp, head, nested_rec_name, global);
+        }
+        if(fields->type == RECORD){
+            //field type is record
+            head = getRecordDetails_util(temp, head, fields->lexeme, global);
+        }
+        fields = fields->next;
+    }
+    return head;
+}
+void IR_assignmentStmt(ast_node* root, symbolTable* localTable, symbolTable* global){
     char *arg1 = root->firstChild->place;
     char *arg2 = root->firstChild->nextSib->place;
     
@@ -217,7 +256,7 @@ void IR_assignmentStmt(ast_node* root, symbolTable* localTable){
     }
     root->list = t2;
 }
-void IR_lowPrecedenceTerm(ast_node *root, symbolTable* localTable)
+void IR_lowPrecedenceTerm(ast_node *root, symbolTable* localTable, symbolTable* global)
 {
     char *arg1 = root->firstChild->place;
 
@@ -267,7 +306,7 @@ void IR_lowPrecedenceTerm(ast_node *root, symbolTable* localTable)
         }
     }
 }
-void IR_highPrecedenceTerm(ast_node *root, symbolTable* localTable)
+void IR_highPrecedenceTerm(ast_node *root, symbolTable* localTable, symbolTable* global)
 {
     char *arg1 = root->firstChild->place;
     char *arg2 = root->firstChild->nextSib->place;
@@ -316,7 +355,7 @@ void IR_highPrecedenceTerm(ast_node *root, symbolTable* localTable)
         }
     }
 }
-void IR_boolean_expression(ast_node *root, symbolTable* localTable)
+void IR_boolean_expression(ast_node *root, symbolTable* localTable, symbolTable* global)
 {
     Tokentype op = ((struct operator_struct *)(root->ninf))->op;
     if (op == TK_AND)
@@ -524,7 +563,7 @@ void IR_boolean_expression(ast_node *root, symbolTable* localTable)
     }
 }
 
-void IR_conditional(ast_node *root, symbolTable* localTable)
+void IR_conditional(ast_node *root, symbolTable* localTable, symbolTable* global)
 {
 
     if (root->firstChild == NULL)
@@ -570,7 +609,7 @@ void IR_conditional(ast_node *root, symbolTable* localTable)
     // root->list->no_tuples = boollist->no_tuples + thenlist->no_tuples + elselist->no_tuples + 5;
 }
 
-void IR_iterative(ast_node *root, symbolTable* localTable)
+void IR_iterative(ast_node *root, symbolTable* localTable, symbolTable* global)
 {
     if (root->firstChild == NULL)
     {
@@ -607,7 +646,7 @@ void IR_iterative(ast_node *root, symbolTable* localTable)
 }
 
 // handling thenStmts_ and elsePart_ ,otherStmts_ and stmts_
-void IR_stmts(ast_node* root, symbolTable* localTable) {
+void IR_stmts(ast_node* root, symbolTable* localTable, symbolTable* global) {
     if(root->firstChild == NULL){
         root->list = NULL;
         return;
@@ -660,10 +699,10 @@ void IR_iostmt(ast_node *root, symbolTable* localTable, symbolTable* global) {
     ast_node* singleOrRecIDNode = root->firstChild;
     insideRecord* head;
     if(singleOrRecIDNode->node_type->type == RECORD){
-        head = getDetails(singleOrRecIDNode->place, head, singleOrRecIDNode->node_type->type_ruid, global);
+        head = getRecordDetails_util(singleOrRecIDNode->place, head, singleOrRecIDNode->node_type->type_ruid, global);
     }
     if(singleOrRecIDNode->node_type->type == INT || singleOrRecIDNode->node_type->type == REAL){
-        
+
     }  
     tupleList* newL= newList();
     tuple* t1;

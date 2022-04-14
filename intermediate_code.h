@@ -1,14 +1,15 @@
 #include "typeChecker.h"
-void IR_boolean_expression(ast_node* root);
-void IR_singleOrRecId(ast_node* root);
-void IR_lowPrecedenceTerm(ast_node* root);
-void IR_highPrecedenceTerm(ast_node* root);
-void IR_assignmentStmt(ast_node* root);
-insideRecord* getDetails(char* lexeme, insideRecord* head , char* record_name, symbolTable* global);
-void IR_otherStmts(ast_node* root);
-void IR_for_astnode(ast_node* root);
+void IR_boolean_expression(ast_node* root, symbolTable* localTable, symbolTable* global);
+void IR_singleOrRecId(ast_node* root, symbolTable* localTable, symbolTable* global);
+void IR_lowPrecedenceTerm(ast_node* root, symbolTable* localTable, symbolTable* global);
+void IR_highPrecedenceTerm(ast_node* root, symbolTable* localTable, symbolTable* global);
+void IR_assignmentStmt(ast_node* root, symbolTable* localTable, symbolTable* global);
+insideRecord* getRecordDetails(char* lexeme, char* record_name, symbolTable* global);
+insideRecord* getRecordDetails_util(char* lexeme, insideRecord* head, char* record_name, symbolTable* global);
+void IR_otherStmts(ast_node* root, symbolTable* localTable, symbolTable* global);
+void IR_for_astnode(ast_node* root, symbolTable* localTable, symbolTable* global);
 void generate(ast_node* root, char ** arr, int no_to_add);
-void createIR(ast_node* root);
+void createIR(ast_node* root, symbolTable* localTable, symbolTable* global);
 char* newlabel();
 char* newtemp();
 tuple* newTuple(OP op, char* arg1, char* arg2, char* arg3, tuple* next);
