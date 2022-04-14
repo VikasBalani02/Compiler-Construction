@@ -1,0 +1,21 @@
+_main
+	type int: b3;
+    type int: c4;
+    type int: d5;
+    type int: b6;
+    type int: b2;
+    c4 <--- 4;
+    b3 <--- 3;
+    d5 <--- 5;
+    b2 <--- c4-b3+10;
+    if(c4>=b3)
+    then
+        write(b2);
+    else
+    if(d5<=d6)
+    then
+        write(d5);
+    endif
+    endif
+	return;
+end
