@@ -367,9 +367,9 @@ void IR_lowPrecedenceTerm(ast_node *root, symbolTable *localTable, symbolTable *
         insideRecord* head2;
         insideRecord* head3;
         tupleList* newL = newList();
-        head1 = getDetails(child1->place, head1, child1->node_type->type_ruid, global);
-        head2 = getDetails(child2->place, head2, child2->node_type->type_ruid, global);
-        head3 = getDetails(root->place, head3, root->node_type->type_ruid, global); //root->node_type->type_ruid ??
+        head1 = getRecordDetails(child1->place, child1->node_type->type_ruid, global);
+        head2 = getRecordDetails(child2->place,  child2->node_type->type_ruid, global);
+        head3 = getRecordDetails(root->place,  root->node_type->type_ruid, global); //root->node_type->type_ruid ??
         while(head1 != NULL && head2 != NULL && head3 != NULL) {
             if(optype == PLUS) {
                 t = newTuple(PLUS, head1->lex, head2->lex, head3->lex, NULL);
@@ -885,7 +885,7 @@ void IR_iostmt(ast_node *root, symbolTable *localTable, symbolTable *global)
     tupleList* newL= newList();
     if(singleOrRecIDNode->node_type->type == RECORD){
         insideRecord* head;
-        head = getDetails(singleOrRecIDNode->place, head, singleOrRecIDNode->node_type->type_ruid, global);
+        head = getRecordDetails(singleOrRecIDNode->place, head, singleOrRecIDNode->node_type->type_ruid, global);
         tuple* t;
         while(head != NULL) {
             if(op==TK_READ) {
