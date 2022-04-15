@@ -1,5 +1,9 @@
-#include "intermediate_code.h"
+#include "codegendef.h"
 
+lexeme_decomp *get_lexdecomp_struct(char *lex);
+lexeme_decomp *decompose_lexeme(char *lex);
+int get_offset(lexeme_decomp *lex, struct symbolTable *local_table, struct symbolTable *global_table);
+void get_offset_util(lexeme_decomp *lexList, SymbolTableRecord *sym_info, struct symbolTable *local_table, struct symbolTable *global_table);
 void generate_code(symbolTable * global, FILE * assembly_file_ptr);
 char* op_map[] = {
     "MUL",
