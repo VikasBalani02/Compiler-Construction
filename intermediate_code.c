@@ -119,10 +119,12 @@ void createIR(ast_node *root, symbolTable *localTable, symbolTable *global)
 // this is for a specific node
 void IR_for_astnode(ast_node *root, symbolTable *localTable, symbolTable *global)
 {
-
     if (root->construct == booleanExpression_)
     {
         IR_boolean_expression(root, localTable, global);
+    }
+    else if(root->construct == primitiveDatatype_){
+        IR_primitiveDatatype(root, localTable, global);
     }
     else if (root->construct == function_ || root->construct == mainFunction_)
     {
@@ -331,6 +333,9 @@ insideRecord *getRecordDetails_util(char *lexeme, insideRecord *head, char *reco
     }
     return head;
 }
+void IR_primitiveDatatype(ast_node *root, symbolTable *localTable, symbolTable *global){
+    
+}
 void IR_assignmentStmt(ast_node *root, symbolTable *localTable, symbolTable *global)
 {
     char *arg1 = root->firstChild->place;
@@ -356,7 +361,10 @@ void IR_lowPrecedenceTerm(ast_node *root, symbolTable *localTable, symbolTable *
     char *arg1 = root->firstChild->place;
     char *arg2 = root->firstChild->nextSib->place;
     char *res = newtemp();
+
     root->place = res;
+
+
     Type optype = root->node_type->type;
     ast_node* child1 = root->firstChild;
     ast_node* child2 = root->firstChild->nextSib;
@@ -885,7 +893,7 @@ void IR_iostmt(ast_node *root, symbolTable *localTable, symbolTable *global)
     tupleList* newL= newList();
     if(singleOrRecIDNode->node_type->type == RECORD){
         insideRecord* head;
-        head = getRecordDetails(singleOrRecIDNode->place, head, singleOrRecIDNode->node_type->type_ruid, global);
+        head = getRecordDetails(singleOrRecIDNode->place, singleOrRecIDNode->node_type->type_ruid, global);
         tuple* t;
         while(head != NULL) {
             if(op==TK_READ) {
