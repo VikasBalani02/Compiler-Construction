@@ -20,4 +20,5 @@ tupleList* newList();
 void IR_iostmt(ast_node *root, symbolTable* localTable, symbolTable* global);
 void print_tuple(tuple* t);
 
+tupleList *get_intermediate_list(ast_node *root, symbolTable *global);
 // void update_code(ast_node* t, char* str);

@@ -206,7 +206,7 @@ int traverseNode(ast_node * current, symbolTable* global){
                 }
                 child = child->nextSib;
             }
-            // temp->width = offset;
+            // temp->width = offset
             SymbolTableRecord * entry = getSymbolInfo(temp->lexeme,global);
             if(entry != NULL){
                 printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d\n", temp->line_no, temp->lexeme, entry->line_no);
@@ -339,7 +339,7 @@ int traverseNode(ast_node * current, symbolTable* global){
                 temp->type_ruid = entry->type_ruid;
                 SymbolTableRecord * entry2 = getSymbolInfo(entry->type_ruid,global);
                 if(entry2->type==4){
-                    printf("Line No: %d, Union %s cannot be declared in this manner %s\n",info->lineNum,info->ruid);
+                    printf("Line No: %d, Union %s cannot be declared in this manner \n",info->lineNum,info->ruid);
                     flag=1;
                 }
                 temp->line_no = info->lineNum;
@@ -558,7 +558,7 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
                 }
                 else if(info->union_or_record == TK_UNION) 
                 {
-                    printf("Line No: %d, Union %s cannot be declared in this manner %s\n",info->lineNum,info->ruid);
+                    printf("Line No: %d, Union %s cannot be declared in this manner\n",info->lineNum,info->ruid);
                     flag=1;
                 }
                 else if (info->union_or_record == -1){
@@ -666,8 +666,8 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
                 temp->type_ruid = entry->type_ruid;
                 SymbolTableRecord * entry2 = getSymbolInfo(entry->type_ruid,global);
                 if(entry2->type==4){
-                    printf("Line No: %d, Union %s cannot be declared in this manner %s\n",info->lineNum,info->ruid);
-                    flag=1;
+                    printf("Line No: %d, Union %s cannot be declared in this manner \n",info->lineNum,info->ruid);
+                    return 1;
                 }
                 temp->line_no = info->lineNum;
                 temp->width = entry2->width;
