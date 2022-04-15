@@ -919,3 +919,40 @@ void IR_iostmt(ast_node *root, symbolTable *localTable, symbolTable *global)
         root->list = newL; 
     }
 }
+
+char* op_map[] = {
+    "MUL",
+    "DIV",
+    "PLUS",
+    "MINUS",
+    "IF",
+    "GOTO",
+    "LT",
+    "LE",
+    "EQ",
+    "NE",
+    "GT",
+    "GE",
+    "NOT",
+    "LABEL",
+    "UNSET",
+    "SET",
+    "ASSIGN",
+    "READ",
+    "WRITE",
+    "FUNCT",
+    "ENDFUNCT"
+};
+
+void print_tuple(tuple* t) {
+    tuple* tcopy = newTuple(NULL, NULL, NULL, NULL, NULL);
+    if(t->arg1==NULL) {
+        tcopy->arg1 = "_";
+    }
+    if(t->arg2==NULL) {
+        tcopy->arg2 = "_";
+    }
+    char* oper = op_map[t->op];
+
+    printf("%s = %s %s %s", t->arg3, oper, tcopy->arg1, tcopy->arg2);
+}

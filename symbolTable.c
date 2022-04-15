@@ -598,6 +598,11 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
                 printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d\n", record->line_no, record->lexeme, entry->line_no);
                 flag=1;
             }
+            SymbolTableRecord * entry_2 = getSymbolInfo(record->lexeme,global);
+            if(entry_2 != NULL){
+                printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d\n", record->line_no, record->lexeme, entry_2->line_no);
+                flag=1;
+            }
             addSymbol(table,record->lexeme,record);
             child = child->nextSib;
         }
@@ -668,27 +673,26 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
                 temp->width = entry2->width;
             }
         }
-        if(info->isGlobal){
+        /*if(info->isGlobal){
             SymbolTableRecord * entry = getSymbolInfo(temp->lexeme,global);
             if(entry != NULL){
                 printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d\n", temp->line_no, temp->lexeme, entry->line_no);
                 flag=1;
             }
             addSymbol(global,temp->lexeme, temp);
+        }*/
+        SymbolTableRecord * entry = getSymbolInfo(temp->lexeme,table);
+        SymbolTableRecord * entry_2 = getSymbolInfo(temp->lexeme,global);
+        if(entry != NULL){
+            printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d\n", temp->line_no, temp->lexeme, entry->line_no);
+            flag=1;
         }
-        else {
-            SymbolTableRecord * entry = getSymbolInfo(temp->lexeme,table);
-            SymbolTableRecord * entry_2 = getSymbolInfo(temp->lexeme,global);
-            if(entry != NULL){
-                printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d\n", temp->line_no, temp->lexeme, entry->line_no);
-                flag=1;
-            }
-            if(entry_2 != NULL){
-                printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d\n", temp->line_no, temp->lexeme, entry_2->line_no);
-                flag=1;
-            }
-            addSymbol(table,temp->lexeme, temp);
-            }
+        if(entry_2 != NULL){
+            printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d\n", temp->line_no, temp->lexeme, entry_2->line_no);
+            flag=1;
+        }
+        addSymbol(table,temp->lexeme, temp);
+            
     }
     ast_node * child = current->firstChild;
     while(child!=NULL){
@@ -725,7 +729,7 @@ symbolTable * populateSymbolTable(ast_node * root){
         FunEntry->function_field->num=i;
         i++;
         FunEntry->width =0;
-        if(traverseNodeFunction(function,funTable,globalTable,FunEntry)==1) exit(0);
+        traverseNodeFunction(function,funTable,globalTable,FunEntry);
         function = function->nextSib;
     }
     return globalTable;
