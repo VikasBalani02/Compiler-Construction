@@ -46,8 +46,10 @@ int checkSymbol(symbolTable* symbolTable,char*key){
     int hash =  hashFunction(key,symbolTable->no_slots);
 	SymbolTableRecord *temp = symbolTable->list[hash]->head;
     while(temp!=NULL){
-        if(strcmp(temp->lexeme,key)==0)
-        return 1;
+        if(strcmp(temp->lexeme,key)==0){
+             return 1;
+        }
+        temp=temp->next;       
     }
     return 0;
 }
@@ -96,7 +98,8 @@ int global_check(symbolTable *global, char *key){
 
 typeInfo* add_function_par(typeInfo * typeInfoList, Type type, char* lexeme, char *ruid, symbolTable* global){
     if(global_check(global,lexeme)){
-        printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d");
+
+        printf("Redeclaration of global variable %s",lexeme);
         return NULL;
     }
     else{
@@ -515,7 +518,7 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
                     ruid = entry->type_ruid;
                     SymbolTableRecord * entry2 = getSymbolInfo(entry->type_ruid,global);
                     if(entry2->type==4){
-                       printf("Line No: %d, Union %s cannot be declared in this manner %s\n",info->lineNum,info->ruid);
+                       printf("Line No: %d, Union %s cannot be declared in this manner \n",info->lineNum,info->ruid);
                        return 1;
                     }
                     width = entry2->width;

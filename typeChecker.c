@@ -1,7 +1,7 @@
 #include <stdarg.h>
 #include "typeChecker.h"
 #include "string.h"
-extern char *terminal_map;
+extern char *terminal_map[];
 typeInfo *get_typeInfo(Type type, char *ruid)
 {
     typeInfo *temp = (typeInfo *)malloc(sizeof(typeInfo));
@@ -32,7 +32,7 @@ void populate_Identifier_type(ast_node *id_node, Error *err_list, symbolTable *t
         sym_info = getSymbolInfo(lexID, global);
         if (sym_info == NULL)
         {
-            log_error(err_list, "Line Number: %d| %s is undefined", info->lineNum, info->lexID);
+            log_error(err_list, "Line Number: %d| %s variable is undefined", info->lineNum, info->lexID);
             id_node->node_type = get_typeInfo(ERROR_, NULL);
             return;
         }
@@ -44,7 +44,10 @@ void populate_Identifier_type(ast_node *id_node, Error *err_list, symbolTable *t
     struct record_field *fields;
     int isField = 0; // If 1 we have to extract the type from record_fields structure instead of directly from symbol table node
     int isError = 0; // To keep track of erroneous access to symbol table
-
+    if (sym_info->type == RECORD || sym_info->type == VARIANTRECORD || sym_info->type == UNION)
+    {
+        sym_info = getSymbolInfo(sym_info->type_ruid, global);
+    }
     while (sym_info->type == RUID)
     {
         sym_info = getSymbolInfo(sym_info->type_ruid, global); // Access the actual record/union entry if symbol table entry is alias
@@ -53,7 +56,8 @@ void populate_Identifier_type(ast_node *id_node, Error *err_list, symbolTable *t
     {
         struct field_id_struct *field_info = (struct field_id_struct *)expansion_list->ninf;
         char *field_lex = field_info->fieldid;
-        while(sym_info->type==RUID){
+        while (sym_info->type == RUID)
+        {
             sym_info = getSymbolInfo(sym_info->type_ruid, global);
         }
         if (sym_info->type != UNION && sym_info->type != RUID && sym_info->type != RECORD && sym_info->type != VARIANTRECORD)
@@ -73,15 +77,18 @@ void populate_Identifier_type(ast_node *id_node, Error *err_list, symbolTable *t
         if (fields == NULL)
         {
             // Error: no such field in record/union
-            log_error(err_list, "Line Number %d: the accessed VARIATNRECORD/RECORD/UNION does not have a field with name %s", field_info->lineNum, field_info->fieldid);
+            log_error(err_list, "Line Number %d: the accessed VARIANT RECORD/RECORD/UNION does not have a field with name %s", field_info->lineNum, field_info->fieldid);
             isError = 1;
             break;
         }
         else
         {
-            if (fields->type == RUID)
+            if (fields->type == RUID || fields->type==RECORD || fields->type==VARIANTRECORD || fields->type==UNION)
             {
                 sym_info = getSymbolInfo(fields->ruid, global);
+                while((sym_info->type==RUID)){
+                    sym_info = getSymbolInfo(sym_info->type_ruid, global);
+                }
                 isField = 0;
             }
         }
@@ -107,7 +114,7 @@ void populate_Identifier_type(ast_node *id_node, Error *err_list, symbolTable *t
     {
         if (sym_info->type == UNION || sym_info->type == RECORD || sym_info->type == VARIANTRECORD)
         {
-            id_node->node_type = get_typeInfo(sym_info->type, sym_info->type_ruid);
+            id_node->node_type = get_typeInfo(sym_info->type, sym_info->lexeme);
         }
         else
         {
@@ -122,7 +129,7 @@ SymbolTableRecord *get_function_entry(char *funid, Error *err_list, symbolTable 
     SymbolTableRecord *func_record = getSymbolInfo(funid, global);
     return func_record;
 }
-void type_checker(ast_node *root, Error *err_list, symbolTable *table, symbolTable *global)
+void type_checker(ast_node *root, Error *err_list, symbolTable *table, symbolTable *global, int fun_num)
 {
     if (root == NULL)
     {
@@ -133,17 +140,18 @@ void type_checker(ast_node *root, Error *err_list, symbolTable *table, symbolTab
 
         struct func_struct *info = (struct func_struct *)root->ninf;
         SymbolTableRecord *func_record = get_function_entry(info->funID, err_list, table, global);
+        fun_num = func_record->function_field->num;
         table = func_record->functionTable;
     }
     ast_node *childptr = root->firstChild;
     while (childptr)
     {
-        type_checker(childptr, err_list, table, global);
+        type_checker(childptr, err_list, table, global, fun_num);
         childptr = childptr->nextSib;
     }
-    check_type(root, err_list, table, global);
+    check_type(root, err_list, table, global, fun_num);
 }
-void check_type(ast_node *node, Error *err_list, symbolTable *table, symbolTable *global)
+void check_type(ast_node *node, Error *err_list, symbolTable *table, symbolTable *global, int fun_num)
 {
     switch (node->construct)
     {
@@ -158,7 +166,7 @@ void check_type(ast_node *node, Error *err_list, symbolTable *table, symbolTable
         check_iterative_stmt(node, err_list);
         break;
     case funCallStmt_:
-        check_funCall_stmt(node, err_list, table, global);
+        check_funCall_stmt(node, err_list, table, global, fun_num);
         break;
     case ioStmt_:
         check_io_stmt(node, err_list);
@@ -202,32 +210,35 @@ void check_type(ast_node *node, Error *err_list, symbolTable *table, symbolTable
     case REALNUM_:
         check_num_type(node, err_list);
         break;
+    case function_:
+        check_function_definition(node,err_list);
+        break;
     default:
 
         node->node_type = get_typeInfo(UNDEFINED, NULL);
         break;
     }
 }
-int find_if_assigned(ast_node *stmt_list, char *lex)
+int find_if_assigned(ast_node *root, char *lex)
 {
     // checks if the lex appears in the LHS of assignment stmts withing the list
-    ast_node *ptr = stmt_list;
-    while (ptr)
-    {
-        if (ptr->construct != assignmentStmt_)
-        {
-            ptr = ptr->nextSib;
-            continue;
-        }
-        ast_node *lhs = ptr->firstChild;
+    ast_node * child= root->firstChild;
+    if(root->construct==assignmentStmt_){
+        ast_node *lhs = root->firstChild;
         struct id_struct *id_info = (struct id_struct *)(lhs->ninf);
         if (strcmp(id_info->lexID, lex) == 0)
         {
             return 1;
         }
-        ptr = ptr->nextSib;
+    }
+    while (child)
+    {
+        int found =find_if_assigned(child,lex);
+        if(found) return 1;
+        child=child->nextSib;
     }
     return 0;
+
 }
 void check_assign_stmt(ast_node *node, Error *err_list)
 {
@@ -256,6 +267,10 @@ void check_assign_stmt(ast_node *node, Error *err_list)
             {
                 node->node_type = get_typeInfo(ERROR_, NULL);
                 log_error(err_list, "Line Number %d: Type Mismatch between id and expression in assignment statement", ((struct id_struct *)(lhs->ninf))->lineNum);
+            }
+            else
+            {
+                node->node_type = lhs_type;
             }
         }
         else
@@ -325,19 +340,22 @@ int compare_param_list(struct func_struct *info, ast_node *node, typeInfo *forma
     }
     return 1;
 }
-void check_funCall_stmt(ast_node *node, Error *err_list, symbolTable *table, symbolTable *global)
+void check_funCall_stmt(ast_node *node, Error *err_list, symbolTable *table, symbolTable *global, int fun_num)
 {
     struct func_struct *info = (struct func_struct *)node->ninf;
     SymbolTableRecord *func_record = get_function_entry(info->funID, err_list, table, global);
+
     if (func_record == NULL)
     {
         node->node_type = get_typeInfo(ERROR_, NULL);
         return;
     }
     // uncomment later
-    //  if(func_record->function_field->function_id>=current_function_id){
-    //      log_error(err_list,"Line Number %d:Cannot call functions declared later in earlier functions",info->lineNum,info->funID);
-    //  }
+
+    if (func_record->function_field->num >= fun_num)
+    {
+        log_error(err_list, "Line Number %d: function %s cannot be called here (not defined yet or recursive call)", info->lineNum, info->funID);
+    }
     ast_node *outputParameters_anode = node->firstChild;
     ast_node *inputParameters_anode = outputParameters_anode->nextSib;
     int error_free_out = compare_param_list(info, outputParameters_anode, func_record->function_field->OutputHead, err_list);
@@ -352,11 +370,43 @@ void check_funCall_stmt(ast_node *node, Error *err_list, symbolTable *table, sym
     }
 }
 
+int populate_guard_variables(char **guard_variables, ast_node *booleanExp, int idx)
+{
+    // same function can be used for populating guard variables for output parameter list.
+    ast_node *child = booleanExp->firstChild;
+    if (booleanExp->construct == singleOrRecId_ || booleanExp->construct == Identifier_)
+    {
+        struct id_struct *info = (struct id_struct *)booleanExp->ninf;
+        idx++;
+        guard_variables[idx] = info->lexID;
+    }
+    while (child)
+    {
+        idx = populate_guard_variables(guard_variables, child, idx);
+        child = child->nextSib;
+    }
+    return idx;
+}
 void check_iterative_stmt(ast_node *node, Error *err_list)
 {
     ast_node *bool_condition = node->firstChild;
     ast_node *stmts_to_repeat = node->firstChild->nextSib;
-
+    char **guard_variables = (char **)calloc(100, sizeof(char *));
+    // assuming any condition will have less than 100 variables
+    int num_guard_vars = populate_guard_variables(guard_variables, bool_condition, -1);
+    int found = 0;
+    for (int i = 0; i <= num_guard_vars; i++)
+    {
+        found = find_if_assigned(stmts_to_repeat, guard_variables[i]);
+        if (found)
+            break;
+    }
+    if (found == 0)
+    {
+        log_error(err_list, "No guard variables were re-assigned within the loop body");
+        // Where to get line numbers from?
+    }
+    free(guard_variables);
     // Check if the boolean expression has no errors
     if (bool_condition->node_type->type == ERROR_)
     {
@@ -376,7 +426,26 @@ void check_iterative_stmt(ast_node *node, Error *err_list)
         }
     }
 }
+void check_function_definition(ast_node *node, Error *err_list)
+{
+    ast_node *output_par_list = node->firstChild->nextSib;
+    ast_node *stmts_group = node->firstChild->nextSib->nextSib;
+    char **guard_variables = (char **)calloc(100, sizeof(char *));
+    // assuming any condition will have less than 100 variables
+    int num_guard_vars = populate_guard_variables(guard_variables, output_par_list, -1);
+    int found = 0;
+    for (int i = 0; i <= num_guard_vars; i++)
+    {
+        found = find_if_assigned(stmts_group, guard_variables[i]);
+        if (found == 0)
+        {
+            struct func_struct *func_info = (struct func_struct *)node->ninf;
+            log_error(err_list, "Line Number %d: definition of %s does not assign any value to output parameter %s",func_info->lineNum,func_info->funID,guard_variables[i]);            
+        }
+    }
 
+    free(guard_variables);
+}
 void check_conditional_stmt(ast_node *node, Error *err_list)
 {
     ast_node *booleanExpression_node = node->firstChild;
@@ -416,7 +485,7 @@ void check_lowPrecedenceTerm(ast_node *node, Error *err_list)
     }
     if (left_operand->node_type->type == UNION || right_operand->node_type->type == UNION)
     {
-        log_error(err_list, "Line Number %d: Operand cannot be of type UNION", op_info->lineno);
+        log_error(err_list, "Line Number %d: %s cannot have operand of type UNION", terminal_map[op_info->op], op_info->lineno);
         node->node_type = get_typeInfo(ERROR_, NULL);
         return;
     }
@@ -432,10 +501,14 @@ void check_lowPrecedenceTerm(ast_node *node, Error *err_list)
             node->node_type = left_operand->node_type;
             return;
         }
+        else{
+            node->node_type = get_typeInfo(ERROR_, NULL);
+            log_error(err_list, "Line Number %d: Type mismatch for %s ", op_info->lineno, terminal_map[op_info->op]);
+        }
     }
     else
     {
-        log_error(err_list, "Line Number %d: Type mismatch for low Precedence Operator ", op_info->lineno);
+        log_error(err_list, "Line Number %d: Type mismatch for %s ", op_info->lineno, terminal_map[op_info->op]);
         // ,terminal_map[op_info->op]
         node->node_type = get_typeInfo(ERROR_, NULL);
         return;
@@ -480,11 +553,19 @@ void check_highPrecedenceTerm(ast_node *node, Error *err_list)
         node->node_type = get_typeInfo(ERROR_, NULL);
         return;
     }
+    
     if (left_operand->node_type->type == UNION || right_operand->node_type->type == UNION || left_operand->node_type->type == RECORD || right_operand->node_type->type == RECORD || left_operand->node_type->type == VARIANTRECORD || right_operand->node_type->type == VARIANTRECORD)
     {
-        log_error(err_list, "Line Number %d: high precedence operators cannot have constructed datatypes as operands", op_info->lineno);
-        node->node_type = get_typeInfo(ERROR_, NULL);
-        return;
+        if(op_info->op==TK_MUL && ((left_operand->node_type->type==RECORD && right_operand->node_type->type==INT) ||(left_operand->node_type->type==INT && right_operand->node_type->type==RECORD))){
+            node->node_type=left_operand->node_type->type==RECORD?left_operand->node_type:right_operand->node_type;
+            return;
+        }
+        else{
+            log_error(err_list, "Line Number %d: %s cannot have constructed datatypes as operands", op_info->lineno, terminal_map[op_info->op]);
+            node->node_type = get_typeInfo(ERROR_, NULL);
+            return;
+        }
+        
     }
     if (op_info->op != TK_DIV && left_operand->node_type->type == right_operand->node_type->type)
     {
@@ -497,7 +578,7 @@ void check_highPrecedenceTerm(ast_node *node, Error *err_list)
     }
     else
     {
-        log_error(err_list, "Line Number %d: Type mismatch for operator high precedence operator ", op_info->lineno);
+        log_error(err_list, "Line Number %d: Type mismatch for operator %s ", op_info->lineno), terminal_map[op_info->op];
         // terminal_map[op_info->op]
         node->node_type = get_typeInfo(ERROR_, NULL);
         return;
@@ -653,7 +734,7 @@ void check_boolean_exp(ast_node *node, Error *err_list)
     }
     ast_node *bool_exp2 = bool_exp1->nextSib;
 
-    if (bool_exp1->node_type->type == ERROR_ || bool_exp1->node_type->type == ERROR_)
+    if (bool_exp1->node_type->type == ERROR_ || bool_exp2->node_type->type == ERROR_)
     {
         // 1. boolexp==>boolexp relop boolexp 2. boolexp==>var relop var
         node->node_type = get_typeInfo(ERROR_, NULL);
@@ -691,7 +772,7 @@ void check_boolean_exp(ast_node *node, Error *err_list)
             {
                 lineno = ((struct num_struct *)(bool_exp1->ninf))->lineno;
             }
-            log_error(err_list, "Line Number %d: Type mismatch detected for relop operands", lineno);
+            log_error(err_list, "Line Number %d: Type mismatch detected for operands of %s", lineno, terminal_map[boolinfo->op]);
             node->node_type = get_typeInfo(ERROR_, NULL);
             return;
         }
@@ -770,12 +851,12 @@ void check_id_list(ast_node *node, Error *err_list)
 
         {
             node->node_type = get_typeInfo(ERROR_, NULL);
-            // if (temp->node_type->type == UNION || temp->node_type->type == RECORD)
-            // {
-            //     // Error: idList cannot have identifier of a record or a union
-            //     int lineno = ((struct constructed_type_struct *)(temp->ninf))->lineNum;
-            //     log_error(err_list, "Line Number %d:cannot have identifiers of type record/union in id lists", lineno);
-            // }
+            if (temp->node_type->type == UNION)
+            {
+                // Error: idList cannot have identifier of a union type
+                int lineno = ((struct constructed_type_struct *)(temp->ninf))->lineNum;
+                log_error(err_list, "Line Number %d:cannot have identifiers of type union as a parameter", lineno);
+            }
             return;
         }
         temp = temp->nextSib;

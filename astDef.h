@@ -134,6 +134,11 @@ typedef struct typeInfo{
 	struct typeInfo * next;
 }typeInfo;
 
+struct insideRecord{
+    struct insideRecord* next;
+    char* lex;
+}; 
+typedef struct insideRecord insideRecord;
 
 struct ast_node {
     struct ast_node *firstChild;

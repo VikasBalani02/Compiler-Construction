@@ -1,0 +1,25 @@
+_main
+    type int: b3;
+    type real: c4;
+    type int: d5;
+    type int: b6;
+    type int: b2;
+    c4 <--- 4;
+    b3 <--- 3;
+    d5 <--- 5;
+    b2 <--- c4-b3+1;
+    while(c4<=b6)
+        c4 <--- b2+1;
+        while(b3 >= b2)
+            b3 <--- b3-1;
+            while(d5 > b2)
+                %d5 <--- d5 - 2;
+                if(d5 < b2)
+                then
+                    write(b2);
+                endif
+            endwhile
+        endwhile
+    endwhile
+return;
+end
