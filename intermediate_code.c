@@ -44,15 +44,21 @@ void addTupleEnd(tupleList *list, tuple *t)
 }
 void concatLists(tupleList **l1, tupleList *l2)
 {
-    if (l1 == NULL)
-    {
-        (*l1) = l2;
+    if(*l1==NULL){
+        (*l1)=l2;
+    }
+    else if((*l1)->head==NULL){
+        if(l2==NULL) return;
+        (*l1)->head=l2->head;
+        (*l1)->tail=l2->tail;
+    }
+    else if(l2==NULL){
         return;
     }
-    if (l2 == NULL)
-        return;
-    (*l1)->tail->next = l2->head;
-    (*l1)->tail = l2->tail;
+    else{
+        (*l1)->tail->next=l2->head;
+        (*l1)->tail=l2->tail;
+    }
     return;
 }
 void addTupleFront(tupleList *list, tuple *t)
@@ -146,7 +152,7 @@ void createIR(ast_node *root, symbolTable *localTable, symbolTable *global)
     {
         if (temp->construct == function_ || temp->construct == mainFunction_)
         {
-            char *funid = ((struct func_struct *)(root->ninf))->funID;
+            char *funid = ((struct func_struct *)(temp->ninf))->funID;
             SymbolTableRecord *func_record = getSymbolInfo(funid, global);
             localTable = func_record->functionTable;
         }
@@ -157,8 +163,14 @@ void createIR(ast_node *root, symbolTable *localTable, symbolTable *global)
 }
 // this is for a specific node
 void IR_for_astnode(ast_node *root, symbolTable *localTable, symbolTable *global)
-{
-    if (root->construct == booleanExpression_)
+{   if(root->construct==conditionalStmt_){
+        IR_conditional(root,localTable,global);
+    }
+    else if(root->construct == iterativeStmt_){
+        IR_iterative(root,localTable,global);
+    }
+
+    else if (root->construct == booleanExpression_)
     {
         IR_boolean_expression(root, localTable, global);
     }
@@ -197,7 +209,7 @@ void IR_for_astnode(ast_node *root, symbolTable *localTable, symbolTable *global
     }
     else if (root->construct == ioStmt_)
     {
-        IR_io_statement(root, localTable, global);
+        IR_iostmt(root, localTable, global);
     }
     else if (root->construct == funCallStmt_)
     {
@@ -839,6 +851,7 @@ void IR_conditional(ast_node *root, symbolTable *localTable, symbolTable *global
 
     if (root->firstChild == NULL)
     {
+        //will never happen
         root->place = NULL;
         root->list = NULL;
     }
@@ -1068,6 +1081,9 @@ void IR_iostmt(ast_node *root, symbolTable *localTable, symbolTable *global)
 }
 
 char *op_map[] = {
+    "PARAMO",
+    "PARAMI",
+    "CALL",
     "MUL",
     "DIV",
     "PLUS",
@@ -1088,29 +1104,35 @@ char *op_map[] = {
     "READ",
     "WRITE",
     "FUNCT",
-    "ENDFUNCT"};
+    "RET"};
 
 void print_tuple(tuple *t)
 {
-    tuple *tcopy = newTuple(NULL, NULL, NULL, NULL, NULL);
+    tuple *tcopy = newTuple(NOT, NULL, NULL, NULL, NULL);
     if (t->arg1 == NULL)
     {
         tcopy->arg1 = "_________";
+    }
+    else {
+        tcopy->arg1 = t->arg1;
     }
     if (t->arg2 == NULL)
     {
         tcopy->arg2 = "_________";
     }
+    else {
+        tcopy->arg2 = t->arg2;
+    }
     if (t->arg3 == NULL)
     {
         tcopy->arg3 = "_________";
     }
-    if (t->arg3 == NULL) {
-        tcopy->arg3 = "_";
+    else {
+        tcopy->arg3 = t->arg3;
     }
     char *oper = op_map[t->op];
 
-    printf("%s %s %s %s", oper, tcopy->arg1, tcopy->arg2, tcopy->arg3);
+    printf("\n%10s %10s %10s %10s", oper, tcopy->arg1, tcopy->arg2, tcopy->arg3);
 }
 void print_tupleList(tupleList *tlist)
 {
