@@ -42,12 +42,14 @@ void addTupleEnd(tupleList *list, tuple *t)
         list->tail = t;
     }
 }
-void concatLists(tupleList* l1, tupleList* l2){
-    if(l1 == NULL){
+void concatLists(tupleList *l1, tupleList *l2)
+{
+    if (l1 == NULL)
+    {
         l1 = l2;
         return;
     }
-    if(l2 == NULL)
+    if (l2 == NULL)
         return;
     l1->tail->next = l2->head;
     l1->tail = l2->tail;
@@ -91,19 +93,20 @@ char *newlabel()
 }
 
 // postorder traversal
-tupleList *get_intermediate_list(ast_node *root, symbolTable* global)
+tupleList *get_intermediate_list(ast_node *root, symbolTable *global)
 {
     createIR(root, NULL, global);
     return root->list;
 }
-void createIR(ast_node *root, symbolTable* localTable, symbolTable* global)
+void createIR(ast_node *root, symbolTable *localTable, symbolTable *global)
 {
     if (root == NULL)
         return;
     ast_node *temp = root->firstChild;
     while (temp != NULL)
     {
-        if(temp->construct == function_ || temp->construct == mainFunction_){
+        if (temp->construct == function_ || temp->construct == mainFunction_)
+        {
             char *funid = ((struct func_struct *)(root->ninf))->funID;
             SymbolTableRecord *func_record = getSymbolInfo(funid, global);
             localTable = func_record->functionTable;
@@ -114,14 +117,15 @@ void createIR(ast_node *root, symbolTable* localTable, symbolTable* global)
     IR_for_astnode(root, localTable, global);
 }
 // this is for a specific node
-void IR_for_astnode(ast_node *root, symbolTable* localTable, symbolTable* global)
+void IR_for_astnode(ast_node *root, symbolTable *localTable, symbolTable *global)
 {
 
     if (root->construct == booleanExpression_)
     {
         IR_boolean_expression(root, localTable, global);
     }
-    else if(root->construct == function_ || root->construct == mainFunction_){
+    else if (root->construct == function_ || root->construct == mainFunction_)
+    {
         IR_function(root, localTable, global);
     }
     else if (root->construct == singleOrRecId_)
@@ -136,48 +140,84 @@ void IR_for_astnode(ast_node *root, symbolTable* localTable, symbolTable* global
     {
         IR_highPrecedenceTerm(root, localTable, global);
     }
-    else if (root->construct == assignmentStmt_){
+    else if (root->construct == assignmentStmt_)
+    {
         IR_assignmentStmt(root, localTable, global);
     }
 
-    else if(root->construct == ioStmt_) {
+    else if (root->construct == ioStmt_)
+    {
         IR_iostmt(root, localTable, global);
     }
-    else if (root->construct == thenStmts_ || root->construct == elsePart_ || root->construct == otherStmts_ || root->construct == stmts_) {
+    else if (root->construct == thenStmts_ || root->construct == elsePart_ || root->construct == otherStmts_ || root->construct == stmts_)
+    {
         IR_stmts(root, localTable, global);
     }
     else if (root->construct == ioStmt_)
     {
         IR_io_statement(root, localTable, global);
     }
+    else if(root->construct == funCallStmt_){
+        IR_funct_call(root, localTable, global);
+    }
     else
     {
         root->list = NULL;
     }
 }
-void IR_function(ast_node* root, symbolTable* localTable, symbolTable* global){
-    char *fun = ((struct func_struct *)(root->ninf))->funID;
-    tuple* newT1 = newTuple(FUNCT, fun, NULL, NULL, NULL);
-    tuple* newT2 = newTuple(ENDFUNCT, fun, NULL, NULL, NULL);
+insideRecord* getParamList(ast_node* params_anode, insideRecord* list_new){
+    ast_node* temp = params_anode->firstChild;
+    while(temp){
+        if(temp->node_type->type == INT || temp->node_type->type == REAL){
+            list_new = insertLexeme(list_new, temp->node_type->lexeme);
+        }
+        // if(temp->node_type->type == RECORD){
+        //     insideRecord* head = 
+        // }
+    }
+    list_new = reverseList(list_new);
+    return list_new;
+} 
+void IR_funct_call(ast_node* root, symbolTable* localTable, symbolTable* global){
+    // return a, b on input c ,d, e, this means we need to put b at bottom and a and then e and then d and then c on top
+    ast_node* outputParams_anode = root->firstChild;
+    ast_node* inputParmas_anode = root->firstChild->nextSib;
 
-    if(root->firstChild == NULL){
+    insideRecord *list_new1 = (insideRecord *)malloc(sizeof(insideRecord));
+    list_new1 = getParamList(outputParams_anode, list_new1);
+    list_new1 = list_new1->next;
+
+    insideRecord *list_new2 = (insideRecord *)malloc(sizeof(insideRecord));
+    list_new2 = getParamList(inputParmas_anode, list_new2);
+    list_new2 = list_new2->next;
+    
+}
+void IR_function(ast_node *root, symbolTable *localTable, symbolTable *global)
+{
+    char *fun = ((struct func_struct *)(root->ninf))->funID;
+    tuple *newT1 = newTuple(FUNCT, fun, NULL, NULL, NULL);
+    tuple *newT2 = newTuple(ENDFUNCT, fun, NULL, NULL, NULL);
+
+    if (root->firstChild == NULL)
+    {
         root->list = newList;
         addTupleEnd(root->list, newT1);
         addTupleEnd(root->list, newT2);
         return;
     }
-    tupleList* newL = newList();
+    tupleList *newL = newList();
     addTupleEnd(newL, newT1);
-    ast_node* temp;
+    ast_node *temp;
     temp = root->firstChild;
-    while(temp){
+    while (temp)
+    {
         concatLists(newL, temp->list);
         temp = temp->nextSib;
     }
     addTupleEnd(newL, newT2);
     root->list = newL;
 }
-void IR_singleOrRecId(ast_node *root, symbolTable* localTable, symbolTable* global)
+void IR_singleOrRecId(ast_node *root, symbolTable *localTable, symbolTable *global)
 {
     char *lexeme = ((struct id_struct *)(root->ninf))->lexID;
     ast_node *temp = root->firstChild;
@@ -192,71 +232,99 @@ void IR_singleOrRecId(ast_node *root, symbolTable* localTable, symbolTable* glob
     root->place = lexeme;
     root->list = NULL;
 }
-insideRecord* getInsideRecord(char* lexeme){
-    insideRecord* temp = (insideRecord* )malloc(sizeof(insideRecord));
-    temp->lex = lexeme; 
+insideRecord *getInsideRecord(char *lexeme)
+{
+    insideRecord *temp = (insideRecord *)malloc(sizeof(insideRecord));
+    temp->lex = lexeme;
     temp->next = NULL;
     return temp;
 }
-insideRecord* insertLexeme(insideRecord* head, char* lexeme){
-    insideRecord* newR = getInsideRecord(lexeme);
-    insideRecord* ptr=head;
-    while(ptr->next){
-        ptr=ptr->next;
+insideRecord *reverseList(insideRecord *head)
+{
+    insideRecord *current = head;
+    insideRecord *prev = NULL, *next = NULL;
+    while (current != NULL)
+    {
+        next = current->next;
+        current->next = prev;
+        prev = current;
+        current = next;
     }
-    ptr->next=newR;
+    head = prev;
+    return head;
 }
-insideRecord* getRecordDetails(char* lexeme, char* record_name, symbolTable* global){
-    insideRecord* list_new=(insideRecord*)malloc(sizeof(insideRecord));
-    getRecordDetails_util(lexeme,list_new,record_name,global);
+insideRecord *insertLexeme(insideRecord *head, char *lexeme)
+{
+    insideRecord *newR = getInsideRecord(lexeme);
+    insideRecord *ptr = head;
+    while (ptr->next)
+    {
+        ptr = ptr->next;
+    }
+    ptr->next = newR;
+    return head;
+}
+insideRecord *getRecordDetails(char *lexeme, char *record_name, symbolTable *global)
+{
+    insideRecord *list_new = (insideRecord *)malloc(sizeof(insideRecord));
+    list_new = getRecordDetails_util(lexeme, list_new, record_name, global);
     return list_new->next;
 }
-insideRecord* getRecordDetails_util(char* lexeme, insideRecord* head, char* record_name, symbolTable* global){
-    SymbolTableRecord* record_entry = getSymbolInfo(record_name, global);
-    struct record_field* fields = record_entry->recordFields;
-    while(fields){
+insideRecord *getRecordDetails_util(char *lexeme, insideRecord *head, char *record_name, symbolTable *global)
+{
+    SymbolTableRecord *record_entry = getSymbolInfo(record_name, global);
+    struct record_field *fields = record_entry->recordFields;
+    while (fields)
+    {
 
-        char* temp = concat(lexeme, fields->lexeme);
-        if(fields->type == INT || fields->type == REAL){
+        char *temp = concat(lexeme, fields->lexeme);
+        if (fields->type == INT || fields->type == REAL)
+        {
             head = insertLexeme(head, temp);
         }
-        if(fields->type == RUID){
-            char* nested_rec_name=NULL;
-            SymbolTableRecord* sym_info = record_entry;
-            while(sym_info->type == RUID){
+        if (fields->type == RUID)
+        {
+            char *nested_rec_name = NULL;
+            SymbolTableRecord *sym_info = record_entry;
+            while (sym_info->type == RUID)
+            {
                 sym_info = getSymbolInfo(sym_info->type_ruid, global);
             }
-            if(sym_info->type != RECORD)
+            if (sym_info->type != RECORD)
                 return;
-            nested_rec_name=sym_info->lexeme;
+            nested_rec_name = sym_info->lexeme;
             head = getRecordDetails_util(temp, head, nested_rec_name, global);
         }
-        if(fields->type == RECORD){
-            //field type is record
+        if (fields->type == RECORD)
+        {
+            // field type is record
             head = getRecordDetails_util(temp, head, fields->lexeme, global);
         }
         fields = fields->next;
     }
     return head;
 }
-void IR_assignmentStmt(ast_node* root, symbolTable* localTable, symbolTable* global){
+void IR_assignmentStmt(ast_node *root, symbolTable *localTable, symbolTable *global)
+{
     char *arg1 = root->firstChild->place;
     char *arg2 = root->firstChild->nextSib->place;
-    
-    tupleList* t2 = root->firstChild->nextSib->list;
-    tuple* newT = newTuple(ASSIGN, arg2, NULL, arg1, NULL);
 
-    if(t2 == NULL){
-        tupleList* newL = newList();
+    tupleList *t2 = root->firstChild->nextSib->list;
+    tuple *newT = newTuple(ASSIGN, arg2, NULL, arg1, NULL);
+
+    if (t2 == NULL)
+    {
+        tupleList *newL = newList();
         addTupleEnd(newL, newT);
         t2 = newL;
     }
-    else{
+    else
+    {
         addTupleEnd(t2, newT);
     }
     root->list = t2;
 }
-void IR_lowPrecedenceTerm(ast_node *root, symbolTable* localTable, symbolTable* global)
+void IR_lowPrecedenceTerm(ast_node *root, symbolTable *localTable, symbolTable *global)
 {
     char *arg1 = root->firstChild->place;
 
@@ -306,7 +374,7 @@ void IR_lowPrecedenceTerm(ast_node *root, symbolTable* localTable, symbolTable* 
         }
     }
 }
-void IR_highPrecedenceTerm(ast_node *root, symbolTable* localTable, symbolTable* global)
+void IR_highPrecedenceTerm(ast_node *root, symbolTable *localTable, symbolTable *global)
 {
     char *arg1 = root->firstChild->place;
     char *arg2 = root->firstChild->nextSib->place;
@@ -355,7 +423,7 @@ void IR_highPrecedenceTerm(ast_node *root, symbolTable* localTable, symbolTable*
         }
     }
 }
-void IR_boolean_expression(ast_node *root, symbolTable* localTable, symbolTable* global)
+void IR_boolean_expression(ast_node *root, symbolTable *localTable, symbolTable *global)
 {
     Tokentype op = ((struct operator_struct *)(root->ninf))->op;
     if (op == TK_AND)
@@ -370,34 +438,37 @@ void IR_boolean_expression(ast_node *root, symbolTable* localTable, symbolTable*
         tupleList *t2 = root->firstChild->nextSib->list;
         tuple *newT;
 
-        tuple* newT1 = newTuple(IF, arg1, NULL, NULL, NULL);
-        char* falseset = newlabel();
-        tuple* newT2 = newTuple(GOTO, falseset, NULL, NULL, NULL);
-        char* after = newlabel();
-        tuple* newT3 = newTuple(GOTO, after, NULL, NULL, NULL);
-        tuple* newT4 = newTuple(LABEL, falseset, NULL, NULL, NULL);
-        tuple* newT5 = newTuple(LABEL, after, NULL, NULL, NULL);
-        tuple* newT6 = newTuple(UNSET, res, NULL, NULL, NULL);
-        tuple* newT7 = newTuple(IF, arg2, NULL, NULL, NULL);
-        tuple* newT8 = newTuple(GOTO, falseset, NULL, NULL, NULL);
-        tuple* newT9 = newTuple(SET, res, NULL, NULL, NULL);
+        tuple *newT1 = newTuple(IF, arg1, NULL, NULL, NULL);
+        char *falseset = newlabel();
+        tuple *newT2 = newTuple(GOTO, falseset, NULL, NULL, NULL);
+        char *after = newlabel();
+        tuple *newT3 = newTuple(GOTO, after, NULL, NULL, NULL);
+        tuple *newT4 = newTuple(LABEL, falseset, NULL, NULL, NULL);
+        tuple *newT5 = newTuple(LABEL, after, NULL, NULL, NULL);
+        tuple *newT6 = newTuple(UNSET, res, NULL, NULL, NULL);
+        tuple *newT7 = newTuple(IF, arg2, NULL, NULL, NULL);
+        tuple *newT8 = newTuple(GOTO, falseset, NULL, NULL, NULL);
+        tuple *newT9 = newTuple(SET, res, NULL, NULL, NULL);
 
-        tupleList* newL = newList();
+        tupleList *newL = newList();
         // t1 followed by IF t1.place
-        if(t1 != NULL){
+        if (t1 != NULL)
+        {
             newL->head = t1->head;
             newL->tail = t1->tail;
             newL->tail->next = newT1;
             newL->tail = newT1;
         }
-        else{
+        else
+        {
             addTupleEnd(newL, newT1);
         }
         // goto falseset
         addTupleEnd(newL, newT2);
-        
+
         // add t2's code
-        if(t2 != NULL){
+        if (t2 != NULL)
+        {
             newL->tail->next = t2->head;
             newL->tail = t2->tail;
         }
@@ -409,16 +480,17 @@ void IR_boolean_expression(ast_node *root, symbolTable* localTable, symbolTable*
         addTupleEnd(newL, newT9);
         // goto after
         addTupleEnd(newL, newT3);
-        // falseset: 
+        // falseset:
         addTupleEnd(newL, newT4);
         // res = false
         addTupleEnd(newL, newT6);
-        // after: 
+        // after:
         addTupleEnd(newL, newT5);
 
         root->list = newL;
     }
-    else if (op == TK_OR){
+    else if (op == TK_OR)
+    {
         char *arg1 = root->firstChild->place;
         char *arg2 = root->firstChild->nextSib->place;
         char *res = newtemp();
@@ -429,29 +501,31 @@ void IR_boolean_expression(ast_node *root, symbolTable* localTable, symbolTable*
         tupleList *t2 = root->firstChild->nextSib->list;
         tuple *newT;
 
-        tuple* newT0 = newTuple(NOT, arg1, NULL, arg1, NULL);
-        tuple* newT1 = newTuple(IF, arg1, NULL, NULL, NULL);
-        char* trueset = newlabel();
-        tuple* newT2 = newTuple(GOTO, trueset, NULL, NULL, NULL);
-        char* after = newlabel();
-        tuple* newT3 = newTuple(GOTO, after, NULL, NULL, NULL);
-        tuple* newT4 = newTuple(LABEL, trueset, NULL, NULL, NULL);
-        tuple* newT5 = newTuple(LABEL, after, NULL, NULL, NULL);
-        tuple* newT6 = newTuple(SET, res, NULL, NULL, NULL);
-        tuple* newT70 = newTuple(NOT, arg2, NULL, arg2, NULL);
-        tuple* newT7 = newTuple(IF, arg2, NULL, NULL, NULL);
-        tuple* newT8 = newTuple(GOTO, trueset, NULL, NULL, NULL);
-        tuple* newT9 = newTuple(UNSET, res, NULL, NULL, NULL);
+        tuple *newT0 = newTuple(NOT, arg1, NULL, arg1, NULL);
+        tuple *newT1 = newTuple(IF, arg1, NULL, NULL, NULL);
+        char *trueset = newlabel();
+        tuple *newT2 = newTuple(GOTO, trueset, NULL, NULL, NULL);
+        char *after = newlabel();
+        tuple *newT3 = newTuple(GOTO, after, NULL, NULL, NULL);
+        tuple *newT4 = newTuple(LABEL, trueset, NULL, NULL, NULL);
+        tuple *newT5 = newTuple(LABEL, after, NULL, NULL, NULL);
+        tuple *newT6 = newTuple(SET, res, NULL, NULL, NULL);
+        tuple *newT70 = newTuple(NOT, arg2, NULL, arg2, NULL);
+        tuple *newT7 = newTuple(IF, arg2, NULL, NULL, NULL);
+        tuple *newT8 = newTuple(GOTO, trueset, NULL, NULL, NULL);
+        tuple *newT9 = newTuple(UNSET, res, NULL, NULL, NULL);
 
-        tupleList* newL = newList();
+        tupleList *newL = newList();
         // t1 followed by NOT t1.place
-        if(t1 != NULL){
+        if (t1 != NULL)
+        {
             newL->head = t1->head;
             newL->tail = t1->tail;
             newL->tail->next = newT0;
             newL->tail = newT0;
         }
-        else{
+        else
+        {
             addTupleEnd(newL, newT0);
         }
         // if t1.place == false
@@ -459,9 +533,10 @@ void IR_boolean_expression(ast_node *root, symbolTable* localTable, symbolTable*
 
         // goto trueset
         addTupleEnd(newL, newT2);
-        
+
         // add t2's code
-        if(t2 != NULL){
+        if (t2 != NULL)
+        {
             newL->tail->next = t2->head;
             newL->tail = t2->tail;
         }
@@ -476,15 +551,14 @@ void IR_boolean_expression(ast_node *root, symbolTable* localTable, symbolTable*
         addTupleEnd(newL, newT9);
         // goto after
         addTupleEnd(newL, newT3);
-        // trueset: 
+        // trueset:
         addTupleEnd(newL, newT4);
         // res = true
         addTupleEnd(newL, newT6);
-        // after: 
+        // after:
         addTupleEnd(newL, newT5);
 
         root->list = newL;
-
     }
     else if (op == TK_NOT)
     {
@@ -563,7 +637,7 @@ void IR_boolean_expression(ast_node *root, symbolTable* localTable, symbolTable*
     }
 }
 
-void IR_conditional(ast_node *root, symbolTable* localTable, symbolTable* global)
+void IR_conditional(ast_node *root, symbolTable *localTable, symbolTable *global)
 {
 
     if (root->firstChild == NULL)
@@ -609,7 +683,7 @@ void IR_conditional(ast_node *root, symbolTable* localTable, symbolTable* global
     // root->list->no_tuples = boollist->no_tuples + thenlist->no_tuples + elselist->no_tuples + 5;
 }
 
-void IR_iterative(ast_node *root, symbolTable* localTable, symbolTable* global)
+void IR_iterative(ast_node *root, symbolTable *localTable, symbolTable *global)
 {
     if (root->firstChild == NULL)
     {
@@ -646,21 +720,25 @@ void IR_iterative(ast_node *root, symbolTable* localTable, symbolTable* global)
 }
 
 // handling thenStmts_ and elsePart_ ,otherStmts_ and stmts_
-void IR_stmts(ast_node* root, symbolTable* localTable, symbolTable* global) {
-    if(root->firstChild == NULL){
+void IR_stmts(ast_node *root, symbolTable *localTable, symbolTable *global)
+{
+    if (root->firstChild == NULL)
+    {
         root->list = NULL;
         return;
     }
-    tupleList* newL = newList();
+    tupleList *newL = newList();
 
-    ast_node* temp;
+    ast_node *temp;
     temp = root->firstChild;
-    while(temp){
+    while (temp)
+    {
         concatLists(newL, temp->list);
         temp = temp->nextSib;
     }
 
-    if(newL->head == NULL){
+    if (newL->head == NULL)
+    {
         root->list = NULL;
         return;
     }
@@ -688,31 +766,34 @@ void IR_stmts(ast_node* root, symbolTable* localTable, symbolTable* global) {
     // tl->tail = NULL;
 }
 
-void IR_iostmt(ast_node *root, symbolTable* localTable, symbolTable* global) {
+void IR_iostmt(ast_node *root, symbolTable *localTable, symbolTable *global)
+{
     if (root->firstChild == NULL)
     {
         root->place = NULL;
         root->list = NULL;
     }
-    Tokentype op = ((struct io_struct*)(root->ninf))->read_or_write;
+    Tokentype op = ((struct io_struct *)(root->ninf))->read_or_write;
 
-    ast_node* singleOrRecIDNode = root->firstChild;
-    insideRecord* head;
-    if(singleOrRecIDNode->node_type->type == RECORD){
+    ast_node *singleOrRecIDNode = root->firstChild;
+    insideRecord *head;
+    if (singleOrRecIDNode->node_type->type == RECORD)
+    {
         head = getRecordDetails_util(singleOrRecIDNode->place, head, singleOrRecIDNode->node_type->type_ruid, global);
     }
-    if(singleOrRecIDNode->node_type->type == INT || singleOrRecIDNode->node_type->type == REAL){
-
-    }  
-    tupleList* newL= newList();
-    tuple* t1;
-    if(op==TK_READ) {
+    if (singleOrRecIDNode->node_type->type == INT || singleOrRecIDNode->node_type->type == REAL)
+    {
+    }
+    tupleList *newL = newList();
+    tuple *t1;
+    if (op == TK_READ)
+    {
         t1 = newTuple(READ, singleOrRecIDNode->place, NULL, NULL, NULL);
     }
-    else {
+    else
+    {
         t1 = newTuple(WRITE, singleOrRecIDNode->place, NULL, NULL, NULL);
     }
     addTupleEnd(newL, t1);
     root->list = newL;
-
 }

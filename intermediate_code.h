@@ -8,6 +8,7 @@ insideRecord* getRecordDetails(char* lexeme, char* record_name, symbolTable* glo
 insideRecord* getRecordDetails_util(char* lexeme, insideRecord* head, char* record_name, symbolTable* global);
 void IR_otherStmts(ast_node* root, symbolTable* localTable, symbolTable* global);
 void IR_for_astnode(ast_node* root, symbolTable* localTable, symbolTable* global);
+void IR_funct_call(ast_node* root, symbolTable* localTable, symbolTable* global);
 void generate(ast_node* root, char ** arr, int no_to_add);
 void createIR(ast_node* root, symbolTable* localTable, symbolTable* global);
 char* newlabel();
