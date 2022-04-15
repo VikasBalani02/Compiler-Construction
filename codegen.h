@@ -1,7 +1,7 @@
 #include "intermediate_code.h"
 
 void generate_code(symbolTable * global, FILE * assembly_file_ptr);
-char* op_map[] = {
+char* op_map_[] = {
     "MUL",
     "DIV",
     "PLUS",
@@ -23,4 +23,4 @@ char* op_map[] = {
     "WRITE",
     "FUNCT",
     "ENDFUNCT"
-}
+};
