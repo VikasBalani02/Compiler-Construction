@@ -75,46 +75,50 @@ tupleList *newList()
     list->tail = NULL;
     return list;
 }
-char *newtemp(symbolTable* localTable, symbolTable* global, struct typeInfo* nodeType)
+char *newtemp(symbolTable *localTable, symbolTable *global, struct typeInfo *nodeType)
 {
-    SymbolTableRecord* symbol = (SymbolTableRecord* ) malloc(sizeof(SymbolTableRecord));
-    
+    SymbolTableRecord *symbol = (SymbolTableRecord *)malloc(sizeof(SymbolTableRecord));
+
     static temp_no = 1;
     char *str = (char *)malloc(20 * sizeof(char));
     sprintf(str, "temp%d", temp_no);
-    
-    //initializing the record for symbol table
+
+    // initializing the record for symbol table
     symbol->lexeme = str;
-    symbol->type=nodeType->type;
-    symbol->type_ruid=nodeType->type_ruid;
-    
-    symbol->line_no=-1;
-    symbol->function_field=NULL;
-    symbol->functionTable=NULL;
-    symbol->next=NULL;
-    symbol->recordFields=NULL;
-    
-    int width=-1;
-    if(nodeType->type==INT || nodeType->type==BOOL){
-        width=2;
+    symbol->type = nodeType->type;
+    symbol->type_ruid = nodeType->type_ruid;
+
+    symbol->line_no = -1;
+    symbol->function_field = NULL;
+    symbol->functionTable = NULL;
+    symbol->next = NULL;
+    symbol->recordFields = NULL;
+
+    int width = -1;
+    if (nodeType->type == INT || nodeType->type == BOOL)
+    {
+        width = 2;
     }
-    else if(nodeType->type==REAL){
-        width=4;
+    else if (nodeType->type == REAL)
+    {
+        width = 4;
     }
-    else if(nodeType->type!=UNDEFINED){
-        //it is record/union/variant record;
-        //need to lookup from global table
-        SymbolTableRecord* sym_info=getSymbolInfo(nodeType->type_ruid,global);
-        if(sym_info==NULL){
-            //this should never run
-            printf("\nERROR: no such record (%s)",nodeType->type_ruid);
+    else if (nodeType->type != UNDEFINED)
+    {
+        // it is record/union/variant record;
+        // need to lookup from global table
+        SymbolTableRecord *sym_info = getSymbolInfo(nodeType->type_ruid, global);
+        if (sym_info == NULL)
+        {
+            // this should never run
+            printf("\nERROR: no such record (%s)", nodeType->type_ruid);
         }
-        width=sym_info->width;
+        width = sym_info->width;
     }
-    symbol->width=width;
-    
-    //adding the newly created record to symbol table
-    addSymbol(localTable, str,symbol);
+    symbol->width = width;
+
+    // adding the newly created record to symbol table
+    addSymbol(localTable, str, symbol);
     temp_no = temp_no + 1;
     return str;
 }
@@ -158,7 +162,8 @@ void IR_for_astnode(ast_node *root, symbolTable *localTable, symbolTable *global
     {
         IR_boolean_expression(root, localTable, global);
     }
-    else if(root->construct == INTNUM_ || root->construct == REALNUM_){
+    else if (root->construct == INTNUM_ || root->construct == REALNUM_)
+    {
         IR_intOrRealValue(root, localTable, global);
     }
     else if (root->construct == function_ || root->construct == mainFunction_)
@@ -205,7 +210,7 @@ void IR_for_astnode(ast_node *root, symbolTable *localTable, symbolTable *global
 }
 insideRecord *getParamList(ast_node *params_anode, insideRecord *list_new, symbolTable *global)
 {
-    ast_node *temp = params_anode->firstChild; //identifier list
+    ast_node *temp = params_anode->firstChild; // identifier list
     while (temp)
     {
         if (temp->node_type->type == INT || temp->node_type->type == REAL)
@@ -215,7 +220,7 @@ insideRecord *getParamList(ast_node *params_anode, insideRecord *list_new, symbo
         }
         if (temp->node_type->type == RECORD)
         {
-            //get all the lexemes associated with the record
+            // get all the lexemes associated with the record
             insideRecord *head = (insideRecord *)malloc(sizeof(insideRecord));
             char *lexeme = ((struct id_struct *)(temp->ninf))->lexID;
             insideRecord *head = getRecordDetails_util(lexeme, head, temp->node_type->type_ruid, global);
@@ -250,7 +255,7 @@ void IR_funct_call(ast_node *root, symbolTable *localTable, symbolTable *global)
 
     tupleList *newL = newList();
     insideRecord *t = list_new1;
-    //iterate through output parameter lexemes in reverse order and push them on stack (PARAMO)
+    // iterate through output parameter lexemes in reverse order and push them on stack (PARAMO)
     while (t)
     {
         tuple *newT = newTuple(PARAMO, t->lex, NULL, NULL, NULL);
@@ -258,7 +263,7 @@ void IR_funct_call(ast_node *root, symbolTable *localTable, symbolTable *global)
         t = t->next;
     }
     t = list_new2;
-    //now push i/p params on stack with PARAMI
+    // now push i/p params on stack with PARAMI
     while (t)
     {
         tuple *newT = newTuple(PARAMI, t->lex, NULL, NULL, NULL);
@@ -267,7 +272,7 @@ void IR_funct_call(ast_node *root, symbolTable *localTable, symbolTable *global)
     }
     char *funid = ((struct func_struct *)(root->ninf))->funID;
     tuple *newT = newTuple(CALL, funid, NULL, NULL, NULL);
-    //after pushing all the parameters we need to call the function
+    // after pushing all the parameters we need to call the function
     addTupleEnd(newL, newT);
     root->list = newL;
 }
@@ -320,7 +325,7 @@ insideRecord *getInsideRecord(char *lexeme)
 }
 insideRecord *reverseList(insideRecord *head)
 {
-    if(head == NULL)
+    if (head == NULL)
         return NULL;
     insideRecord *current = head;
     insideRecord *prev = NULL, *next = NULL;
@@ -385,17 +390,20 @@ insideRecord *getRecordDetails_util(char *lexeme, insideRecord *head, char *reco
     }
     return head;
 }
-void IR_intOrRealValue(ast_node *root, symbolTable *localTable, symbolTable *global){
-    struct num_struct* info= (struct num_struct*)root->ninf;
-    char* buf=(char*)malloc(30);
-    if(root->construct==INTNUM_){
-        sprintf(buf,"%d",info->value->ival);
+void IR_intOrRealValue(ast_node *root, symbolTable *localTable, symbolTable *global)
+{
+    struct num_struct *info = (struct num_struct *)root->ninf;
+    char *buf = (char *)malloc(30);
+    if (root->construct == INTNUM_)
+    {
+        sprintf(buf, "%d", info->value->ival);
     }
-    else{
-        sprintf(buf,"%.2f",info->value->fval);
+    else
+    {
+        sprintf(buf, "%.2f", info->value->fval);
     }
-    root->place=buf;
-    root->list=NULL;
+    root->place = buf;
+    root->list = NULL;
 }
 void IR_assignmentStmt(ast_node *root, symbolTable *localTable, symbolTable *global)
 {
@@ -407,31 +415,34 @@ void IR_assignmentStmt(ast_node *root, symbolTable *localTable, symbolTable *glo
     ast_node *child1 = root->firstChild;
     ast_node *child2 = root->firstChild->nextSib;
 
-    tupleList* newL = newList();
+    tupleList *newL = newList();
 
     if (optype == RECORD)
     {
-        tupleList* t2=root->firstChild->nextSib->list;
-        
-        tuple* newT;
-        insideRecord* head1;
-        insideRecord* head2;
+        tupleList *t2 = root->firstChild->nextSib->list;
+
+        tuple *newT;
+        insideRecord *head1;
+        insideRecord *head2;
         head1 = getRecordDetails(child1->place, child1->node_type->type_ruid, global);
         head2 = getRecordDetails(child2->place, child2->node_type->type_ruid, global);
-        while(head1 != NULL && head2 != NULL) {
+        while (head1 != NULL && head2 != NULL)
+        {
             newT = newTuple(ASSIGN, head1, NULL, head2, NULL);
             addTupleEnd(newL, newT);
             head1 = head1->next;
             head2 = head2->next;
         }
-        if(t2==NULL){
+        if (t2 == NULL)
+        {
             root->list = newL;
         }
-        else{
-            addTupleEnd(t2,newL->head);
-            t2->tail=newL->tail;
-            root->list=t2;
-        }    
+        else
+        {
+            addTupleEnd(t2, newL->head);
+            t2->tail = newL->tail;
+            root->list = t2;
+        }
     }
     else
     {
@@ -490,22 +501,27 @@ void IR_lowPrecedenceTerm(ast_node *root, symbolTable *localTable, symbolTable *
         }
         tupleList *t1 = root->firstChild->list;
         tupleList *t2 = root->firstChild->nextSib->list;
-        if(t1 == NULL){
-            if(t2 == NULL)
+        if (t1 == NULL)
+        {
+            if (t2 == NULL)
                 root->list = newL;
-            else{
-                concatLists(&t2,newL);
+            else
+            {
+                concatLists(&t2, newL);
                 root->list = t2;
             }
         }
-        else{
-            if(t2 == NULL){
+        else
+        {
+            if (t2 == NULL)
+            {
                 concatLists(&t1, newL);
                 root->list = t1;
             }
-            else{
-                concatLists(&t1,t2);
-                concatLists(&t1,newL);
+            else
+            {
+                concatLists(&t1, t2);
+                concatLists(&t1, newL);
                 root->list = t1;
             }
         }
@@ -1079,13 +1095,28 @@ void print_tuple(tuple *t)
     tuple *tcopy = newTuple(NULL, NULL, NULL, NULL, NULL);
     if (t->arg1 == NULL)
     {
-        tcopy->arg1 = "_";
+        tcopy->arg1 = "_________";
     }
     if (t->arg2 == NULL)
     {
-        tcopy->arg2 = "_";
+        tcopy->arg2 = "_________";
+    }
+    if (t->arg3 == NULL)
+    {
+        tcopy->arg3 = "_________";
     }
     char *oper = op_map[t->op];
 
-    printf("%s = %s %s %s", t->arg3, oper, tcopy->arg1, tcopy->arg2);
+    printf("%s %s %s %s", oper, tcopy->arg1, tcopy->arg2, tcopy->arg3);
+}
+void print_tupleList(tupleList *tlist)
+{
+    if (tlist == NULL)
+        return;
+    tuple *temp = tlist->head;
+    while (temp)
+    {
+        print_tuple(temp);
+        temp = temp->next;
+    }
 }
