@@ -74,6 +74,9 @@ enum CONSTRUCT
 typedef enum CONSTRUCT CONSTRUCT;
 
 typedef enum TYPE{
+    PARAMO,
+    PARAMI,
+    CALL,
 	INT,
 	REAL,
 	RECORD,

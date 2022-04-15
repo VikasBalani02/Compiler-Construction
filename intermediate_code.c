@@ -149,7 +149,7 @@ void IR_for_astnode(ast_node *root, symbolTable *localTable, symbolTable *global
     {
         IR_iostmt(root, localTable, global);
     }
-    else if (root->construct == thenStmts_ || root->construct == elsePart_ || root->construct == otherStmts_ || root->construct == stmts_)
+    else if (root->construct == thenStmts_ || root->construct == elsePart_ || root->construct == otherStmts_ || root->construct == stmts_ || root->construct == program_)
     {
         IR_stmts(root, localTable, global);
     }
@@ -165,15 +165,25 @@ void IR_for_astnode(ast_node *root, symbolTable *localTable, symbolTable *global
         root->list = NULL;
     }
 }
-insideRecord* getParamList(ast_node* params_anode, insideRecord* list_new){
+insideRecord* getParamList(ast_node* params_anode, insideRecord* list_new, symbolTable* global){
     ast_node* temp = params_anode->firstChild;
     while(temp){
         if(temp->node_type->type == INT || temp->node_type->type == REAL){
-            list_new = insertLexeme(list_new, temp->node_type->lexeme);
+            char *lexeme = ((struct id_struct *)(temp->ninf))->lexID;
+            list_new = insertLexeme(list_new, lexeme);
         }
-        // if(temp->node_type->type == RECORD){
-        //     insideRecord* head = 
-        // }
+        if(temp->node_type->type == RECORD){
+            insideRecord *head = (insideRecord *)malloc(sizeof(insideRecord));
+            char *lexeme = ((struct id_struct *)(temp->ninf))->lexID;
+            insideRecord* head = getRecordDetails_util(lexeme, head, temp->node_type->type_ruid, global);
+            head = head->next;
+            insideRecord* t = list_new;
+            while(t->next){
+                t = t->next;
+            }
+            t->next = head;
+        }
+        temp = temp->nextSib;
     }
     list_new = reverseList(list_new);
     return list_new;
@@ -184,13 +194,30 @@ void IR_funct_call(ast_node* root, symbolTable* localTable, symbolTable* global)
     ast_node* inputParmas_anode = root->firstChild->nextSib;
 
     insideRecord *list_new1 = (insideRecord *)malloc(sizeof(insideRecord));
-    list_new1 = getParamList(outputParams_anode, list_new1);
+    list_new1 = getParamList(outputParams_anode, list_new1, global);
     list_new1 = list_new1->next;
 
     insideRecord *list_new2 = (insideRecord *)malloc(sizeof(insideRecord));
-    list_new2 = getParamList(inputParmas_anode, list_new2);
+    list_new2 = getParamList(inputParmas_anode, list_new2, global);
     list_new2 = list_new2->next;
     
+    tupleList* newL = newList();
+    insideRecord* t = list_new1;
+    while(t){
+        tuple* newT = newTuple(PARAMO, t->lex, NULL, NULL, NULL);
+        addTupleEnd(newL, newT);
+        t = t->next;
+    }
+    t = list_new2;
+    while(t){
+        tuple* newT = newTuple(PARAMI, t->lex, NULL, NULL, NULL);
+        addTupleEnd(newL, newT);
+        t = t->next;
+    }
+    char *fun = ((struct func_struct *)(root->ninf))->funID;
+    tuple* newT = newTuple(CALL, fun, NULL, NULL, NULL);
+    addTupleEnd(newL, newT);
+    root->list = newL;
 }
 void IR_function(ast_node *root, symbolTable *localTable, symbolTable *global)
 {
