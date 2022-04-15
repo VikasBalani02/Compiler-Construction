@@ -74,10 +74,7 @@ enum CONSTRUCT
 typedef enum CONSTRUCT CONSTRUCT;
 
 typedef enum TYPE{
-    PARAMO,
-    PARAMI,
-    CALL,
-	INT,
+    INT,
 	REAL,
 	RECORD,
     VARIANTRECORD,
@@ -92,6 +89,9 @@ typedef enum TYPE{
 }Type;
 
 typedef enum OP{
+    PARAMO,
+    PARAMI,
+    CALL,
     MUL,
     DIV,
     PLUS,
@@ -112,7 +112,7 @@ typedef enum OP{
     READ,
     WRITE,
     FUNCT,
-    ENDFUNCT
+    RET
 }OP;
 struct tuple
 {

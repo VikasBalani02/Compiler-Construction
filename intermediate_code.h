@@ -17,5 +17,6 @@ tuple* newTuple(OP op, char* arg1, char* arg2, char* arg3, tuple* next);
 void addTuple(tupleList* list, tuple* t);
 tupleList* newList();
 void IR_iostmt(ast_node *root, symbolTable* localTable, symbolTable* global);
+void print_tuple(tuple* t);
 
 // void update_code(ast_node* t, char* str);
