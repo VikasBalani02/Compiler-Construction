@@ -9,7 +9,7 @@ Usneek Singh - 2019A7PS0127P
 Abhijith S Raj - 2019A7PS0055P 
 */
 
-#include"typeChecker.h"
+#include"intermediate_code.h"
 #include <stdio.h>
 #include <time.h>
 #include<unistd.h>
@@ -180,6 +180,7 @@ int main(int argc, char **argv)
             break;
         case 10:
             tupleList* compList = get_intermediate_list(tr->root->addr, global);
+            print_tupleList(compList);
             break;
         default:
             printf("\nIncorrect option.");

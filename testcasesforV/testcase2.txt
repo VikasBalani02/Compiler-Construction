@@ -1,0 +1,5 @@
+_main
+	type int :b3;
+    b3<---5;
+	return;
+end
