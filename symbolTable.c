@@ -286,6 +286,21 @@ int traverseNode(ast_node * current, symbolTable* global){
             addSymbol(global,temp->lexeme,temp);
         }
     }
+    else if(current->construct == declaration_){
+        SymbolTableRecord * temp = (SymbolTableRecord*) malloc(sizeof(SymbolTableRecord));
+        struct id_struct * info = (struct id_struct *)current->ninf;
+        temp->lexeme = info->lexID;
+        temp->line_no = info->lineNum;
+        ast_node * dataType = current->firstChild;
+        if(info->isGlobal){
+            SymbolTableRecord * entry = getSymbolInfo(temp->lexeme,global);
+            if(entry != NULL){
+                printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d", temp->line_no, temp->lexeme, entry->line_no);
+                return 1;
+            }
+            addSymbol(global,temp->lexeme, temp);
+        }
+    }
 
     else if (current->construct == definetypestmt_){
         struct defineType_struct *info = (struct defineType_struct *)current->ninf;
