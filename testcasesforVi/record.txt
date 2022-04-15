@@ -21,6 +21,7 @@ type record #book: c2;
 type record #book: d2;
 type record #new: b7bc34;
 
+b2<---b2*3.12;
 b2.edition <--- 3;
 b2.price <--- 24.95;
 c2.edition <--- 2;

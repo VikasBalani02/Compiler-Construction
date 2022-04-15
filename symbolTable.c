@@ -503,7 +503,7 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
                     ruid = entry->type_ruid;
                     SymbolTableRecord * entry2 = getSymbolInfo(entry->type_ruid,global);
                     if(entry2->type==4){
-                       printf("Line No: %d, Union %s cannot be declared in this manner %s\n",info->lineNum,info->ruid);
+                       printf("Line No: %d, Union %s cannot be declared in this manner \n",info->lineNum,info->ruid);
                        return 1;
                     }
                     width = entry2->width;

@@ -684,7 +684,7 @@ void ast_r52(tNode *outputParameters_tNode)
     arr = (ast_node **)malloc(1 * sizeof(ast_node *));
     arr[0] = (idList_anode->firstChild);
     outputParameters_tNode->addr = makeNode(outputParameters_, arr, 1, NULL);
-    free(idList_anode);
+    // free(idList_anode);
 }
 
 // <outputParameters> ===> eps’
@@ -758,7 +758,7 @@ void ast_r56(tNode *conditionalStmt_tNode)
     arr[0] = booleanExpression_anode;
     arr[1] = thenPart_anode;
     arr[2] = elsePart_anode;
-    conditionalStmt_tNode->addr = makeNode(iterativeStmt_, arr, 3, NULL);
+    conditionalStmt_tNode->addr = makeNode(conditionalStmt_, arr, 3, NULL);
 }
 
 // <elsePart> ===> TK_ELSE <stmt> <otherStmts> TK_ENDIF
@@ -1273,7 +1273,7 @@ void ast_r90(tNode *idList_node)
     arr = (ast_node **)malloc(2 * sizeof(ast_node *));
     arr[0]= Identifier_anode;
     arr[1] = more_ids->firstChild;
-    idList_node->addr = makeNode(idList_, arr, 1, (struct node_info *)info);
+    idList_node->addr = makeNode(idList_, arr, 2, (struct node_info *)info);
     // free(more_ids);
 }
 
@@ -1466,7 +1466,7 @@ void ast_create(tNode *root)
         ast_create(child_ptr);
         child_ptr = child_ptr->next_sibling;
     }
-    printf("%s\n", non_terminal_map[root->nt]);
+    //printf("%s\n", non_terminal_map[root->nt]);
     func_ptr[root->rule_no - 1](root);
 }
 

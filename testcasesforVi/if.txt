@@ -1,16 +1,27 @@
 _main
-	type int: b3;
+	
+record #book
+    type int : edition;
+    type real: price;
+endrecord
+
+    type record #book: b2;
+    type int: b3;
     type int: c4;
     type int: d5;
     type int: b6;
-    type int: b2;
+    type int: b34;
     c4 <--- 4;
     b3 <--- 3;
     d5 <--- 5;
-    b2 <--- c4-b3+10;
+    b2.price<--- b2.price/b2.edition;
+    b2.edition <--- 3 + c4;
+    b2.price <--- 24.95;
+    b34 <--- c4-b3+b2;
     if(c4>=b3)
     then
-        write(b2);
+        c4 <--- 3;
+        write(b34);
     else
     if(d5<=d6)
     then
