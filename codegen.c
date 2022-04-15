@@ -1,4 +1,6 @@
 #include "codegen.h"
+#include <stdio.h>
+#include<stdlib.h>
 
 lexeme_decomp *get_lexdecomp_struct(char *lex)
 {
