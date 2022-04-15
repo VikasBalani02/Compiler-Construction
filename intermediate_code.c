@@ -79,7 +79,7 @@ char *newtemp(symbolTable *localTable, symbolTable *global, struct typeInfo *nod
 {
     SymbolTableRecord *symbol = (SymbolTableRecord *)malloc(sizeof(SymbolTableRecord));
 
-    static temp_no = 1;
+    static int temp_no = 1;
     char *str = (char *)malloc(20 * sizeof(char));
     sprintf(str, "temp%d", temp_no);
 
@@ -124,7 +124,7 @@ char *newtemp(symbolTable *localTable, symbolTable *global, struct typeInfo *nod
 }
 char *newlabel()
 {
-    static label_no = 1;
+    static int label_no = 1;
     char *str = (char *)malloc(20 * sizeof(char));
     sprintf(str, "L%d", label_no);
     label_no = label_no + 1;
@@ -223,7 +223,7 @@ insideRecord *getParamList(ast_node *params_anode, insideRecord *list_new, symbo
             // get all the lexemes associated with the record
             insideRecord *head = (insideRecord *)malloc(sizeof(insideRecord));
             char *lexeme = ((struct id_struct *)(temp->ninf))->lexID;
-            insideRecord *head = getRecordDetails_util(lexeme, head, temp->node_type->type_ruid, global);
+            head = getRecordDetails_util(lexeme, head, temp->node_type->type_ruid, global);
             head = head->next;
             insideRecord *traverse_ptr = list_new;
             while (traverse_ptr->next)
@@ -377,7 +377,7 @@ insideRecord *getRecordDetails_util(char *lexeme, insideRecord *head, char *reco
                 sym_info = getSymbolInfo(sym_info->type_ruid, global);
             }
             if (sym_info->type != RECORD)
-                return;
+                return NULL;
             nested_rec_name = sym_info->lexeme;
             head = getRecordDetails_util(temp, head, nested_rec_name, global);
         }
@@ -1104,6 +1104,9 @@ void print_tuple(tuple *t)
     if (t->arg3 == NULL)
     {
         tcopy->arg3 = "_________";
+    }
+    if (t->arg3 == NULL) {
+        tcopy->arg3 = "_";
     }
     char *oper = op_map[t->op];
 
