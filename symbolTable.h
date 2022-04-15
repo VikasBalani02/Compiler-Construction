@@ -6,3 +6,6 @@ symbolTable * populateSymbolTable(ast_node * root);
 int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* global, SymbolTableRecord * function);
 int traverseNode(ast_node * current, symbolTable* global);
 void printSymbolTable(symbolTable * global);
+void printglobalvariables(symbolTable * global);
+void printactivationrecords(symbolTable * global);
+void printglobalrecords(symbolTable * global);
