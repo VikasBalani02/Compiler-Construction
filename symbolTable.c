@@ -861,3 +861,51 @@ void printSymbolTable(symbolTable * global){
     }
 
 }
+
+void printglobalvariables(symbolTable *global){
+    for(int i=0;i<global->no_slots;i++){
+        SymbolTableRecord * entry = global->list[i]->head;
+        while(entry!=NULL){
+            if(entry->type==INT || entry->type==REAL){
+                printf("Name: %s ",entry->lexeme);
+                printf("Width: %d ",entry->width);
+                printf("Offset: %d ", entry->offset);
+                printf("\n");
+
+            }
+            entry = entry->next;
+        }
+    }
+}
+
+void printactivationrecords(symbolTable *global){
+    for(int i=0;i<global->no_slots;i++){
+        SymbolTableRecord * entry = global->list[i]->head;
+        while(entry!=NULL){
+            if(entry->type==FUNCTION){
+                printf("Name: %s ",entry->lexeme);
+                printf("Offset: %d ", entry->offset);
+                printf("\n");
+
+            }
+            entry = entry->next;
+        }
+    }
+}
+
+void printglobalrecords(symbolTable *global){
+    for(int i=0;i<global->no_slots;i++){
+        SymbolTableRecord * entry = global->list[i]->head;
+        while(entry!=NULL){
+            if(entry->type == RECORD || entry->type == VARIANTRECORD || entry->type == RUID){
+                printf("Name: %s ",entry->lexeme);
+                printf("Type Expression: ");
+                printTypeExpression(entry, global);
+                printf("Offset: %d ", entry->offset);
+                printf("\n");
+
+            }
+            entry = entry->next;
+        }
+    }
+}
