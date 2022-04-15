@@ -173,6 +173,9 @@ int main(int argc, char **argv)
             
             if(global == NULL) exit(0);
             printSymbolTable(global);
+            printglobalvariables(global);
+            printactivationrecords(global);
+            printglobalrecords(global);
             break;
         // case 9: 
             
@@ -180,9 +183,9 @@ int main(int argc, char **argv)
         //     print_error_list(err);
         //     break;
         case 10:
-            tupleList* compList = get_intermediate_list(tr->root->addr, global);
+            /*tupleList* compList = get_intermediate_list(tr->root->addr, global);
             print_tupleList(compList);
-            break;
+            break;*/
         // case 11 : f = fopen("assembly.asm", "w");
         //     generate_code(global,f);
         //     fclose(f); break;

@@ -598,6 +598,11 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
                 printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d\n", record->line_no, record->lexeme, entry->line_no);
                 flag=1;
             }
+            SymbolTableRecord * entry_2 = getSymbolInfo(record->lexeme,global);
+            if(entry != NULL){
+                printf("Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d\n", record->line_no, record->lexeme, entry_2->line_no);
+                flag=1;
+            }
             addSymbol(table,record->lexeme,record);
             child = child->nextSib;
         }
@@ -676,7 +681,7 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
             }
             addSymbol(global,temp->lexeme, temp);
         }*/
-        
+        if(!(info->isGlobal)){
         SymbolTableRecord * entry = getSymbolInfo(temp->lexeme,table);
         SymbolTableRecord * entry_2 = getSymbolInfo(temp->lexeme,global);
         if(entry != NULL){
@@ -688,6 +693,7 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
             flag=1;
         }
         addSymbol(table,temp->lexeme, temp);
+        }
             
     }
     ast_node * child = current->firstChild;
@@ -863,6 +869,7 @@ void printSymbolTable(symbolTable * global){
 }
 
 void printglobalvariables(symbolTable *global){
+    printf("Printing global variables\n");
     for(int i=0;i<global->no_slots;i++){
         SymbolTableRecord * entry = global->list[i]->head;
         while(entry!=NULL){
@@ -879,12 +886,13 @@ void printglobalvariables(symbolTable *global){
 }
 
 void printactivationrecords(symbolTable *global){
+    printf("Printing activation records\n");
     for(int i=0;i<global->no_slots;i++){
         SymbolTableRecord * entry = global->list[i]->head;
         while(entry!=NULL){
             if(entry->type==FUNCTION){
                 printf("Name: %s ",entry->lexeme);
-                printf("Offset: %d ", entry->offset);
+                printf("Width: %d ", entry->width);
                 printf("\n");
 
             }
@@ -894,6 +902,7 @@ void printactivationrecords(symbolTable *global){
 }
 
 void printglobalrecords(symbolTable *global){
+    printf("Printing global records\n");
     for(int i=0;i<global->no_slots;i++){
         SymbolTableRecord * entry = global->list[i]->head;
         while(entry!=NULL){
