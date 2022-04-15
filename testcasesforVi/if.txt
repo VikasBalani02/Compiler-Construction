@@ -11,22 +11,16 @@ endrecord
     type int: d5;
     type int: b6;
     type int: b34;
-    c4 <--- 4;
-    b3 <--- 3;
-    d5 <--- 5;
-    b2.price<--- b2.price/b2.edition;
-    b2.edition <--- 3 + c4;
-    b2.price <--- 24.95;
-    b34 <--- c4-b3+b2;
-    if(c4>=b3)
+  
+    if((~(c4>=b3)) @@@ (c4 < b3))
     then
-        c4 <--- 3;
+        %c4 <--- 3;
         write(b34);
-    else
-    if(d5<=d6)
-    then
-        write(d5);
-    endif
+    %else
+    %if(d5<=b3)
+    %then
+        %write(d5);
+    %endif
     endif
 	return;
 end

@@ -296,7 +296,7 @@ void IR_function(ast_node *root, symbolTable *localTable, symbolTable *global)
 
     if (root->firstChild == NULL)
     {
-        root->list = newList;
+        root->list = newList();
         addTupleEnd(root->list, newT1);
         addTupleEnd(root->list, newT2);
         return;
@@ -440,7 +440,7 @@ void IR_assignmentStmt(ast_node *root, symbolTable *localTable, symbolTable *glo
         head2 = getRecordDetails(child2->place, child2->node_type->type_ruid, global);
         while (head1 != NULL && head2 != NULL)
         {
-            newT = newTuple(ASSIGN, head1, NULL, head2, NULL);
+            newT = newTuple(ASSIGN, head1->lex, NULL, head2->lex, NULL);
             addTupleEnd(newL, newT);
             head1 = head1->next;
             head2 = head2->next;
@@ -498,7 +498,7 @@ void IR_lowPrecedenceTerm(ast_node *root, symbolTable *localTable, symbolTable *
         head3 = getRecordDetails(root->place, root->node_type->type_ruid, global); // root->node_type->type_ruid ??
         while (head1 != NULL && head2 != NULL && head3 != NULL)
         {
-            if (optype == PLUS)
+            if (((struct operator_struct *)(root->ninf))->op == TK_PLUS)
             {
                 t = newTuple(PLUS, head1->lex, head2->lex, head3->lex, NULL);
             }
@@ -946,14 +946,10 @@ void IR_iterative(ast_node *root, symbolTable *localTable, symbolTable *global)
         root->place = NULL;
         root->list = NULL;
     }
-    root->list = newList();
+    tupleList* newL = newList();
     ast_node *boolExp = root->firstChild;
     tupleList *boollist = boolExp->list;
-    if (boollist == NULL)
-    {
-        root->list = NULL;
-        return;
-    }
+    
     char *beginlabel = newlabel();
     char *afterlabel = newlabel();
 
@@ -963,27 +959,36 @@ void IR_iterative(ast_node *root, symbolTable *localTable, symbolTable *global)
     tuple *t4 = newTuple(GOTO, beginlabel, NULL, NULL, NULL);
     tuple *t5 = newTuple(LABEL, afterlabel, NULL, NULL, NULL);
 
-    t1->next = boollist->head;
-    boollist->tail = t2;
-    t2->next = t3;
+    addTupleEnd(newL,t1);
+    concatLists(&newL, boollist);
+    addTupleEnd(newL, t2);
+    addTupleEnd(newL, t3);
+    // t1->next = boollist->head;
+    // boollist->tail = t2;
+    // t2->next = t3;
 
     ast_node *otherExp = boolExp->nextSib;
     tupleList *otherlist = otherExp->list;
-    if (otherlist == NULL)
-    {
-        t3->next = t4;
-    }
-    else
-    {
-        t3->next = otherlist->head;
-        otherlist->tail = t4;
-    }
 
-    t4->next = t5;
-    t5->next = NULL;
+    concatLists(&newL, otherlist);
+    addTupleEnd(newL, t4);
+    addTupleEnd(newL, t5);
+    // if (otherlist == NULL)
+    // {
+    //     t3->next = t4;
+    // }
+    // else
+    // {
+    //     t3->next = otherlist->head;
+    //     otherlist->tail = t4;
+    // }
 
-    root->list->head = t1;
-    root->list->tail = t5;
+    // t4->next = t5;
+    // t5->next = NULL;
+
+    // root->list->head = t1;
+    // root->list->tail = t5;
+    root->list = newL;
 }
 
 // handling thenStmts_ and elsePart_ ,otherStmts_ and stmts_
@@ -1132,7 +1137,7 @@ void print_tuple(tuple *t)
     }
     char *oper = op_map[t->op];
 
-    printf("\n%10s %10s %10s %10s", oper, tcopy->arg1, tcopy->arg2, tcopy->arg3);
+    printf("\n%20s %20s %20s %20s", oper, tcopy->arg1, tcopy->arg2, tcopy->arg3);
 }
 void print_tupleList(tupleList *tlist)
 {
