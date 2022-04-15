@@ -179,8 +179,7 @@ int main(int argc, char **argv)
             print_error_list(err);
             break;
         case 10:
-            //tupleList* compList = get_intermediate_list(tr->root->addr, global);
-
+            tupleList* compList = get_intermediate_list(tr->root->addr, global);
             break;
         default:
             printf("\nIncorrect option.");
