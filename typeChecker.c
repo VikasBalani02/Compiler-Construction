@@ -881,28 +881,28 @@ void check_num_type(ast_node *node, Error *err_list)
         node->node_type = get_typeInfo(REAL, NULL);
     }
 }
-void log_error(Error *err_list, const char *fmt, ...)
-{
-    Error *new_error = (Error *)malloc(sizeof(Error));
-    new_error->next = NULL;
-    va_list args;
-    va_start(args, fmt);
-    vsnprintf(new_error->description, DESCRIPTION_SIZE, fmt, args);
-    va_end(args);
-    Error *ptr = err_list;
-    while (ptr->next != NULL)
-    {
-        ptr = ptr->next;
-    }
-    ptr->next = new_error;
-}
+// void log_error(Error *err_list, const char *fmt, ...)
+// {
+//     Error *new_error = (Error *)malloc(sizeof(Error));
+//     new_error->next = NULL;
+//     va_list args;
+//     va_start(args, fmt);
+//     vsnprintf(new_error->description, DESCRIPTION_SIZE, fmt, args);
+//     va_end(args);
+//     Error *ptr = err_list;
+//     while (ptr->next != NULL)
+//     {
+//         ptr = ptr->next;
+//     }
+//     ptr->next = new_error;
+// }
 
-void print_error_list(Error *err_list)
-{
-    Error *ptr = err_list->next;
-    while (ptr)
-    {
-        printf("\nERROR: %s", ptr->description);
-        ptr = ptr->next;
-    }
-}
+// void print_error_list(Error *err_list)
+// {
+//     Error *ptr = err_list->next;
+//     while (ptr)
+//     {
+//         printf("\nERROR: %s", ptr->description);
+//         ptr = ptr->next;
+//     }
+// }

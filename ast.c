@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include<stdarg.h>
 #include "ast.h"
 
 //trial push changes
@@ -1573,13 +1574,38 @@ void traverse_pt(tNode* root, int* num_ptr) {
 int get_ast_product(ast_node* root) {
     int num=0;
     traverse_ast(root, &num);
-    printf("\nAST number of nodes= : %d allocated memory = %d bytes", num, num*sizeof(root));
+    printf("\nAST number of nodes= : %d allocated memory = %d bytes", num, (int)num*sizeof(root));
     return num*sizeof(root);
 }
 
 int get_pt_product(tNode* root) {
     int num=0;
     traverse_pt(root, &num);
-    printf("\nParse tree number of nodes= : %d allocated memory = %d bytes", num, num*sizeof(root));
+    printf("\nParse tree number of nodes= : %d allocated memory = %d bytes", num, (int)num*sizeof(root));
     return num*sizeof(root);
+}
+void log_error(Error *err_list, const char *fmt, ...)
+{
+    Error *new_error = (Error *)malloc(sizeof(Error));
+    new_error->next = NULL;
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(new_error->description, DESCRIPTION_SIZE, fmt, args);
+    va_end(args);
+    Error *ptr = err_list;
+    while (ptr->next != NULL)
+    {
+        ptr = ptr->next;
+    }
+    ptr->next = new_error;
+}
+
+void print_error_list(Error *err_list)
+{
+    Error *ptr = err_list->next;
+    while (ptr)
+    {
+        printf("\nERROR: %s", ptr->description);
+        ptr = ptr->next;
+    }
 }

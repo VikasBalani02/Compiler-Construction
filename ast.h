@@ -103,3 +103,5 @@ void traverse_ast(ast_node* root, int* num_ptr);
 int get_ast_product(ast_node* root);
 int get_ast_product(ast_node* root);
 int get_pt_product(tNode* root);
+void log_error(Error* err_list,const char *fmt, ...);
+void print_error_list(Error* err_list);
