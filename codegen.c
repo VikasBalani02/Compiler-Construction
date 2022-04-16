@@ -117,9 +117,23 @@ void get_offset_util(lexeme_decomp *lexList, SymbolTableRecord *sym_info, struct
     }
     //sym_info now contains the symbol table record for the RECORD/UNION/VARIANT RECORD of the field whose offset we just set
     //extract useful info from this symbol table record now
-    lexList->info->type=sym_info->type;
-    lexList->info->type_ruid=sym_info->type_ruid;
-    lexList->info->width=sym_info->width;
+    if (fields->type == RUID || fields->type == RECORD || fields->type == VARIANTRECORD || fields->type == UNION){
+        lexList->info->type=sym_info->type;
+        lexList->info->type_ruid=sym_info->type_ruid;
+        lexList->info->width=sym_info->width;
+    }
+    else{
+        if(fields->type==INT){
+            lexList->info->type=INT;
+            lexList->info->type_ruid=NULL;
+            lexList->info->width=2;
+        }
+        else if(fields->type==REAL){
+            lexList->info->type=REAL;
+            lexList->info->type_ruid=NULL;
+            lexList->info->width=4;
+        }
+    }    
 
     //get information about further expansions
     get_offset_util(lexList->next, sym_info, local_table, global_table);
