@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 extern printf, scanf, exit
 section .data
 		b2d: dd 0.0
@@ -38,3 +40,4 @@ main:
 >>>>>>> d44fe13e343dec20007f1496d374cc1bd8f645bc
                 call printf 
                 add ESP,12                 
+>>>>>>> e4ec893d8547ab62e2dcab5b9ac38e0c0f3a725b

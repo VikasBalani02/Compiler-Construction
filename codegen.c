@@ -43,8 +43,12 @@ lex_info* get_lexinfo(char *lex, struct symbolTable *local_table, struct symbolT
     //returns lexInfo with offset -1 if lexeme is not in local table
     // get a lexeme for a identitfier/temporary and find its offset.
     //lexeme can be of form t1.a.b.c where t1 is of type record
-
     lexeme_decomp *lexList = decompose_lexeme(lex);
+    if(lex[0]>='0' && lex[0]<='9'){
+        lexList->info->offset = -2;
+        lexList->info->type = getNumType(lex);
+        return lexList->info;
+    }
 
     SymbolTableRecord *sym_info = getSymbolInfo(lexList->lex, local_table);
     if (sym_info == NULL)
@@ -148,6 +152,151 @@ Type getNumType(char *str){
     }
     return INT;
 }
+<<<<<<< HEAD
+void param_code_gen(tuple* tup){
+    struct symbolTable * local = (symbolTable *)st->head->t_node;
+    lex_info* info=get_lexinfo(tup->arg1,local,GLOBAL);
+    if(info->type==INT){
+        //pushing int size 2 bytes
+        //fprintf(assemblyFile,"MOV AX, word [EBP-%d]\n",info->offset);
+        fprintf(assemblyFile,"push word [EBP-%d]\n",info->offset);
+    }
+    else if (info->type == REAL){
+        //pushing a real size 4 bytes
+        //fprintf(assemblyFile,"MOVSS XMM0, dword [EBP-%d]\n",info->offset);
+        fprintf(assemblyFile,"push dword [EBP-%d]\n",info->offset);
+    }
+}
+void copy_param_code_gen(tuple* tup){
+    struct symbolTable * local = (symbolTable *)st->head->t_node;
+    lex_info* info=get_lexinfo(tup->arg1,local,GLOBAL);
+    int offset_in_caller=info->offset + info->width + 4; //4 is for adjusting for EBP
+    int offset_in_callee=info->offset;
+    if(info->type==INT){
+         fprintf(assemblyFile,"MOV AX, word[EBP+%d]\n",offset_in_callee);
+         fprintf(assemblyFile,"MOV [EBP-%d], EAX\n",offset_in_callee);
+    }
+    else{
+        //type is real
+        //check this //movss
+        fprintf(assemblyFile,"MOV XMM0, dword[EBP+%d]",offset_in_callee);
+        fprintf(assemblyFile,"MOV [EBP-%d], XMM0",offset_in_caller);
+    }      
+}
+void fn_space_code_gen(tuple * tup){
+    /**
+     * @brief Reserve number of bytes equal to offset value
+     * of this function, Also output function's label
+     */
+    if(strcmp(tup->arg1, "_main")==0){
+        fprintf(assemblyFile, "main:\n");    
+    }
+    else 
+        fprintf(assemblyFile, "%s:\n", tup->arg1);
+    SymbolTableRecord * entry = getSymbolInfo(tup->arg1,GLOBAL);
+    push_stack_node(st,get_stack_node((tNode*)entry->functionTable));
+
+    struct symbolTable * local = (symbolTable *)st->head->t_node;
+    // int num_elems = 0;
+    // type *type_ptr;
+    // int offset = 0;
+    // st_wrapper *table_ptr = quad.curr_scope_table_ptr, *lvl_start_ptr;
+
+    // lvl_start_ptr = table_ptr->leftmost_child_table;
+    // while(lvl_start_ptr != NULL){
+    //     table_ptr = lvl_start_ptr;
+    //     while(table_ptr){
+    //         for(int i=0; i < HASH_SIZE; i++){                        
+    //             type_ptr = (type*)(table_ptr->table[i].value);
+    //             if(type_ptr != NULL){
+    //                 // printf("adding2 offset for %s\n", table_ptr->table[i].lexeme);
+    //                 // printf("while gen space for fn, lexeme in ht %llu found to be %s\n",table_ptr,table_ptr->table[i].lexeme );
+    //                 num_elems++;
+    //                 offset += WIDTH_POINTER;
+    //                 if(type_ptr->name == ARRAY){
+    //                     if(type_ptr->typeinfo.array.is_dynamic.range_high == false && type_ptr->typeinfo.array.is_dynamic.range_low == false){
+    //                         offset += (type_ptr->typeinfo.array.range_high.value - type_ptr->typeinfo.array.range_low.value + 1) * WIDTH_POINTER;
+    //                     }
+    //                 }
+    //             }            
+    //         }
+    //         table_ptr = table_ptr->sibling_table;
+    //     }
+    //     lvl_start_ptr = lvl_start_ptr->leftmost_child_table;
+    // }
+    // typeInfo* inp_params= entry->function_field->InputHead;
+    // while(inp_params){
+    //     char* 
+    //     inp_params=inp_params->next;
+    // }
+    // // printf("total_num_elems : %d\n", num_elems);
+    fprintf(assemblyFile, "\t\t\t\tENTER %d, 0\n", entry->functionTable->currentOffset);
+    fprintf(assemblyFile, "\t\t\t\t;reserve space for the input/output params of fn, later flush this space\n");
+    /**
+     * @brief Insert the parameters in current scope's table too
+     * This is to enable updation locally in function
+     * While returning output params 
+     */
+    // lex_info* info=get_lexinfo(tup->arg1,local,GLOBAL);
+    // int offset_in_caller=info->offset + info->width + 4; //4 is for adjusting for EBP
+    // int offset_in_callee=info->offset;
+    // if(info->type==INT){
+    //      fprintf(assemblyFile,"MOV AX, word[EBP+%d]\n",offset_in_callee);
+    //      fprintf(assemblyFile,"MOV [EBP-%d], EAX\n",offset_in_callee);
+    // }
+    // else{
+    //     //type is real
+    //     //check this //movss
+    //     fprintf(assemblyFile,"MOV XMM0, dword[EBP+%d]",offset_in_callee);
+    //     fprintf(assemblyFile,"MOV [EBP-%d], XMM0",offset_in_caller);
+    // }  
+    // while(inp_param){
+        
+    //     char *param_str = inp_param->param_name;
+        
+    //     type *param_type  = inp_param->t;
+
+    //     /**
+    //      * @brief Check if param type is dynamic array, copy the range values from stack
+    //      * And if static, do range checking
+    //      */
+
+
+
+    //     param_type->offset = quad.encl_fun_type_ptr->typeinfo.module.curr_offset;
+    //     param_type->offset_used = quad.encl_fun_type_ptr->typeinfo.module.curr_offset_used;
+    //     // printf("Assigned offset %d to a param %s\n", param_type->offset_used, param_str);
+    //     quad.encl_fun_type_ptr->typeinfo.module.curr_offset += param_type->width;
+    //     quad.encl_fun_type_ptr->typeinfo.module.curr_offset_used += WIDTH_POINTER;
+
+
+    //     hash_insert_ptr_val(quad.curr_scope_table_ptr->table, param_str, param_type);
+
+    //     fprintf(assemblyFile, "\t\t\t\t; Allocating space to %s inp param on stack\n", inp_param->param_name);
+    //     fprintf(assemblyFile, "\t\t\t\tmov RAX, [RBP + 16 + 8 + 8*%d]; copy value of this param from caller\n", inp_param_num);
+    //     fprintf(assemblyFile, "\t\t\t\tmov RAX, [RAX] ;copy to my local space for the param\n");
+    //     fprintf(assemblyFile, "\t\t\t\tmov [RBP - %d], RAX ;copy to my local space for the param\n", param_type->offset_used);
+
+    //     inp_param_num++;
+    //     inp_param = inp_param->next;
+    // }   
+
+    // while(outp_param){
+        
+    //     char *param_str = outp_param->param_name;
+        
+    //     type *param_type  = outp_param->t;
+    //     param_type->offset = quad.encl_fun_type_ptr->typeinfo.module.curr_offset;
+    //     param_type->offset_used = quad.encl_fun_type_ptr->typeinfo.module.curr_offset_used;
+    //     quad.encl_fun_type_ptr->typeinfo.module.curr_offset += param_type->width;
+    //     quad.encl_fun_type_ptr->typeinfo.module.curr_offset_used += WIDTH_POINTER;
+    //     hash_insert_ptr_val(quad.curr_scope_table_ptr->table, param_str, param_type);
+    //     outp_param_num++;
+    //     outp_param = outp_param->next;
+    // }    
+}
+=======
+>>>>>>> e4ec893d8547ab62e2dcab5b9ac38e0c0f3a725b
 // void arithexpr_code_gen(tuple* tuple){
 //     /**
 //      * @brief Check the operator and generate code
@@ -425,7 +574,7 @@ void output_code_gen(tuple* intermediateCode){
 
 void relational_code_gen(tuple *intermediateCode, struct symbolTable *local, struct symbolTable *global)
 {
-
+    
     lex_info *arg1_info = get_lexinfo(intermediateCode->arg1, local, global);
     lex_info *arg2_info = get_lexinfo(intermediateCode->arg2, local, global);
     lex_info *arg3_info = get_lexinfo(intermediateCode->arg3, local, global);
@@ -440,6 +589,9 @@ void relational_code_gen(tuple *intermediateCode, struct symbolTable *local, str
         // arg1 corresponds to a global variable
         snprintf(arg1_str, MAX_LEXEME_LEN, "word[%s]", intermediateCode->arg1); // directly use the global variable lex as it will have a label associated with it
     }
+    else if (arg1_info->offset==-2){
+        snprintf(arg1_str, MAX_LEXEME_LEN, "%s", intermediateCode->arg1);
+    }
     else
     {
         snprintf(arg1_str, MAX_LEXEME_LEN, "word[EBP-%d]", arg1_info->offset); // access the variable value from offset
@@ -449,6 +601,9 @@ void relational_code_gen(tuple *intermediateCode, struct symbolTable *local, str
     {
         // arg2 corresponds to a global variable
         snprintf(arg2_str, MAX_LEXEME_LEN, "word[%s]", intermediateCode->arg2); // directly use the global variable lex as it will have a label associated with it
+    }
+    else if (arg1_info->offset==-2){
+        snprintf(arg1_str, MAX_LEXEME_LEN, "%s", intermediateCode->arg1);
     }
     else
     {
@@ -494,33 +649,57 @@ void relational_code_gen(tuple *intermediateCode, struct symbolTable *local, str
                     arg1_str, arg2_str, arg3_str);
             break;
         case GT:
+<<<<<<< HEAD
+            fprintf(assemblyFile, "MOV AX, %s \n\
+            MOV BX, %s \n\
+            CMP AX, BX\n\
+=======
             fprintf(assemblyFile, "MOV EAX %s \n\
             MOV EBX, %s \n\
             CMP EAX, EBX\n\
+>>>>>>> e4ec893d8547ab62e2dcab5b9ac38e0c0f3a725b
             CMOVG ECX, EDX\n\
             MOV %s, ECX\n",
                     arg1_str, arg2_str, arg3_str);
             break;
         case GE:
+<<<<<<< HEAD
+            fprintf(assemblyFile, "MOV AX, %s \n\
+            MOV BX, %s \n\
+            CMP AX, BX\n\
+=======
             fprintf(assemblyFile, "MOV EAX %s \n\
             MOV EBX, %s \n\
             CMP EAX, EBX\n\
+>>>>>>> e4ec893d8547ab62e2dcab5b9ac38e0c0f3a725b
             CMOVGE ECX, EDX\n\
             MOV %s, ECX\n",
                     arg1_str, arg2_str, arg3_str);
             break;
         case EQ:
+<<<<<<< HEAD
+            fprintf(assemblyFile, "MOV AX, %s \n\
+            MOV BX, %s \n\
+            CMP AX, BX\n\
+=======
             fprintf(assemblyFile, "MOV EAX %s \n\
             MOV EBX, %s \n\
             CMP EAX, EBX\n\
+>>>>>>> e4ec893d8547ab62e2dcab5b9ac38e0c0f3a725b
             CMOVE ECX, EDX\n\
             MOV %s, ECX\n",
                     arg1_str, arg2_str, arg3_str);
             break;
         case NE:
+<<<<<<< HEAD
+            fprintf(assemblyFile, "MOV AX, %s \n\
+            MOV BX, %s \n\
+            CMP AX, BX\n\
+=======
             fprintf(assemblyFile, "MOV EAX %s \n\
             MOV EBX, %s \n\
             CMP EAX, EBX\n\
+>>>>>>> e4ec893d8547ab62e2dcab5b9ac38e0c0f3a725b
             CMOVNE ECX, EDX\n\
             MOV %s, ECX\n",
                     arg1_str, arg2_str, arg3_str);
@@ -534,7 +713,7 @@ void relational_code_gen(tuple *intermediateCode, struct symbolTable *local, str
         {
 
         case LT:
-            fprintf(assemblyFile, "MOV XMM0 %s \n\
+            fprintf(assemblyFile, "MOV XMM0, %s \n\
             MOV XMM1, %s \n\
             CMP XMM0, XMM1\n\
             CMOVL ECX, EDX\n\
@@ -542,7 +721,7 @@ void relational_code_gen(tuple *intermediateCode, struct symbolTable *local, str
                     arg1_str, arg2_str, arg3_str);
             break;
         case LE:
-            fprintf(assemblyFile, "MOV XMM0 %s \n\
+            fprintf(assemblyFile, "MOV XMM0, %s \n\
             MOV XMM1, %s \n\
             CMP XMM0, XMM1\n\
             CMOVLE ECX, EDX\n\
@@ -550,7 +729,7 @@ void relational_code_gen(tuple *intermediateCode, struct symbolTable *local, str
                     arg1_str, arg2_str, arg3_str);
             break;
         case GT:
-            fprintf(assemblyFile, "MOV XMM0 %s \n\
+            fprintf(assemblyFile, "MOV XMM0, %s \n\
             MOV XMM1, %s \n\
             CMP XMM0, XMM1\n\
             CMOVG ECX, EDX\n\
@@ -558,7 +737,7 @@ void relational_code_gen(tuple *intermediateCode, struct symbolTable *local, str
                     arg1_str, arg2_str, arg3_str);
             break;
         case GE:
-            fprintf(assemblyFile, "MOV XMM0 %s \n\
+            fprintf(assemblyFile, "MOV XMM0, %s \n\
             MOV XMM1, %s \n\
             CMP XMM0, XMM1\n\
             CMOVGE ECX, EDX\n\
@@ -566,7 +745,7 @@ void relational_code_gen(tuple *intermediateCode, struct symbolTable *local, str
                     arg1_str, arg2_str, arg3_str);
             break;
         case EQ:
-            fprintf(assemblyFile, "MOV XMM0 %s \n\
+            fprintf(assemblyFile, "MOV XMM0, %s \n\
             MOV XMM1, %s \n\
             CMP XMM0, XMM1\n\
             CMOVE ECX, EDX\n\
@@ -574,7 +753,7 @@ void relational_code_gen(tuple *intermediateCode, struct symbolTable *local, str
                     arg1_str, arg2_str, arg3_str);
             break;
         case NE:
-            fprintf(assemblyFile, "MOV XMM0 %s \n\
+            fprintf(assemblyFile, "MOV XMM0, %s \n\
             MOV XMM1, %s \n\
             CMP XMM0, XMM1\n\
             CMOVNE ECX, EDX\n\
@@ -606,7 +785,8 @@ void if_code_gen(tuple *intermediateCode, struct symbolTable *local, struct symb
         snprintf(arg1_str, MAX_LEXEME_LEN, "word[EBP-%d]", arg1_info->offset); // access the variable value from offset
     }
     //move value of boolean to register eax if value is 0 => bool expr was false so jump to label
-    fprintf(assemblyFile,"MOV EAX, %s\n",arg1_str);
+    fprintf(assemblyFile,"MOV AX, %s\n",arg1_str);
+    fprintf(assemblyFile,"CMP AX, 0\n");
     fprintf(assemblyFile,"JZ %s\n",label_str);
 }
 
@@ -617,7 +797,7 @@ void label_code_gen(tuple *intermediateCode, struct symbolTable *local, struct s
 
 void goto_code_gen(tuple *intermediateCode, struct symbolTable *local, struct symbolTable *global){
     //jump to a label
-    fprintf(assemblyFile,"GOTO %s\n",intermediateCode->arg1);
+    fprintf(assemblyFile,"JMP %s\n",intermediateCode->arg1);
 }
 
 void arithexpr_code_gen(tuple* intermediateCode,struct symbolTable* local, struct symbolTable* global){
@@ -725,7 +905,7 @@ void assignment_stmt(tuple *intermediateCode){
     SymbolTableRecord * entry = getSymbolInfo(intermediateCode->arg3, (symbolTable *)st->head->t_node);
     if(entry==NULL){
         entry = getSymbolInfo(intermediateCode->arg1, GLOBAL);
-        if(intermediateCode->arg1[0] > '0' && intermediateCode->arg1[0] < '9'){ //handle immediate value
+        if(intermediateCode->arg1[0] >= '0' && intermediateCode->arg1[0] <= '9'){ //handle immediate value
             Type t = getNumType(intermediateCode->arg1);
             switch(t){
                 case INT:
@@ -742,7 +922,7 @@ void assignment_stmt(tuple *intermediateCode){
         }
     }
     else {//do nothing for now change later
-          if(intermediateCode->arg1[0] > '0' && intermediateCode->arg1[0] < '9'){ //handle immediate value
+          if(intermediateCode->arg1[0] >= '0' && intermediateCode->arg1[0] <= '9'){ //handle immediate value
             Type t = getNumType(intermediateCode->arg1);
             switch(t){
                 case INT:
@@ -800,6 +980,30 @@ void generate_code(tupleList* intermediateCode, symbolTable * global, FILE * out
             case WRITE:
                 output_code_gen(tup);
             break;
+<<<<<<< HEAD
+            case ASSIGN:
+                assignment_stmt(tup);
+            break;
+            case LT:
+            case GT:
+            case LE:
+            case GE:
+            case EQ:
+            case NE:
+                relational_code_gen(tup, (symbolTable *)st->head->t_node, GLOBAL);
+            break;
+            case FUNCT:
+                fn_space_code_gen(tup); break;
+            case RET:
+                return_code_gen(tup); break;
+            case IF:
+                if_code_gen(tup,(symbolTable *)st->head->t_node, GLOBAL); break;
+            case GOTO:
+                goto_code_gen(tup,(symbolTable *)st->head->t_node, GLOBAL); break;
+            case LABEL:
+                label_code_gen(tup,(symbolTable *)st->head->t_node, GLOBAL); break;
+=======
+>>>>>>> e4ec893d8547ab62e2dcab5b9ac38e0c0f3a725b
         }
         tup = tup->next;
     }
