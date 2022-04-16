@@ -134,9 +134,6 @@ int main(int argc, char **argv)
         switch (option)
         {
         case 1:
-            removeComments(argv[1]);
-            break;
-        case 2:
             fp1 = initialize_lexer(argv[1]);
             printf("\n%4s | %15s | %22s", "lNum", "tokenType", "lexeme");
             while (1)
@@ -149,50 +146,49 @@ int main(int argc, char **argv)
                 printf("\n%4d | %15s | %22s", tk->lineNo, terminal_map[tk->type], tk->lexeme);
             }
             break;
-        case 3:
+        case 2:
             fprintf(fpt, "\n %20s %25s %7s %20s %25s %10s %10s\n", "lexeme", "CurrentNodeSymbol", "lineNum", "value (0 if not num)", "parentNodeSymbol", "isLeafNode", "Rule No");
             fflush(fpt);
             printParseTree(tr->root, argv[2]);
-            printf("\nSuccessfully printed parse tree to %s" , argv[2]);
+            break;
+        case 3:
+            printf("Printing AST Tree in Preorder traversal\n");
+            print_ast(tr->root->addr, 0);
             break;
         case 4:
-            printf("total_CPU_time: %f", total_CPU_time);
-            printf("\ntotal_CPU_time_in_seconds: %f", total_CPU_time_in_seconds);
+            pt_product = get_pt_product(tr->root);
+            ast_product = get_ast_product(tr->root->addr);
+            printf("\n");
+            printf("Compression percentage: %d\n", ((pt_product-ast_product)*100/pt_product));
             break;
         case 5:
-            print_grammar(gr);
-        break;
-        case 6:
-            printf("\n******************FIRST SETS******************\n");
-            printFirstOrFollowSets(fnf->firstSet);
-            printf("\n\n\n******************FOLLOW SETS******************\n");
-            printFirstOrFollowSets(fnf->followSet);
-        break;
-        case 7:
-            print_ast(tr->root->addr, 0);
-            ast_product = get_ast_product(tr->root->addr);
-            pt_product = get_pt_product(tr->root);
-            // printf("\n%d", ast_product);
-            // printf("\n%d", pt_product);
-            printf("\nRatio: %f", (ast_product*1.0)/pt_product);
-        break;
-        case 8: 
-            
             if(global == NULL) exit(0);
             printSymbolTable(global);
+            break;
+        case 6:
+            if(global == NULL) exit(0);
             printglobalvariables(global);
+            break;
+        case 7:
+            if(global == NULL) exit(0);
             printactivationrecords(global);
+            break;
+        case 8: 
+            if(global == NULL) exit(0);
             printglobalrecords(global);
             break;
         case 9: 
             type_checker(tr->root->addr,err,global,global,-1);
             print_error_list(err);
+            printf("\ntotal_cpu_time: %f",total_CPU_time);
+            printf("\ntotal_cpu_time_in_seconds: %f", total_CPU_time_in_seconds);
             break;
         case 10:
             complist = get_intermediate_list(tr->root->addr, global);
             print_tupleList(complist);
             break;
-        case 11 : f = fopen("assembly.asm", "w");
+        case 11 : 
+            f = fopen("assembly.asm", "w");
             generate_code(complist, global,f);
             fclose(f); break;
         default:

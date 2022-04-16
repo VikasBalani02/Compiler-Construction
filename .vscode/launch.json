@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${fileDirname}/${fileBasenameNoExtension}",
-            "args": ["testcase19.txt","dummy.txt"],
+            "args": ["newtestcases/s3.txt","dummy.txt"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],

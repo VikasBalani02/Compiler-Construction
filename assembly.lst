@@ -1,5 +1,6 @@
      1                                  extern printf, scanf, exit
      2                                  section .data
+<<<<<<< HEAD
      3 00000000 25640A00                		int_fmt: db "%d", 10, 0
      4 00000004 256C660A00              		real_fmt: db "%lf", 10, 0
      5 00000009 0000                    		zero: dw 0
@@ -58,3 +59,64 @@
     58                                  				;Deallocate space given to I/O variables on stack
     59 000000A9 83C40A                  				add ESP, 10
     60 000000AC C9                      				LEAVE
+=======
+<<<<<<< HEAD
+     3 00000000 0000                    		b2d: dw 0
+     4 00000002 0000                    		b3d: dw 0
+     5 00000004 25640A00                		int_fmt: db "%d", 10, 0
+     6 00000008 256C660A00              		real_fmt: db "%lf", 10, 0
+     7 0000000D 0000                    		zero: dw 0
+     8 0000000F 0000000000000000        		flttmp: dq 0.0
+     9                                  section .text
+    10                                  global main
+    11                                  main:
+    12 00000000 C8040000                				ENTER 4, 0
+    13                                  				;reserve space for the input/output params of fn, later flush this space
+    14 00000004 66C705[00000000]05-     		                    mov word [b2d], 5 
+    14 0000000C 00                 
+    15 0000000D 66C705[02000000]04-                         		                    mov word [b3d], 4 
+    15 00000015 00                 
+    16 00000016 89EA                                        		                    mov EDX, EBP 
+    17 00000018 83EA00                                      sub EDX, 0 
+    18 0000001B 66C7020600                                  mov word [EDX], 6 
+    19 00000020 89EA                                                        mov EDX, EBP
+    20 00000022 83EA00                                  sub EDX, 0     ; make EDX to point at location of variable on the stack
+    21 00000025 66FF35[0D000000]                        push word [zero] ;
+    22 0000002C 66FF32                                  push word [EDX]  ; for integer, value stored at offset should be passed to printf
+    23 0000002F 68[04000000]                            push dword int_fmt
+    24 00000034 E8(00000000)                            call printf 
+    25 00000039 83C408                                  add ESP, 8
+    26 0000003C B900000000                              MOV ECX, 0
+    27 00000041 BA01000000                      MOV EDX,1
+    28 00000046 66FF35[0D000000]                        push word [zero] ;
+    29 0000004D 66FF35[00000000]                        push word [b2d]  ; for integer, value stored at offset should be passed to printf
+    30 00000054 68[04000000]                            push dword int_fmt
+    31 00000059 E8(00000000)                            call printf 
+    32 0000005E 83C408                                  add ESP, 8
+    33 00000061 66FF35[0D000000]                                        push word [zero] ;
+    34 00000068 66FF35[02000000]                        push word [b3d]  ; for integer, value stored at offset should be passed to printf
+    35 0000006F 68[04000000]                            push dword int_fmt
+    36 00000074 E8(00000000)                            call printf 
+    37 00000079 83C408                                  add ESP, 8
+    38                                                  				;Deallocate space given to I/O variables on stack
+    39 0000007C 83C404                  				add ESP, 4
+    40 0000007F C9                      				LEAVE
+=======
+     3 00000000 00000000                		b2d: dd 0.0
+     4 00000004 25640A00                		int_fmt: db "%d", 10, 0
+     5 00000008 256C660A00              		real_fmt: db "%lf", 10, 0
+     6 0000000D 0000                    		zero: dw 0
+     7 0000000F 0000000000000000        		flttmp: dq 0.0
+     8                                  section .text
+     9                                  global main
+    10                                  main:
+    11 00000000 D905[00000000]                          fld	dword [b2d]	            ; need to convert 32-bit to 64-bit 
+    12 00000006 DD1D[0F000000]          	            fstp	qword [flttmp]      ; floating load makes 80-bit,
+    13                                  	                                        ; store as 64-bit 
+    14 0000000C FF35[13000000]                          push dword [flttmp+4]       
+    15 00000012 FF35[0F000000]                          push dword [flttmp]         
+    16 00000018 68[08000000]                            push dword real_fmt 
+    17 0000001D E8(00000000)                            call printf 
+    18 00000022 83C40C                                  add ESP,12                 
+>>>>>>> d44fe13e343dec20007f1496d374cc1bd8f645bc
+>>>>>>> e4ec893d8547ab62e2dcab5b9ac38e0c0f3a725b
