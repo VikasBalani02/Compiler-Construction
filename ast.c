@@ -1573,15 +1573,13 @@ void traverse_pt(tNode* root, int* num_ptr) {
 int get_ast_product(ast_node* root) {
     int num=0;
     traverse_ast(root, &num);
-    printf("\nNumber of nodes in ast: %d", num);
-    printf("\nSize of ast_node: %ld", sizeof(root));
+    printf("\nAST number of nodes= : %d allocated memory = %d bytes", num, num*sizeof(root));
     return num*sizeof(root);
 }
 
 int get_pt_product(tNode* root) {
     int num=0;
     traverse_pt(root, &num);
-    printf("\nNumber of nodes in pt: %d", num);
-    printf("\nSize of parse tree node: %ld", sizeof(root));
+    printf("\nParse tree number of nodes= : %d allocated memory = %d bytes", num, num*sizeof(root));
     return num*sizeof(root);
 }

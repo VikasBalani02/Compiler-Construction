@@ -826,11 +826,11 @@ void printParseTree(tNode* root , char* outfile)
     // fprintf(fptr,"\n %20s %15s %4d %10f %15s %3s",lexeme,symbol,lineNum,value,parent_symbol,LeafOrNot[root->is_terminal]);
     if(root->is_terminal && root->lex_token && root->lex_token->tag==1) 
     {
-        fprintf(fptr,"\n %20s %25s %7d %20f %25s %10s %10d",lexeme,symbol,lineNum,value,parent_symbol,LeafOrNot[root->is_terminal], rule_no);
+        printf("\n %20s %25s %7d %20f %25s %10s %10d",lexeme,symbol,lineNum,value,parent_symbol,LeafOrNot[root->is_terminal], rule_no);
 
     }  
     else {
-        fprintf(fptr,"\n %20s %25s %7d %20d %25s %10s %10d",lexeme,symbol,lineNum,(int) value,parent_symbol,LeafOrNot[root->is_terminal], rule_no);
+        printf("\n %20s %25s %7d %20d %25s %10s %10d",lexeme,symbol,lineNum,(int) value,parent_symbol,LeafOrNot[root->is_terminal], rule_no);
 
     }
     fclose(fptr);
