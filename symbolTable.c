@@ -794,12 +794,16 @@ void printSymbolTableFunction(symbolTable * table, char * name, symbolTable * gl
 for(int i=0;i<table->no_slots;i++){
     SymbolTableRecord * entry = table->list[i]->head;
     while(entry!=NULL){
+        
             printf("Name: %s\t",entry->lexeme);
 
             printf("Scope: %s\t", name);
             if(entry->type == RECORD || entry->type == VARIANTRECORD || entry->type == RUID){
                 if(entry->type_ruid !=NULL)
                 printf("TypeName : %s ", entry->type_ruid);
+            }
+            else {
+                printf("TypeName : ---\t");
             }
             printf("Type Expression: ");
             printTypeExpression(entry, global);
@@ -832,6 +836,10 @@ void printSymbolTable(symbolTable * global){
             if(entry->type == RECORD || entry->type == VARIANTRECORD || entry->type == RUID){
                 if(entry->type_ruid !=NULL)
                 printf("TypeName : %s\t", entry->type_ruid);
+            }
+            else{
+                printf("TypeName : ---\t");
+
             }
 
             printf("Type Expression: ");

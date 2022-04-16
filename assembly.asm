@@ -1,7 +1,6 @@
 extern printf, scanf, exit
 section .data
-		b2d: dw 0
-		b3d: dw 0
+		b2d: dd 0.0
 		int_fmt: db "%d", 10, 0
 		real_fmt: db "%lf", 10, 0
 		zero: dw 0
@@ -9,6 +8,7 @@ section .data
 section .text
 global main
 main:
+<<<<<<< HEAD
 				ENTER 4, 0
 				;reserve space for the input/output params of fn, later flush this space
 		                    mov word [b2d], 5 
@@ -28,13 +28,13 @@ main:
                 push word [zero] ;
                 push word [b2d]  ; for integer, value stored at offset should be passed to printf
                 push dword int_fmt
+=======
+                fld	dword [b2d]	            ; need to convert 32-bit to 64-bit 
+	            fstp	qword [flttmp]      ; floating load makes 80-bit,
+	                                        ; store as 64-bit 
+                push dword [flttmp+4]       
+                push dword [flttmp]         
+                push dword real_fmt 
+>>>>>>> d44fe13e343dec20007f1496d374cc1bd8f645bc
                 call printf 
-                add ESP, 8
-                                push word [zero] ;
-                push word [b3d]  ; for integer, value stored at offset should be passed to printf
-                push dword int_fmt
-                call printf 
-                add ESP, 8
-                				;Deallocate space given to I/O variables on stack
-				add ESP, 4
-				LEAVE
+                add ESP,12                 
