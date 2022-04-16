@@ -647,16 +647,17 @@ void IR_boolean_expression(ast_node *root, symbolTable *localTable, symbolTable 
         tupleList *t2 = root->firstChild->nextSib->list;
         tuple *newT;
 
-        tuple *newT1 = newTuple(IF, arg1, NULL, NULL, NULL);
         char *falseset = newlabel();
-        tuple *newT2 = newTuple(GOTO, falseset, NULL, NULL, NULL);
+        tuple *newT1 = newTuple(IF, arg1, NULL, falseset, NULL);
+        
+        // tuple *newT2 = newTuple(GOTO, falseset, NULL, NULL, NULL);
         char *after = newlabel();
         tuple *newT3 = newTuple(GOTO, after, NULL, NULL, NULL);
         tuple *newT4 = newTuple(LABEL, falseset, NULL, NULL, NULL);
         tuple *newT5 = newTuple(LABEL, after, NULL, NULL, NULL);
         tuple *newT6 = newTuple(UNSET, res, NULL, NULL, NULL);
-        tuple *newT7 = newTuple(IF, arg2, NULL, NULL, NULL);
-        tuple *newT8 = newTuple(GOTO, falseset, NULL, NULL, NULL);
+        tuple *newT7 = newTuple(IF, arg2, NULL, falseset, NULL);
+        // tuple *newT8 = newTuple(GOTO, falseset, NULL, NULL, NULL);
         tuple *newT9 = newTuple(SET, res, NULL, NULL, NULL);
 
         tupleList *newL = newList();
@@ -673,7 +674,7 @@ void IR_boolean_expression(ast_node *root, symbolTable *localTable, symbolTable 
             addTupleEnd(newL, newT1);
         }
         // goto falseset
-        addTupleEnd(newL, newT2);
+        // addTupleEnd(newL, newT2);
 
         // add t2's code
         if (t2 != NULL)
@@ -684,7 +685,7 @@ void IR_boolean_expression(ast_node *root, symbolTable *localTable, symbolTable 
         // IF t2.place
         addTupleEnd(newL, newT7);
         // goto falseset
-        addTupleEnd(newL, newT8);
+        // addTupleEnd(newL, newT8);
         // res = true
         addTupleEnd(newL, newT9);
         // goto after
@@ -711,17 +712,18 @@ void IR_boolean_expression(ast_node *root, symbolTable *localTable, symbolTable 
         tuple *newT;
 
         tuple *newT0 = newTuple(NOT, arg1, NULL, arg1, NULL);
-        tuple *newT1 = newTuple(IF, arg1, NULL, NULL, NULL);
         char *trueset = newlabel();
-        tuple *newT2 = newTuple(GOTO, trueset, NULL, NULL, NULL);
+        tuple *newT1 = newTuple(IF, arg1, NULL, trueset, NULL);
+        
+        // tuple *newT2 = newTuple(GOTO, trueset, NULL, NULL, NULL);
         char *after = newlabel();
         tuple *newT3 = newTuple(GOTO, after, NULL, NULL, NULL);
         tuple *newT4 = newTuple(LABEL, trueset, NULL, NULL, NULL);
         tuple *newT5 = newTuple(LABEL, after, NULL, NULL, NULL);
         tuple *newT6 = newTuple(SET, res, NULL, NULL, NULL);
         tuple *newT70 = newTuple(NOT, arg2, NULL, arg2, NULL);
-        tuple *newT7 = newTuple(IF, arg2, NULL, NULL, NULL);
-        tuple *newT8 = newTuple(GOTO, trueset, NULL, NULL, NULL);
+        tuple *newT7 = newTuple(IF, arg2, NULL, trueset, NULL);
+        // tuple *newT8 = newTuple(GOTO, trueset, NULL, NULL, NULL);
         tuple *newT9 = newTuple(UNSET, res, NULL, NULL, NULL);
 
         tupleList *newL = newList();
@@ -741,7 +743,7 @@ void IR_boolean_expression(ast_node *root, symbolTable *localTable, symbolTable 
         addTupleEnd(newL, newT1);
 
         // goto trueset
-        addTupleEnd(newL, newT2);
+        // addTupleEnd(newL, newT2);
 
         // add t2's code
         if (t2 != NULL)
@@ -755,7 +757,7 @@ void IR_boolean_expression(ast_node *root, symbolTable *localTable, symbolTable 
         // IF t2.place == false
         addTupleEnd(newL, newT7);
         // goto trueset
-        addTupleEnd(newL, newT8);
+        // addTupleEnd(newL, newT8);
         // res = false
         addTupleEnd(newL, newT9);
         // goto after
@@ -855,88 +857,116 @@ void IR_conditional(ast_node *root, symbolTable *localTable, symbolTable *global
         root->place = NULL;
         root->list = NULL;
     }
-    root->list = newList();
+    // root->list = newList();
+    // ast_node *boolExp = root->firstChild;
+    // tupleList *boollist = boolExp->list;
+
+    // char *elselabel = newlabel();
+    // char *afterlabel = newlabel();
+
+    // tuple *t1 = newTuple(IF, boolExp->place, NULL, NULL, NULL);
+    // tuple *t2 = newTuple(GOTO, elselabel, NULL, NULL, NULL);
+    // tuple *t3 = newTuple(GOTO, afterlabel, NULL, NULL, NULL);
+    // tuple *t4 = newTuple(LABEL, elselabel, NULL, NULL, NULL);
+    // tuple *t5 = newTuple(LABEL, afterlabel, NULL, NULL, NULL);
+
+    // root->list->head = boollist->head;
+    // boollist->tail->next = t1;
+    // t1->next = t2;
+
+    // ast_node *then = boolExp->nextSib;
+    // tupleList *thenlist = then->list;
+    // int flag = 0;
+    // if (thenlist == NULL)
+    // {
+    //     flag = 1; // if flag is 1 after next if, then only thenlist is NULL
+    // }
+    // ast_node *elseExp = then->nextSib;
+    // tupleList *elselist = elseExp->list;
+    // if (elselist == NULL)
+    // {
+    //     if (flag == 1)
+    //     {
+    //         flag = 3; // both NULL
+    //     }
+    //     else
+    //     {
+    //         flag = 2; // only elselist is NULL
+    //     }
+    // }
+    // switch (flag)
+    // {
+    // case 0:
+    //     t2->next = thenlist->head;
+    //     thenlist->tail->next = t3;
+    //     t3->next = t4;
+
+    //     t4->next = elselist->head;
+    //     elselist->tail->next = t5;
+
+    //     break;
+
+    // case 1:
+    //     t2->next = t3;
+    //     t3->next = t4;
+
+    //     t4->next = elselist->head;
+    //     elselist->tail->next = t5;
+
+    //     break;
+
+    // case 2:
+
+    //     t2->next = thenlist->head;
+    //     thenlist->tail->next = t3;
+    //     t3->next = t4;
+
+    //     t4->next = t5;
+
+    //     break;
+
+    // case 3:
+
+    //     t2->next = t3;
+    //     t3->next = t4;
+    //     t4->next = t5;
+
+    //     break;
+    // }
+
+    // t5->next = NULL;
+    // root->list->head = boollist->head;
+    // root->list->tail = t5;
+
+    // root->list->no_tuples = boollist->no_tuples + thenlist->no_tuples + elselist->no_tuples + 5;
+    tupleList* newL = newList();
     ast_node *boolExp = root->firstChild;
     tupleList *boollist = boolExp->list;
 
     char *elselabel = newlabel();
     char *afterlabel = newlabel();
 
-    tuple *t1 = newTuple(IF, boolExp->place, NULL, NULL, NULL);
-    tuple *t2 = newTuple(GOTO, elselabel, NULL, NULL, NULL);
+    tuple *t1 = newTuple(IF, boolExp->place, NULL, elselabel, NULL);
+    // tuple *t2 = newTuple(GOTO, elselabel, NULL, NULL, NULL);
     tuple *t3 = newTuple(GOTO, afterlabel, NULL, NULL, NULL);
     tuple *t4 = newTuple(LABEL, elselabel, NULL, NULL, NULL);
     tuple *t5 = newTuple(LABEL, afterlabel, NULL, NULL, NULL);
 
-    root->list->head = boollist->head;
-    boollist->tail->next = t1;
-    t1->next = t2;
+    concatLists(&newL, boollist);
+    addTupleEnd(newL, t1);
 
     ast_node *then = boolExp->nextSib;
     tupleList *thenlist = then->list;
-    int flag = 0;
-    if (thenlist == NULL)
-    {
-        flag = 1; // if flag is 1 after next if, then only thenlist is NULL
-    }
+    concatLists(&newL, thenlist);
+    addTupleEnd(newL, t3);
+    addTupleEnd(newL, t4);
+
     ast_node *elseExp = then->nextSib;
     tupleList *elselist = elseExp->list;
-    if (elselist == NULL)
-    {
-        if (flag == 1)
-        {
-            flag = 3; // both NULL
-        }
-        else
-        {
-            flag = 2; // only elselist is NULL
-        }
-    }
-    switch (flag)
-    {
-    case 0:
-        t2->next = thenlist->head;
-        thenlist->tail->next = t3;
-        t3->next = t4;
 
-        t4->next = elselist->head;
-        elselist->tail->next = t5;
-
-        break;
-
-    case 1:
-        t2->next = t3;
-        t3->next = t4;
-
-        t4->next = elselist->head;
-        elselist->tail->next = t5;
-
-        break;
-
-    case 2:
-
-        t2->next = thenlist->head;
-        thenlist->tail->next = t3;
-        t3->next = t4;
-
-        t4->next = t5;
-
-        break;
-
-    case 3:
-
-        t2->next = t3;
-        t3->next = t4;
-        t4->next = t5;
-
-        break;
-    }
-
-    t5->next = NULL;
-    root->list->head = boollist->head;
-    root->list->tail = t5;
-
-    // root->list->no_tuples = boollist->no_tuples + thenlist->no_tuples + elselist->no_tuples + 5;
+    concatLists(&newL, elselist);
+    addTupleEnd(newL, t5);
+    root->list = newL;
 }
 
 void IR_iterative(ast_node *root, symbolTable *localTable, symbolTable *global)
@@ -954,15 +984,15 @@ void IR_iterative(ast_node *root, symbolTable *localTable, symbolTable *global)
     char *afterlabel = newlabel();
 
     tuple *t1 = newTuple(LABEL, beginlabel, NULL, NULL, NULL);
-    tuple *t2 = newTuple(IF, boolExp->place, NULL, NULL, NULL);
-    tuple *t3 = newTuple(GOTO, afterlabel, NULL, NULL, NULL);
+    tuple *t2 = newTuple(IF, boolExp->place, NULL, afterlabel, NULL);
+    // tuple *t3 = newTuple(GOTO, afterlabel, NULL, NULL, NULL);
     tuple *t4 = newTuple(GOTO, beginlabel, NULL, NULL, NULL);
     tuple *t5 = newTuple(LABEL, afterlabel, NULL, NULL, NULL);
 
     addTupleEnd(newL,t1);
     concatLists(&newL, boollist);
     addTupleEnd(newL, t2);
-    addTupleEnd(newL, t3);
+    // addTupleEnd(newL, t3);
     // t1->next = boollist->head;
     // boollist->tail = t2;
     // t2->next = t3;
