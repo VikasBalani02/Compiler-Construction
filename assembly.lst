@@ -15,18 +15,28 @@
     14 0000000C 00                 
     15 0000000D 66C705[02000000]04-                         		                    mov word [b3d], 4 
     15 00000015 00                 
-    16 00000016 B900000000                                  MOV ECX, 0
-    17 0000001B BA01000000                      MOV EDX,1
-    18 00000020 66FF35[0D000000]                        push word [zero] ;
-    19 00000027 66FF35[00000000]                        push word [b2d]  ; for integer, value stored at offset should be passed to printf
-    20 0000002E 68[04000000]                            push dword int_fmt
-    21 00000033 E8(00000000)                            call printf 
-    22 00000038 83C408                                  add ESP, 8
-    23 0000003B 66FF35[0D000000]                                        push word [zero] ;
-    24 00000042 66FF35[02000000]                        push word [b3d]  ; for integer, value stored at offset should be passed to printf
-    25 00000049 68[04000000]                            push dword int_fmt
-    26 0000004E E8(00000000)                            call printf 
-    27 00000053 83C408                                  add ESP, 8
-    28                                                  				;Deallocate space given to I/O variables on stack
-    29 00000056 83C404                  				add ESP, 4
-    30 00000059 C9                      				LEAVE
+    16 00000016 89EA                                        		                    mov EDX, EBP 
+    17 00000018 83EA00                                      sub EDX, 0 
+    18 0000001B 66C7020600                                  mov word [EDX], 6 
+    19 00000020 89EA                                                        mov EDX, EBP
+    20 00000022 83EA00                                  sub EDX, 0     ; make EDX to point at location of variable on the stack
+    21 00000025 66FF35[0D000000]                        push word [zero] ;
+    22 0000002C 66FF32                                  push word [EDX]  ; for integer, value stored at offset should be passed to printf
+    23 0000002F 68[04000000]                            push dword int_fmt
+    24 00000034 E8(00000000)                            call printf 
+    25 00000039 83C408                                  add ESP, 8
+    26 0000003C B900000000                              MOV ECX, 0
+    27 00000041 BA01000000                      MOV EDX,1
+    28 00000046 66FF35[0D000000]                        push word [zero] ;
+    29 0000004D 66FF35[00000000]                        push word [b2d]  ; for integer, value stored at offset should be passed to printf
+    30 00000054 68[04000000]                            push dword int_fmt
+    31 00000059 E8(00000000)                            call printf 
+    32 0000005E 83C408                                  add ESP, 8
+    33 00000061 66FF35[0D000000]                                        push word [zero] ;
+    34 00000068 66FF35[02000000]                        push word [b3d]  ; for integer, value stored at offset should be passed to printf
+    35 0000006F 68[04000000]                            push dword int_fmt
+    36 00000074 E8(00000000)                            call printf 
+    37 00000079 83C408                                  add ESP, 8
+    38                                                  				;Deallocate space given to I/O variables on stack
+    39 0000007C 83C404                  				add ESP, 4
+    40 0000007F C9                      				LEAVE

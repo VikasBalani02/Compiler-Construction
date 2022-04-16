@@ -904,14 +904,14 @@ void assignment_stmt(tuple *intermediateCode){
             switch(t){
                 case INT:
                     fprintf(assemblyFile, "\t\t\
-                    mov EDX, EBX \n\
+                    mov EDX, EBP \n\
                     sub EDX, %d \n\
                     mov word [EDX], %s \n\
                     ", entry->offset , intermediateCode->arg1);
                     break;
                 case REAL:
                     fprintf(assemblyFile, "\
-                    mov EDX, EBX \n\
+                    mov EDX, EBP \n\
                     sub EDX, %d\n\
                     mov dword [EDX], __?float32?__ (%s) \n\
                     ", entry->offset, intermediateCode->arg1);

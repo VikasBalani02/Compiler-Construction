@@ -5,6 +5,7 @@ _main
 		b2d <--- 5;
 		b3d <--- 4;
 		b2d4 <--- 6;
+		write(b2d4);
 		if(b2d<b3d)
 		then
 			write(b2d);

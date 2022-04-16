@@ -13,10 +13,17 @@ main:
 				;reserve space for the input/output params of fn, later flush this space
 		                    mov word [b2d], 5 
                     		                    mov word [b3d], 4 
-                    		                    mov EDX, EBX 
+                    		                    mov EDX, EBP 
                     sub EDX, 0 
                     mov word [EDX], 6 
-                    MOV ECX, 0
+                                    mov EDX, EBP
+                sub EDX, 0     ; make EDX to point at location of variable on the stack
+                push word [zero] ;
+                push word [EDX]  ; for integer, value stored at offset should be passed to printf
+                push dword int_fmt
+                call printf 
+                add ESP, 8
+                MOV ECX, 0
         MOV EDX,1
                 push word [zero] ;
                 push word [b2d]  ; for integer, value stored at offset should be passed to printf
