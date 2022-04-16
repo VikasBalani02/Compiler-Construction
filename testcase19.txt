@@ -1,5 +1,14 @@
 _main
-		type real: b2d : global;
-		write(b2d);
+		type int: b2d : global;
+		type int: b3d : global;
+		type int : b2d4;
+		b2d <--- 5;
+		b3d <--- 4;
+		if(b2d<b3d)
+		then
+			write(b2d);
+		else
+			write(b3d);
+		endif
 return;
 end
