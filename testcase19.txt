@@ -1,16 +1,16 @@
 _main
-		type int: b2d : global;
-		type int: b3d : global;
-		type int : b2d4;
+		type int: b2d;
+		type int: b3d;
+		type real : b2d4;
 		b2d <--- 5;
 		b3d <--- 4;
-		b2d4 <--- 6;
-		write(b2d4);
-		if(b2d<b3d)
-		then
-			write(b2d);
-		else
-			write(b3d);
-		endif
+		b2d4 <--- 6.26;
+		write(b3d);
+		%if(b2d<b3d)
+		%then
+		%	write(b2d);
+		%else
+		%	write(b3d);
+		%endif
 return;
 end
