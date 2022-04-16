@@ -1548,3 +1548,40 @@ void print_ast(ast_node *root, int depth) {
     if(root->nextSib==NULL) return;
     print_ast(root->nextSib, depth);
 }
+
+void traverse_ast(ast_node* root, int* num_ptr) {
+    if(root==NULL) return;
+    if(root->firstChild!=NULL) {
+        (*num_ptr)++;
+        traverse_ast(root->firstChild, num_ptr);
+    }
+    if(root->nextSib==NULL) return;
+    traverse_ast(root->nextSib, num_ptr);
+}
+
+void traverse_pt(tNode* root, int* num_ptr) {
+    if(root==NULL) return;
+    
+    if(root->child_first!=NULL) {
+        (*num_ptr)++;
+        traverse_pt(root->child_first, num_ptr);
+    }
+    if(root->next_sibling==NULL) return;
+    traverse_pt(root->next_sibling, num_ptr);
+}
+
+int get_ast_product(ast_node* root) {
+    int num=0;
+    traverse_ast(root, &num);
+    printf("\nNumber of nodes in ast: %d", num);
+    printf("\nSize of ast_node: %ld", sizeof(root));
+    return num*sizeof(root);
+}
+
+int get_pt_product(tNode* root) {
+    int num=0;
+    traverse_pt(root, &num);
+    printf("\nNumber of nodes in pt: %d", num);
+    printf("\nSize of parse tree node: %ld", sizeof(root));
+    return num*sizeof(root);
+}

@@ -119,6 +119,7 @@ int main(int argc, char **argv)
     global = populateSymbolTable(tr->root->addr);
     tupleList* complist;
     FILE * f;
+    int ast_product, pt_product;
     while (1)
     {
         int option;
@@ -169,6 +170,11 @@ int main(int argc, char **argv)
         break;
         case 7:
             print_ast(tr->root->addr, 0);
+            ast_product = get_ast_product(tr->root->addr);
+            pt_product = get_pt_product(tr->root);
+            // printf("\n%d", ast_product);
+            // printf("\n%d", pt_product);
+            printf("\nRatio: %f", (ast_product*1.0)/pt_product);
         break;
         case 8: 
             
