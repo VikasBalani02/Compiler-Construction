@@ -794,7 +794,7 @@ void printSymbolTableFunction(symbolTable * table, char * name, symbolTable * gl
 for(int i=0;i<table->no_slots;i++){
     SymbolTableRecord * entry = table->list[i]->head;
     while(entry!=NULL){
-        
+
             printf("Name: %s\t",entry->lexeme);
 
             printf("Scope: %s\t", name);
@@ -829,6 +829,10 @@ void printSymbolTable(symbolTable * global){
     for(int i=0;i<global->no_slots;i++){
         SymbolTableRecord * entry = global->list[i]->head;
         while(entry!=NULL){
+            if(entry->type==FUNCTION){
+                entry=entry->next;
+                continue;
+            }
             printf("Name: %s\t ",entry->lexeme);
 
             printf("Scope: GLOBAL\t");
