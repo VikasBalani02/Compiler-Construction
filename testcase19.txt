@@ -1,5 +1,5 @@
 _main
 		type real: b2d : global;
-			
+		write(b2d);
 return;
 end

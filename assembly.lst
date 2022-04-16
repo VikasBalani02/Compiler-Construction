@@ -1,0 +1,18 @@
+     1                                  extern printf, scanf, exit
+     2                                  section .data
+     3 00000000 00000000                		b2d: dd 0.0
+     4 00000004 25640A00                		int_fmt: db "%d", 10, 0
+     5 00000008 256C660A00              		real_fmt: db "%lf", 10, 0
+     6 0000000D 0000                    		zero: dw 0
+     7 0000000F 0000000000000000        		flttmp: dq 0.0
+     8                                  section .text
+     9                                  global main
+    10                                  main:
+    11 00000000 D905[00000000]                          fld	dword [b2d]	            ; need to convert 32-bit to 64-bit 
+    12 00000006 DD1D[0F000000]          	            fstp	qword [flttmp]      ; floating load makes 80-bit,
+    13                                  	                                        ; store as 64-bit 
+    14 0000000C FF35[13000000]                          push dword [flttmp+4]       
+    15 00000012 FF35[0F000000]                          push dword [flttmp]         
+    16 00000018 68[08000000]                            push dword real_fmt 
+    17 0000001D E8(00000000)                            call printf 
+    18 00000022 83C40C                                  add ESP,12                 

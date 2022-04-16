@@ -9,7 +9,7 @@ Usneek Singh - 2019A7PS0127P
 Abhijith S Raj - 2019A7PS0055P 
 */
 
-#include"intermediate_code.h"
+#include"codegen.h"
 #include <stdio.h>
 #include <time.h>
 #include<unistd.h>
@@ -192,9 +192,9 @@ int main(int argc, char **argv)
             complist = get_intermediate_list(tr->root->addr, global);
             print_tupleList(complist);
             break;
-        // case 11 : f = fopen("assembly.asm", "w");
-        //     generate_code(global,f);
-        //     fclose(f); break;
+        case 11 : f = fopen("assembly.asm", "w");
+            generate_code(complist, global,f);
+            fclose(f); break;
         default:
             printf("\nIncorrect option.");
             break;
