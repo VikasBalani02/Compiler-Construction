@@ -401,27 +401,27 @@ void output_code_gen(tuple* intermediateCode){
    
 }
 
-void param_code_gen(tuple* intermediateCode){
+// void param_code_gen(tuple* intermediateCode){
     
-    SymbolTableRecord * entry = getSymbolInfo(intermediateCode->arg1, (symbolTable *)st->head->t_node);
-    Type type = entry->type;
+//     SymbolTableRecord * entry = getSymbolInfo(intermediateCode->arg1, (symbolTable *)st->head->t_node);
+//     Type type = entry->type;
 
-    // int offset_arg1 = 0;
-    int offset_arg1 = entry->offset;
-    // fprintf(assemblyFile, "\t\t\t\t;pushing a parameter(%s) on stack\n", intermediateCode->arg1);
-    if(type==INT){
-        fprintf(assemblyFile, "\t\t\t\tmov EAX, EBP\n");
-        fprintf(assemblyFile, "\t\t\t\tsub EAX, %d\n", offset_arg1);
-        fprintf(assemblyFile, "\t\t\t\tpush word [EAX]\n");
-    }
-    else if (type == REAL){
-        fprintf(assemblyFile, "\t\t\t\tmov EAX, EBP\n");
-        fprintf(assemblyFile, "\t\t\t\tsub EAX, %d\n", offset_arg1);
-        fprintf(assemblyFile, "\t\t\t\tpush dword [EAX]\n");
-    }
+//     // int offset_arg1 = 0;
+//     int offset_arg1 = entry->offset;
+//     // fprintf(assemblyFile, "\t\t\t\t;pushing a parameter(%s) on stack\n", intermediateCode->arg1);
+//     if(type==INT){
+//         fprintf(assemblyFile, "\t\t\t\tmov EAX, EBP\n");
+//         fprintf(assemblyFile, "\t\t\t\tsub EAX, %d\n", offset_arg1);
+//         fprintf(assemblyFile, "\t\t\t\tpush word [EAX]\n");
+//     }
+//     else if (type == REAL){
+//         fprintf(assemblyFile, "\t\t\t\tmov EAX, EBP\n");
+//         fprintf(assemblyFile, "\t\t\t\tsub EAX, %d\n", offset_arg1);
+//         fprintf(assemblyFile, "\t\t\t\tpush dword [EAX]\n");
+//     }
     
-    //do for record
-}
+//     //do for record
+// }
 
 void relational_code_gen(tuple *intermediateCode, struct symbolTable *local, struct symbolTable *global)
 {

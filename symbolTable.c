@@ -324,10 +324,13 @@ int traverseNode(ast_node * current, symbolTable* global){
                     printf("Line No: %d, No type definition found corresponding to this type %s\n",info->lineNum,info->ruid);
                     flag=1;
                 }
-                temp->type = entry->type;
-                temp->type_ruid = info->ruid;
+                else{
+                   temp->type = entry->type;
+                   temp->type_ruid = info->ruid;
                 temp->line_no = info->lineNum;
                 temp->width = entry->width;
+                }
+                
             }
             else if (info->union_or_record == -1){
                 SymbolTableRecord * entry = getSymbolInfo(info->ruid,global);
@@ -338,12 +341,14 @@ int traverseNode(ast_node * current, symbolTable* global){
                 temp->type = entry->type;
                 temp->type_ruid = entry->type_ruid;
                 SymbolTableRecord * entry2 = getSymbolInfo(entry->type_ruid,global);
-                if(entry2->type==4){
+                if(entry2 != NULL && entry2->type==4){
                     printf("Line No: %d, Union %s cannot be declared in this manner \n",info->lineNum,info->ruid);
                     flag=1;
                 }
+                if(entry2!=NULL){
                 temp->line_no = info->lineNum;
                 temp->width = entry2->width;
+                }
             }
         }
         if(info->isGlobal){
