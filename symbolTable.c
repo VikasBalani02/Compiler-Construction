@@ -800,7 +800,7 @@ for(int i=0;i<table->no_slots;i++){
             printf("Scope: %s\t", name);
             if(entry->type == RECORD || entry->type == VARIANTRECORD || entry->type == RUID){
                 if(entry->type_ruid !=NULL)
-                printf("TypeName : %s ", entry->type_ruid);
+                printf("TypeName : %s\t", entry->type_ruid);
             }
             else {
                 printf("TypeName : ---\t");
@@ -811,6 +811,7 @@ for(int i=0;i<table->no_slots;i++){
             if(entry->type == INT || entry->type == REAL || entry->type == RECORD||entry->type == VARIANTRECORD || entry->type == UNION || entry->type == RUID){
                 printf("Width: ");
                 printf("%d\t",entry->width);
+                printf("\t");
             }
 
             printf("isGlobal : ---\t");
@@ -848,6 +849,7 @@ void printSymbolTable(symbolTable * global){
 
             printf("Type Expression: ");
             printTypeExpression(entry, global);
+            printf("\t");
             
 
             if(entry->type == INT || entry->type == REAL || entry->type == RECORD||entry->type == VARIANTRECORD || entry->type == UNION || entry->type == RUID){

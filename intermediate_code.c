@@ -594,42 +594,83 @@ void IR_highPrecedenceTerm(ast_node *root, symbolTable *localTable, symbolTable 
     tupleList *t1 = root->firstChild->list;
     tupleList *t2 = root->firstChild->nextSib->list;
     tuple *newT;
-    if (((struct operator_struct *)(root->ninf))->op == TK_MUL)
+
+    Type optype1 = root->firstChild->node_type->type;
+    Type optype2 = root->firstChild->nextSib->node_type->type;
+    Tokentype op = ((struct operator_struct *)(root->ninf))->op; 
+    if (root->node_type->type == INT || root->node_type->type == REAL)
     {
-        newT = newTuple(MUL, arg1, arg2, res, NULL);
-    }
-    else
-    {
-        newT = newTuple(DIV, arg1, arg2, res, NULL);
-    }
-    if (t1 == NULL)
-    {
-        if (t2 == NULL)
+        if (((struct operator_struct *)(root->ninf))->op == TK_MUL)
         {
-            tupleList *newL = newList();
+            newT = newTuple(MUL, arg1, arg2, res, NULL);
+        }
+        else
+        {
+            newT = newTuple(DIV, arg1, arg2, res, NULL);
+        }
+        if (t1 == NULL)
+        {
+            if (t2 == NULL)
+            {
+                tupleList *newL = newList();
+                addTupleEnd(newL, newT);
+                root->list = newL;
+            }
+            else
+            {
+                addTupleEnd(t2, newT);
+                root->list = t2;
+            }
+        }
+        else
+        {
+            if (t2 == NULL)
+            {
+                addTupleEnd(t1, newT);
+                root->list = t1;
+            }
+            else
+            {
+                t1->tail->next = t2->head;
+                t2->tail->next = newT;
+                t1->tail = newT;
+                root->list = t1;
+            }
+        }
+    }
+    else{
+        insideRecord *head1;
+        insideRecord *tempList;
+        tupleList *newL = newList();
+        concatLists(&newL, t1);
+        concatLists(&newL, t2);
+        
+        if(optype1 == RECORD){
+            head1 = getRecordDetails(root->firstChild->place, root->firstChild->node_type->type_ruid, global);
+            tempList = getRecordDetails(root->place, root->firstChild->node_type->type_ruid, global);
+        }
+        else{
+            head1 = getRecordDetails(root->firstChild->nextSib->place, root->firstChild->nextSib->node_type->type_ruid, global);
+            tempList = getRecordDetails(root->place, root->firstChild->nextSib->node_type->type_ruid, global);
+        }
+        insideRecord* temp1 = head1;
+        insideRecord* temp2 = tempList;
+        while(temp1){
+            if(optype1 == RECORD){
+                if(op == TK_MUL){
+                    newT = newTuple(MUL, temp1->lex, root->firstChild->nextSib->place, temp2->lex, NULL);
+                }
+            }
+            else{
+                if(op == TK_MUL){
+                    newT = newTuple(MUL, root->firstChild->place, temp1->lex, temp2->lex, NULL);
+                }
+            }
             addTupleEnd(newL, newT);
-            root->list = newL;
+            temp1 = temp1->next;
+            temp2 = temp2->next;
         }
-        else
-        {
-            addTupleEnd(t2, newT);
-            root->list = t2;
-        }
-    }
-    else
-    {
-        if (t2 == NULL)
-        {
-            addTupleEnd(t1, newT);
-            root->list = t1;
-        }
-        else
-        {
-            t1->tail->next = t2->head;
-            t2->tail->next = newT;
-            t1->tail = newT;
-            root->list = t1;
-        }
+        root->list = newL;
     }
 }
 void IR_boolean_expression(ast_node *root, symbolTable *localTable, symbolTable *global)
