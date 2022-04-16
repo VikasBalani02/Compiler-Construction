@@ -12,7 +12,7 @@ lexeme_decomp *get_lexdecomp_struct(char *lex)
     new_temp->lex = lex;
     new_temp->info=(lex_info*)malloc(sizeof(lex_info));
     new_temp->info->offset=-1;
-    new_temp->info->width=-1;
+    new_temp->info->width=0;
     new_temp->info->type=UNDEFINED;
     new_temp->info->type_ruid=NULL;
     new_temp->next = NULL;
@@ -51,6 +51,9 @@ lex_info* get_lexinfo(char *lex, struct symbolTable *local_table, struct symbolT
     {
         // not a local variable
         //variable is a global variable if returned info->offfset==-1
+        sym_info=getSymbolInfo(lexList->lex,global_table);
+        lexList->info->type=sym_info->type;
+        lexList->info->type_ruid=sym_info->type_ruid;
         return lexList->info;
     }
     lexList->info->offset = sym_info->offset;
@@ -82,7 +85,7 @@ lex_info* get_lexinfo(char *lex, struct symbolTable *local_table, struct symbolT
         ptr=ptr->next;
     }
     lex_info* to_return=ptr->info;
-    to_return->offset=offset;
+    to_return->offset=offset+to_return->width;
     return to_return;
 }
 
@@ -148,6 +151,36 @@ Type getNumType(char *str){
     }
     return INT;
 }
+void param_code_gen(tuple* tup){
+    struct symbolTable * local = (symbolTable *)st->head->t_node;
+    lex_info* info=get_lexinfo(tup->arg1,local,GLOBAL);
+    if(info->type==INT){
+        //pushing int size 2 bytes
+        //fprintf(assemblyFile,"MOV AX, word [EBP-%d]\n",info->offset);
+        fprintf(assemblyFile,"push word [EBP-%d]\n",info->offset);
+    }
+    else{
+        //pushing a real size 4 bytes
+        //fprintf(assemblyFile,"MOVSS XMM0, dword [EBP-%d]\n",info->offset);
+        fprintf(assemblyFile,"push dword [EBP-%d]\n",info->offset);
+    }
+}
+void copy_param_code_gen(tuple* tup){
+    struct symbolTable * local = (symbolTable *)st->head->t_node;
+    lex_info* info=get_lexinfo(tup->arg1,local,GLOBAL);
+    int offset_in_caller=info->offset + info->width + 4; //4 is for adjusting for EBP
+    int offset_in_callee=info->offset;
+    if(info->type==INT){
+         fprintf(assemblyFile,"MOV AX, word[EBP+%d]\n",offset_in_callee);
+         fprintf(assemblyFile,"MOV [EBP-%d], EAX\n",offset_in_callee);
+    }
+    else{
+        //type is real
+        //check this //movss
+        fprintf(assemblyFile,"MOV XMM0, dword[EBP+%d]",offset_in_callee);
+        fprintf(assemblyFile,"MOV [EBP-%d], XMM0",offset_in_caller);
+    }      
+}
 void fn_space_code_gen(tuple * tup){
     /**
      * @brief Reserve number of bytes equal to offset value
@@ -202,8 +235,19 @@ void fn_space_code_gen(tuple * tup){
      * This is to enable updation locally in function
      * While returning output params 
      */
-    
-
+    // lex_info* info=get_lexinfo(tup->arg1,local,GLOBAL);
+    // int offset_in_caller=info->offset + info->width + 4; //4 is for adjusting for EBP
+    // int offset_in_callee=info->offset;
+    // if(info->type==INT){
+    //      fprintf(assemblyFile,"MOV AX, word[EBP+%d]\n",offset_in_callee);
+    //      fprintf(assemblyFile,"MOV [EBP-%d], EAX\n",offset_in_callee);
+    // }
+    // else{
+    //     //type is real
+    //     //check this //movss
+    //     fprintf(assemblyFile,"MOV XMM0, dword[EBP+%d]",offset_in_callee);
+    //     fprintf(assemblyFile,"MOV [EBP-%d], XMM0",offset_in_caller);
+    // }  
     // while(inp_param){
         
     //     char *param_str = inp_param->param_name;
