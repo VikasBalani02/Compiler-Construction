@@ -148,6 +148,107 @@ Type getNumType(char *str){
     }
     return INT;
 }
+void fn_space_code_gen(tuple * tup){
+    /**
+     * @brief Reserve number of bytes equal to offset value
+     * of this function, Also output function's label
+     */
+    if(strcmp(tup->arg1, "_main")==0){
+        fprintf(assemblyFile, "main:\n");    
+    }
+    else 
+        fprintf(assemblyFile, "%s:\n", tup->arg1);
+    SymbolTableRecord * entry = getSymbolInfo(tup->arg1,GLOBAL);
+    push_stack_node(st,get_stack_node((tNode*)entry->functionTable));
+
+    struct symbolTable * local = (symbolTable *)st->head->t_node;
+    // int num_elems = 0;
+    // type *type_ptr;
+    // int offset = 0;
+    // st_wrapper *table_ptr = quad.curr_scope_table_ptr, *lvl_start_ptr;
+
+    // lvl_start_ptr = table_ptr->leftmost_child_table;
+    // while(lvl_start_ptr != NULL){
+    //     table_ptr = lvl_start_ptr;
+    //     while(table_ptr){
+    //         for(int i=0; i < HASH_SIZE; i++){                        
+    //             type_ptr = (type*)(table_ptr->table[i].value);
+    //             if(type_ptr != NULL){
+    //                 // printf("adding2 offset for %s\n", table_ptr->table[i].lexeme);
+    //                 // printf("while gen space for fn, lexeme in ht %llu found to be %s\n",table_ptr,table_ptr->table[i].lexeme );
+    //                 num_elems++;
+    //                 offset += WIDTH_POINTER;
+    //                 if(type_ptr->name == ARRAY){
+    //                     if(type_ptr->typeinfo.array.is_dynamic.range_high == false && type_ptr->typeinfo.array.is_dynamic.range_low == false){
+    //                         offset += (type_ptr->typeinfo.array.range_high.value - type_ptr->typeinfo.array.range_low.value + 1) * WIDTH_POINTER;
+    //                     }
+    //                 }
+    //             }            
+    //         }
+    //         table_ptr = table_ptr->sibling_table;
+    //     }
+    //     lvl_start_ptr = lvl_start_ptr->leftmost_child_table;
+    // }
+    typeInfo* inp_params= entry->function_field->InputHead;
+    while(inp_params){
+        char* 
+        inp_params=inp_params->next;
+    }
+    // // printf("total_num_elems : %d\n", num_elems);
+    fprintf(assemblyFile, "\t\t\t\tENTER %d, 0\n", entry->functionTable->currentOffset);
+    fprintf(assemblyFile, "\t\t\t\t;reserve space for the input/output params of fn, later flush this space\n");
+    /**
+     * @brief Insert the parameters in current scope's table too
+     * This is to enable updation locally in function
+     * While returning output params 
+     */
+    
+
+    // while(inp_param){
+        
+    //     char *param_str = inp_param->param_name;
+        
+    //     type *param_type  = inp_param->t;
+
+    //     /**
+    //      * @brief Check if param type is dynamic array, copy the range values from stack
+    //      * And if static, do range checking
+    //      */
+
+
+
+    //     param_type->offset = quad.encl_fun_type_ptr->typeinfo.module.curr_offset;
+    //     param_type->offset_used = quad.encl_fun_type_ptr->typeinfo.module.curr_offset_used;
+    //     // printf("Assigned offset %d to a param %s\n", param_type->offset_used, param_str);
+    //     quad.encl_fun_type_ptr->typeinfo.module.curr_offset += param_type->width;
+    //     quad.encl_fun_type_ptr->typeinfo.module.curr_offset_used += WIDTH_POINTER;
+
+
+    //     hash_insert_ptr_val(quad.curr_scope_table_ptr->table, param_str, param_type);
+
+    //     fprintf(assemblyFile, "\t\t\t\t; Allocating space to %s inp param on stack\n", inp_param->param_name);
+    //     fprintf(assemblyFile, "\t\t\t\tmov RAX, [RBP + 16 + 8 + 8*%d]; copy value of this param from caller\n", inp_param_num);
+    //     fprintf(assemblyFile, "\t\t\t\tmov RAX, [RAX] ;copy to my local space for the param\n");
+    //     fprintf(assemblyFile, "\t\t\t\tmov [RBP - %d], RAX ;copy to my local space for the param\n", param_type->offset_used);
+
+    //     inp_param_num++;
+    //     inp_param = inp_param->next;
+    // }   
+
+    // while(outp_param){
+        
+    //     char *param_str = outp_param->param_name;
+        
+    //     type *param_type  = outp_param->t;
+    //     param_type->offset = quad.encl_fun_type_ptr->typeinfo.module.curr_offset;
+    //     param_type->offset_used = quad.encl_fun_type_ptr->typeinfo.module.curr_offset_used;
+    //     quad.encl_fun_type_ptr->typeinfo.module.curr_offset += param_type->width;
+    //     quad.encl_fun_type_ptr->typeinfo.module.curr_offset_used += WIDTH_POINTER;
+    //     hash_insert_ptr_val(quad.curr_scope_table_ptr->table, param_str, param_type);
+    //     outp_param_num++;
+    //     outp_param = outp_param->next;
+    // }    
+}
 // void arithexpr_code_gen(tuple* tuple){
 //     /**
 //      * @brief Check the operator and generate code
@@ -288,19 +389,75 @@ Type getNumType(char *str){
 // }
 
 
+void return_code_gen(tuple * tup){
+    symbolTable * local = (symbolTable*)st->head->t_node;
+    // type *fn_type_ptr = quad.encl_fun_type_ptr;
+
+    // params_list_node *outp_param = NULL;
+    // int total_offset_reqd = 0;
+    // int extra_inp_param_num = 0;    // will be 2 when inp param is of array type
+
+    // params_list_node *inp_param = NULL;
+    // if(fn_type_ptr && fn_type_ptr->typeinfo.module.input_params)
+    //     inp_param = fn_type_ptr->typeinfo.module.input_params->first;
+
+    // while(inp_param){
+    //     type *param_type  = inp_param->t;
+    //     total_offset_reqd += WIDTH_POINTER;
+    //     inp_param = inp_param->next;
+    //     if(param_type->name == ARRAY)
+    //         extra_inp_param_num += 2;
+    // }
+
+    // if(fn_type_ptr && fn_type_ptr->typeinfo.module.output_params)
+    //     outp_param = fn_type_ptr->typeinfo.module.output_params->first;
+
+    // while(outp_param){        
+    //     type *param_type  = outp_param->t;
+    //     total_offset_reqd += WIDTH_POINTER;
+    //     outp_param = outp_param->next;
+    // }
+
+
+    // if(fn_type_ptr && strcmp(fn_type_ptr->typeinfo.module.module_name, "driver") != 0){
+    //     if(fn_type_ptr->typeinfo.module.output_params)
+    //         outp_param = fn_type_ptr->typeinfo.module.output_params->first;
+    
+    //     int num_inp_params = fn_type_ptr->typeinfo.module.input_params->length;    
+    //     int outp_param_num = 0;
+    //     int outp_param_offset_callee;
+    //     type *outp_param_type_ptr_callee = NULL;
+    //     fprintf(assembly_file_ptr, "\t\t\t\t; copy values to output parameters that u have computed so far\n");
+    //     while(outp_param){
+    //         outp_param_type_ptr_callee = (type *)key_search_recursive(quad.curr_scope_table_ptr, outp_param->param_name, quad.encl_fun_type_ptr, NULL);
+    //         outp_param_offset_callee = outp_param_type_ptr_callee->offset_used;
+    //         fprintf(assembly_file_ptr, "\t\t\t\tmov RAX, [RBP - %d]\n", outp_param_offset_callee);
+    //         fprintf(assembly_file_ptr, "\t\t\t\tmov RBX, [RBP + 16 + 8 + 8*%d + 8*%d]\n", num_inp_params + extra_inp_param_num,outp_param_num);
+    //         fprintf(assembly_file_ptr, "\t\t\t\tmov [RBX], RAX\n");
+    //         outp_param_num++;
+    //         outp_param = outp_param->next;
+    //     }
+    // }    
+    fprintf(assemblyFile, "\t\t\t\t;Deallocate space given to I/O variables on stack\n");
+    fprintf(assemblyFile, "\t\t\t\tadd ESP, %d\n", local->currentOffset);
+    fprintf(assemblyFile, "\t\t\t\tLEAVE\n");
+    // int offset = quad.encl_fun_type_ptr->typeinfo.module.curr_offset;
+    // fprintf(assemblyFile, "\t\t\t\t%s\n\n", tac_op_str[quad.op]);
+    pop_tree_node(st);
+}
 
 void one_var_output_code_gen(Type type, int offset){
     switch(type){
         case INT:
-        {
+        {  
             fprintf(assemblyFile, "\
                 mov EDX, EBP\n\
                 sub EDX, %d     ; make EDX to point at location of variable on the stack\n\
-                push word [EDX]  ; for integer, value stored at offset should be passed to printf\n\
                 push word [zero] ;\n\
+                push word [EDX]  ; for integer, value stored at offset should be passed to printf\n\
                 push dword int_fmt\n\
                 call printf \n\
-                add ESP, 8\
+                add ESP, 8\n\
                 ", offset);
         }
         break;
@@ -316,7 +473,7 @@ void one_var_output_code_gen(Type type, int offset){
                 push dword [flttmp]         \n\
                 push dword real_fmt \n\
                 call printf \n\
-                add ESP,12 \
+                add ESP,12 \n\
                 ", offset);
         }
         break;
@@ -328,11 +485,11 @@ void one_var_output_code_gen_global(Type type, char * name){
         case INT:
         {
             fprintf(assemblyFile, "\
-                push word [%s]  ; for integer, value stored at offset should be passed to printf\n\
                 push word [zero] ;\n\
+                push word [%s]  ; for integer, value stored at offset should be passed to printf\n\
                 push dword int_fmt\n\
                 call printf \n\
-                add ESP, 8\
+                add ESP, 8\n\
                 ", name);
         }
         break;
@@ -346,7 +503,7 @@ void one_var_output_code_gen_global(Type type, char * name){
                 push dword [flttmp]         \n\
                 push dword real_fmt \n\
                 call printf \n\
-                add ESP,12 \
+                add ESP,12 \n\
                 ", name);
         }
         break;
@@ -468,7 +625,7 @@ void relational_code_gen(tuple *intermediateCode, struct symbolTable *local, str
 
     // we need to store 0 in ECX initially and 1 in EDX so we can set ECX if condition holds
     fprintf(assemblyFile, "MOV ECX, 0\n\
-        MOV EDX,1");
+        MOV EDX,1\n");
 
     if (arg1_info->type == INT)
     {
@@ -721,7 +878,48 @@ void arithexpr_code_gen(tuple* intermediateCode,struct symbolTable* local, struc
     }
 }
 
-
+void assignment_stmt(tuple *intermediateCode){
+    SymbolTableRecord * entry = getSymbolInfo(intermediateCode->arg3, (symbolTable *)st->head->t_node);
+    if(entry==NULL){
+        entry = getSymbolInfo(intermediateCode->arg1, GLOBAL);
+        if(intermediateCode->arg1[0] > '0' && intermediateCode->arg1[0] < '9'){ //handle immediate value
+            Type t = getNumType(intermediateCode->arg1);
+            switch(t){
+                case INT:
+                    fprintf(assemblyFile, "\t\t\
+                    mov word [%s], %s \n\
+                    ", intermediateCode->arg3, intermediateCode->arg1);
+                    break;
+                case REAL:
+                    fprintf(assemblyFile, "\
+                    mov dword [%s], __?float32?__ (%s) \n\
+                    ", intermediateCode->arg3, intermediateCode->arg1);
+                    break;
+            }
+        }
+    }
+    else {//do nothing for now change later
+          if(intermediateCode->arg1[0] > '0' && intermediateCode->arg1[0] < '9'){ //handle immediate value
+            Type t = getNumType(intermediateCode->arg1);
+            switch(t){
+                case INT:
+                    fprintf(assemblyFile, "\t\t\
+                    mov EDX, EBX \n\
+                    sub EDX, %d \n\
+                    mov word [EDX], %s \n\
+                    ", entry , intermediateCode->arg1);
+                    break;
+                case REAL:
+                    fprintf(assemblyFile, "\
+                    mov EDX, EBX \n\
+                    sub EDX, %d\n\
+                    mov dword [EDX], __?float32?__ (%s) \n\
+                    ", intermediateCode->arg3, intermediateCode->arg1);
+                    break;
+            }
+        }
+    }
+}
 void generate_code(tupleList* intermediateCode, symbolTable * global, FILE * output){
     assemblyFile = output;
     GLOBAL = global;
@@ -752,13 +950,27 @@ void generate_code(tupleList* intermediateCode, symbolTable * global, FILE * out
     fprintf(assemblyFile, "\t\tflttmp: dq 0.0\n");
     fprintf(assemblyFile, "section .text\n");
     fprintf(assemblyFile, "global main\n");
-    fprintf(assemblyFile, "main:\n");
     tuple * tup = intermediateCode->head;
-    while(tup->next!=NULL){
+    while(tup!=NULL){
         switch(tup->op){
             case WRITE:
                 output_code_gen(tup);
             break;
+            case ASSIGN:
+                assignment_stmt(tup);
+            break;
+            case LT:
+            case GT:
+            case LE:
+            case GE:
+            case EQ:
+            case NE:
+                relational_code_gen(tup, (symbolTable *)st->head->t_node, GLOBAL);
+            break;
+            case FUNCT:
+                fn_space_code_gen(tup); break;
+            case RET:
+                return_code_gen(tup); break;
         }
         tup = tup->next;
     }
