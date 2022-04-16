@@ -10,7 +10,11 @@ lexeme_decomp *get_lexdecomp_struct(char *lex)
 {
     lexeme_decomp *new_temp = (lexeme_decomp *)malloc(sizeof(lexeme_decomp));
     new_temp->lex = lex;
-    new_temp->offset = -1;
+    new_temp->info=(lex_info*)malloc(sizeof(lex_info));
+    new_temp->info->offset=-1;
+    new_temp->info->width=-1;
+    new_temp->info->type=UNDEFINED;
+    new_temp->info->type_ruid=NULL;
     new_temp->next = NULL;
     return new_temp;
 }
@@ -34,18 +38,25 @@ lexeme_decomp *decompose_lexeme(char *lex)
     }
     return head;
 }
-int get_offset(lexeme_decomp *lex, struct symbolTable *local_table, struct symbolTable *global_table)
-{
+lex_info* get_lexinfo(lexeme_decomp *lex, struct symbolTable *local_table, struct symbolTable *global_table)
+{  
+    //returns lexInfo with offset -1 if lexeme is not in local table
     // get a lexeme for a identitfier/temporary and find its offset.
+    //lexeme can be of form t1.a.b.c where t1 is of type record
+
     lexeme_decomp *lexList = decompose_lexeme(lex);
 
     SymbolTableRecord *sym_info = getSymbolInfo(lexList->lex, local_table);
     if (sym_info == NULL)
     {
         // not a local variable
-        // return;
+        //variable is a global variable if returned info->offfset==-1
+        return lexList->info;
     }
-    lexList->offset = sym_info->offset;
+    lexList->info->offset = sym_info->offset;
+    lexList->info->type=sym_info->type;
+    lexList->info->type_ruid=sym_info->type_ruid;
+    lexList->info->width=sym_info->width;
 
     if (sym_info->type == RUID || sym_info->type == RECORD || sym_info->type == VARIANTRECORD || sym_info->type == UNION)
     {
@@ -62,10 +73,17 @@ int get_offset(lexeme_decomp *lex, struct symbolTable *local_table, struct symbo
     lexeme_decomp *ptr = lexList;
     while (ptr)
     {
-        offset += ptr->offset;
+        offset += ptr->info->offset;
         ptr = ptr->next;
     }
-    return offset;
+    //fetch the last lex_info 
+    ptr=lexList;
+    while(ptr->next){
+        ptr=ptr->next;
+    }
+    lex_info* to_return=ptr->info;
+    to_return->offset=offset;
+    return to_return;
 }
 
 void get_offset_util(lexeme_decomp *lexList, SymbolTableRecord *sym_info, struct symbolTable *local_table, struct symbolTable *global_table)
@@ -77,7 +95,7 @@ void get_offset_util(lexeme_decomp *lexList, SymbolTableRecord *sym_info, struct
     {
         if (strcmp(fields->lexeme, lexList->lex) == 0)
         {
-            lexList->offset = fields->offset;
+            lexList->info->offset = fields->offset;
             break;
         }
     }
@@ -97,6 +115,13 @@ void get_offset_util(lexeme_decomp *lexList, SymbolTableRecord *sym_info, struct
             }
         }
     }
+    //sym_info now contains the symbol table record for the RECORD/UNION/VARIANT RECORD of the field whose offset we just set
+    //extract useful info from this symbol table record now
+    lexList->info->type=sym_info->type;
+    lexList->info->type_ruid=sym_info->type_ruid;
+    lexList->info->width=sym_info->width;
+
+    //get information about further expansions
     get_offset_util(lexList->next, sym_info, local_table, global_table);
 }
 
