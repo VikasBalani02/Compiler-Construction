@@ -721,7 +721,6 @@ void arithexpr_code_gen(tuple* intermediateCode,struct symbolTable* local, struc
     }
 }
 
-<<<<<<< HEAD
 void assignment_stmt(tuple *intermediateCode){
     SymbolTableRecord * entry = getSymbolInfo(intermediateCode->arg3, (symbolTable *)st->head->t_node);
     if(entry==NULL){
@@ -764,9 +763,6 @@ void assignment_stmt(tuple *intermediateCode){
         }
     }
 }
-=======
-
->>>>>>> d44fe13e343dec20007f1496d374cc1bd8f645bc
 void generate_code(tupleList* intermediateCode, symbolTable * global, FILE * output){
     assemblyFile = output;
     GLOBAL = global;
