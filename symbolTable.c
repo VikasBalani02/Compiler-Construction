@@ -892,7 +892,7 @@ void printactivationrecords(symbolTable *global){
         while(entry!=NULL){
             if(entry->type==FUNCTION){
                 printf("Name: %s ",entry->lexeme);
-                printf("Width: %d ", entry->width);
+                printf("Width: %d ", entry->functionTable->currentOffset);
                 printf("\n");
 
             }
