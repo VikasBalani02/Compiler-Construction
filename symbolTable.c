@@ -791,33 +791,31 @@ void printTypeExpression(SymbolTableRecord * entry, symbolTable * global){
 }
 
 void printSymbolTableFunction(symbolTable * table, char * name, symbolTable * global){
-printf("**************%s Symbol Table*****************\n",name);
 for(int i=0;i<table->no_slots;i++){
     SymbolTableRecord * entry = table->list[i]->head;
     while(entry!=NULL){
-            printf("Name: %s\n",entry->lexeme);
+            printf("Name: %s\t",entry->lexeme);
 
-            printf("Scope: %s\n", name);
+            printf("Scope: %s\t", name);
             if(entry->type == RECORD || entry->type == VARIANTRECORD || entry->type == RUID){
                 if(entry->type_ruid !=NULL)
-                printf("TypeName : %s\n", entry->type_ruid);
+                printf("TypeName : %s ", entry->type_ruid);
             }
             printf("Type Expression: ");
             printTypeExpression(entry, global);
-            printf("\n");
 
             if(entry->type == INT || entry->type == REAL || entry->type == RECORD||entry->type == VARIANTRECORD || entry->type == UNION || entry->type == RUID){
                 printf("Width: ");
-                printf("%d\n",entry->width);
+                printf("%d\t",entry->width);
             }
 
-            printf("isGlobal : ---\n");
+            printf("isGlobal : ---\t");
 
             if(entry->type == INT || entry->type == REAL || entry->type == RECORD || entry->type == UNION || entry->type == VARIANTRECORD || entry->type == RUID)
-            printf("Offset: %d\n", entry->offset);
+            printf("Offset: %d\t", entry->offset);
 
-            printf("Variable Usage : %s\n", usageMAP[entry->usage]);
-            printf("******************************************************************\n");
+            printf("Variable Usage : %s\t", usageMAP[entry->usage]);
+            printf("\n");
             entry = entry->next;
         }
 }
@@ -827,13 +825,13 @@ void printSymbolTable(symbolTable * global){
     for(int i=0;i<global->no_slots;i++){
         SymbolTableRecord * entry = global->list[i]->head;
         while(entry!=NULL){
-            printf("Name: %s ",entry->lexeme);
+            printf("Name: %s\t ",entry->lexeme);
 
-            printf("Scope: GLOBAL ");
+            printf("Scope: GLOBAL\t");
 
             if(entry->type == RECORD || entry->type == VARIANTRECORD || entry->type == RUID){
                 if(entry->type_ruid !=NULL)
-                printf("TypeName : %s ", entry->type_ruid);
+                printf("TypeName : %s\t", entry->type_ruid);
             }
 
             printf("Type Expression: ");
@@ -842,15 +840,15 @@ void printSymbolTable(symbolTable * global){
 
             if(entry->type == INT || entry->type == REAL || entry->type == RECORD||entry->type == VARIANTRECORD || entry->type == UNION || entry->type == RUID){
                 printf("Width: ");
-                printf("%d",entry->width);
+                printf("%d\t",entry->width);
             }
 
-            printf("isGlobal : global ");
+            printf("isGlobal : global\t");
 
             if(entry->type == INT || entry->type == REAL || entry->type == RECORD || entry->type == UNION)
-            printf("Offset: %d ", entry->offset);
+            printf("Offset: %d\t", entry->offset);
 
-            printf("Variable Usage : ---");
+            printf("Variable Usage : ---\t");
             printf("\n");
             entry = entry->next;
         }
