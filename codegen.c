@@ -412,3 +412,301 @@ void generate_code(tupleList* intermediateCode, symbolTable * global, FILE * out
     fprintf(assemblyFile, "\t\tflt_temp: dq 0.0\n");
     // fprintf(assemblyFile, "\t\tbool_fmt: db \"%%d\", 0\n");
 }
+
+void relational_code_gen(tuple *intermediateCode, struct symbolTable *local, struct symbolTable *global)
+{
+
+    lex_info *arg1_info = get_lexinfo(intermediateCode->arg1, local, global);
+    lex_info *arg2_info = get_lexinfo(intermediateCode->arg2, local, global);
+    lex_info *arg3_info = get_lexinfo(intermediateCode->arg3, local, global);
+
+    char *arg1_str = (char *)malloc(MAX_LEXEME_LEN);
+    char *arg2_str = (char *)malloc(MAX_LEXEME_LEN);
+    char *arg3_str = (char *)malloc(MAX_LEXEME_LEN);
+
+    // initializing the locations from where the values are to be picked up from / be stored
+    if (arg1_info->offset == -1)
+    {
+        // arg1 corresponds to a global variable
+        snprintf(arg1_str, MAX_LEXEME_LEN, "word[%s]", intermediateCode->arg1); // directly use the global variable lex as it will have a label associated with it
+    }
+    else
+    {
+        snprintf(arg1_str, MAX_LEXEME_LEN, "word[EBP-%d]", arg1_info->offset); // access the variable value from offset
+    }
+
+    if (arg2_info->offset == -1)
+    {
+        // arg2 corresponds to a global variable
+        snprintf(arg2_str, MAX_LEXEME_LEN, "word[%s]", intermediateCode->arg2); // directly use the global variable lex as it will have a label associated with it
+    }
+    else
+    {
+        snprintf(arg2_str, MAX_LEXEME_LEN, "word[EBP-%d]", arg2_info->offset); // access the variable value from offset
+    }
+
+    if (arg3_info->offset == -1)
+    {
+        // arg3 corresponds to a global variable
+        snprintf(arg3_str, MAX_LEXEME_LEN, "%s", intermediateCode->arg3); // directly use the global variable lex as it will have a label associated with it
+    }
+    else
+    {
+        snprintf(arg3_str, MAX_LEXEME_LEN, "[EBP-%d]", arg3_info->offset); // access the variable value from offset
+        // do not need keyword "word as we are moving to this destination"
+    }
+
+    // we need to store 0 in ECX initially and 1 in EDX so we can set ECX if condition holds
+    fprintf(assemblyFile, "MOV ECX, 0\n\
+        MOV EDX,1");
+
+    if (arg1_info->type == INT)
+    {
+        // comparisons of 2 integers
+
+        switch (intermediateCode->op)
+        {
+
+        case LT:
+            fprintf(assemblyFile, "MOV EAX %s \n\
+            MOV EBX, %s \n\
+            CMP EAX, EBX\n\
+            CMOVL ECX, EDX\n\
+            MOV %s, ECX\n",
+                    arg1_str, arg2_str, arg3_str);
+            break;
+        case LE:
+            fprintf(assemblyFile, "MOV EAX %s \n\
+            MOV EBX, %s \n\
+            CMP EAX, EBX\n\
+            CMOVLE ECX, EDX\n\
+            MOV %s, ECX\n",
+                    arg1_str, arg2_str, arg3_str);
+            break;
+        case GT:
+            fprintf(assemblyFile, "MOV EAX %s \n\
+            MOV EBX, %s \n\
+            CMP EAX, EBX\n\
+            CMOVG ECX, EDX\n\
+            MOV %s, ECX\n",
+                    arg1_str, arg2_str, arg3_str);
+            break;
+        case GE:
+            fprintf(assemblyFile, "MOV EAX %s \n\
+            MOV EBX, %s \n\
+            CMP EAX, EBX\n\
+            CMOVGE ECX, EDX\n\
+            MOV %s, ECX\n",
+                    arg1_str, arg2_str, arg3_str);
+            break;
+        case EQ:
+            fprintf(assemblyFile, "MOV EAX %s \n\
+            MOV EBX, %s \n\
+            CMP EAX, EBX\n\
+            CMOVE ECX, EDX\n\
+            MOV %s, ECX\n",
+                    arg1_str, arg2_str, arg3_str);
+            break;
+        case NE:
+            fprintf(assemblyFile, "MOV EAX %s \n\
+            MOV EBX, %s \n\
+            CMP EAX, EBX\n\
+            CMOVNE ECX, EDX\n\
+            MOV %s, ECX\n",
+                    arg1_str, arg2_str, arg3_str);
+            break;
+        }
+    }
+    else if (arg1_info->type == REAL)
+    {
+        // comparisons of 2 REALS
+         switch (intermediateCode->op)
+        {
+
+        case LT:
+            fprintf(assemblyFile, "MOV XMM0 %s \n\
+            MOV XMM1, %s \n\
+            CMP XMM0, XMM1\n\
+            CMOVL ECX, EDX\n\
+            MOV %s, ECX\n",
+                    arg1_str, arg2_str, arg3_str);
+            break;
+        case LE:
+            fprintf(assemblyFile, "MOV XMM0 %s \n\
+            MOV XMM1, %s \n\
+            CMP XMM0, XMM1\n\
+            CMOVLE ECX, EDX\n\
+            MOV %s, ECX\n",
+                    arg1_str, arg2_str, arg3_str);
+            break;
+        case GT:
+            fprintf(assemblyFile, "MOV XMM0 %s \n\
+            MOV XMM1, %s \n\
+            CMP XMM0, XMM1\n\
+            CMOVG ECX, EDX\n\
+            MOV %s, ECX\n",
+                    arg1_str, arg2_str, arg3_str);
+            break;
+        case GE:
+            fprintf(assemblyFile, "MOV XMM0 %s \n\
+            MOV XMM1, %s \n\
+            CMP XMM0, XMM1\n\
+            CMOVGE ECX, EDX\n\
+            MOV %s, ECX\n",
+                    arg1_str, arg2_str, arg3_str);
+            break;
+        case EQ:
+            fprintf(assemblyFile, "MOV XMM0 %s \n\
+            MOV XMM1, %s \n\
+            CMP XMM0, XMM1\n\
+            CMOVE ECX, EDX\n\
+            MOV %s, ECX\n",
+                    arg1_str, arg2_str, arg3_str);
+            break;
+        case NE:
+            fprintf(assemblyFile, "MOV XMM0 %s \n\
+            MOV XMM1, %s \n\
+            CMP XMM0, XMM1\n\
+            CMOVNE ECX, EDX\n\
+            MOV %s, ECX\n",
+                    arg1_str, arg2_str, arg3_str);
+            break;
+        }
+    }
+}
+
+//check argument numbers for next 3 functions 
+void if_code_gen(tuple *intermediateCode, struct symbolTable *local, struct symbolTable *global){
+    //jump if false
+    lex_info *arg1_info = get_lexinfo(intermediateCode->arg1, local, global);
+    //arg3 is a label
+
+    char *arg1_str = (char *)malloc(MAX_LEXEME_LEN);
+    char *label_str = (char *)malloc(MAX_LEXEME_LEN);
+    snprintf(label_str,MAX_LEXEME_LEN,intermediateCode->arg3);
+    // initializing the locations from where the values are to be picked up from / be stored
+    if (arg1_info->offset == -1)
+    {   
+        //this branch will never be executed because temporaries are not stored in global table
+        // arg1 corresponds to a global variable
+        snprintf(arg1_str, MAX_LEXEME_LEN, "word[%s]", intermediateCode->arg1); // directly use the global variable lex as it will have a label associated with it
+    }
+    else
+    {
+        snprintf(arg1_str, MAX_LEXEME_LEN, "word[EBP-%d]", arg1_info->offset); // access the variable value from offset
+    }
+    //move value of boolean to register eax if value is 0 => bool expr was false so jump to label
+    fprintf(assemblyFile,"MOV EAX, %s\n",arg1_str);
+    fprintf(assemblyFile,"JZ %s\n",label_str);
+}
+
+void label_code_gen(tuple *intermediateCode, struct symbolTable *local, struct symbolTable *global){
+    //place a label in the code
+    fprintf(assemblyFile,"%s :\n",intermediateCode->arg1);
+}
+
+void goto_code_gen(tuple *intermediateCode, struct symbolTable *local, struct symbolTable *global){
+    //jump to a label
+    fprintf(assemblyFile,"GOTO %s\n",intermediateCode->arg1);
+}
+
+void arithexpr_code_gen(tuple* intermediateCode,struct symbolTable* local, struct symbolTable* global){
+
+    /* 
+        Integers are returned in rax or rdx:rax, and floating point values are returned in xmm0 or xmm1:xmm0
+        Note: The floating point instructions have an sd suffix (i.e. convert single s to double precision d)
+    */
+    lex_info *arg1_info = get_lexinfo(intermediateCode->arg1, local, global);
+    lex_info *arg2_info = get_lexinfo(intermediateCode->arg2, local, global);
+    lex_info *arg3_info = get_lexinfo(intermediateCode->arg3, local, global);
+
+    char *arg1_str = (char *)malloc(MAX_LEXEME_LEN);
+    char *arg2_str = (char *)malloc(MAX_LEXEME_LEN);
+    char *arg3_str = (char *)malloc(MAX_LEXEME_LEN);
+
+    // initializing the locations from where the values are to be picked up from / be stored
+    if (arg1_info->offset == -1)
+    {
+        // arg1 corresponds to a global variable
+        snprintf(arg1_str, MAX_LEXEME_LEN, "word[%s]", intermediateCode->arg1); // directly use the global variable lex as it will have a label associated with it
+    }
+    else
+    {
+        snprintf(arg1_str, MAX_LEXEME_LEN, "word[EBP-%d]", arg1_info->offset); // access the variable value from offset
+    }
+
+    if (arg2_info->offset == -1)
+    {
+        // arg2 corresponds to a global variable
+        snprintf(arg2_str, MAX_LEXEME_LEN, "word[%s]", intermediateCode->arg2); // directly use the global variable lex as it will have a label associated with it
+    }
+    else
+    {
+        snprintf(arg2_str, MAX_LEXEME_LEN, "word[EBP-%d]", arg2_info->offset); // access the variable value from offset
+    }
+
+    if (arg3_info->offset == -1)
+    {
+        // arg3 corresponds to a global variable
+        snprintf(arg3_str, MAX_LEXEME_LEN, "%s", intermediateCode->arg3); // directly use the global variable lex as it will have a label associated with it
+    }
+    else
+    {
+        snprintf(arg3_str, MAX_LEXEME_LEN, "[EBP-%d]", arg3_info->offset); // access the variable value from offset
+        // do not need keyword "word as we are moving to this destination"
+    }
+    // SymbolTableRecord * res = getSymbolInfo(tuple->arg1, (symbolTable *)st->head->t_node);
+    // SymbolTableRecord * operand1 = getSymbolInfo(tuple->arg2, (symbolTable *)st->head->t_node);
+    // SymbolTableRecord * operand2 = getSymbolInfo(tuple->arg3, (symbolTable *)st->head->t_node);   
+    
+    
+    // fprintf(assemblyFile, "\t\t\t\tpush_all\n");
+    if(intermediateCode->op==DIV){
+        //code for handling division of two numbers
+        // case DIV: 
+        //     fprintf(assemblyFile, "\t\t\t\t;Division of integers\n");
+        //     fprintf(assemblyFile, "\t\t\t\tmov DX, 0\n\
+        //         mov AX, %s\n\
+        //         mov BX, %s\n\
+        //         div BX \n\
+        //         mov %s, AX \n", arg1_str, arg2_str, res_str);
+        //     break;
+
+        // case DIV_OP: 
+        //     fprintf(assemblyFile, "\t\t\t\t;Division of reals\n");
+        //     fprintf(assemblyFile,"\t\t\t\tdivsd XMM0, XMM2 \n\
+        //         movsd [EBP - %d], XMM0 \n", offset_result);
+        //     break;
+    }
+    else if(arg1_info->type == INT)  
+    {   //handle * - + on INT
+
+        switch(intermediateCode->op)
+        {
+            case PLUS: 
+            // fprintf(assemblyFile, "\t\t\t\t;Addition of integers\n");
+            fprintf(assemblyFile, "\t\t\t\tmov AX, %s\n\
+                mov BX, %s\n\
+                add AX, BX \n\
+                mov %s, AX \n", arg1_str, arg2_str, arg3_str);
+            break;
+
+            case MINUS: 
+            // fprintf(assemblyFile, "\t\t\t\t;Subtraction of integers\n");
+            fprintf(assemblyFile, "\t\t\t\tmov AX, %s\n\
+                mov BX, %s\n\
+                sub AX, BX \n\
+                mov %s, AX \n", arg1_str, arg2_str, arg3_str);
+            break;
+            
+            case MUL: 
+            // fprintf(assemblyFile, "\t\t\t\t;Multiplication of integers\n");
+            fprintf(assemblyFile, "\t\t\t\tmov AX, %s\n\
+                mov BX, %s\n\
+                mul BX \n\
+                mov %s, AX \n", arg1_str, arg2_str, arg3_str);
+            break;
+            
+        }
+    }
+}
