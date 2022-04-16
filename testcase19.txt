@@ -5,12 +5,19 @@ _main
 		b2d <--- 5;
 		b3d <--- 4;
 		b2d4 <--- 6.26;
-		write(b3d);
-		%if(b2d<b3d)
-		%then
-		%	write(b2d);
-		%else
-		%	write(b3d);
-		%endif
+		write(b2d4);
+		while(b2d<20)
+			%if(b2d>10)
+			%	then
+			%		b2d<---25;
+			%endif
+			%if(b2d<10)
+			%then 
+			%	b2d<---15;
+			%endif
+			write(b2d);
+
+		endwhile
+
 return;
 end
