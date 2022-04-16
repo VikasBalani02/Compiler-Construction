@@ -4,6 +4,7 @@ _main
 		type int : b2d4;
 		b2d <--- 5;
 		b3d <--- 4;
+		b2d4 <--- 6;
 		if(b2d<b3d)
 		then
 			write(b2d);

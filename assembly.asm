@@ -13,6 +13,9 @@ main:
 				;reserve space for the input/output params of fn, later flush this space
 		                    mov word [b2d], 5 
                     		                    mov word [b3d], 4 
+                    		                    mov EDX, EBX 
+                    sub EDX, 0 
+                    mov word [EDX], 6 
                     MOV ECX, 0
         MOV EDX,1
                 push word [zero] ;

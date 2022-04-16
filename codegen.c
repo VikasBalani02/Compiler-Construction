@@ -189,11 +189,11 @@ void fn_space_code_gen(tuple * tup){
     //     }
     //     lvl_start_ptr = lvl_start_ptr->leftmost_child_table;
     // }
-    typeInfo* inp_params= entry->function_field->InputHead;
-    while(inp_params){
-        char* 
-        inp_params=inp_params->next;
-    }
+    // typeInfo* inp_params= entry->function_field->InputHead;
+    // while(inp_params){
+    //     char* 
+    //     inp_params=inp_params->next;
+    // }
     // // printf("total_num_elems : %d\n", num_elems);
     fprintf(assemblyFile, "\t\t\t\tENTER %d, 0\n", entry->functionTable->currentOffset);
     fprintf(assemblyFile, "\t\t\t\t;reserve space for the input/output params of fn, later flush this space\n");
@@ -907,14 +907,14 @@ void assignment_stmt(tuple *intermediateCode){
                     mov EDX, EBX \n\
                     sub EDX, %d \n\
                     mov word [EDX], %s \n\
-                    ", entry , intermediateCode->arg1);
+                    ", entry->offset , intermediateCode->arg1);
                     break;
                 case REAL:
                     fprintf(assemblyFile, "\
                     mov EDX, EBX \n\
                     sub EDX, %d\n\
                     mov dword [EDX], __?float32?__ (%s) \n\
-                    ", intermediateCode->arg3, intermediateCode->arg1);
+                    ", entry->offset, intermediateCode->arg1);
                     break;
             }
         }
