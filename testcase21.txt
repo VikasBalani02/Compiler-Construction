@@ -1,11 +1,42 @@
+_function1
+input parameter list [int b2b3, int b3b2]
+output parameter list [int d2d3, int d3d2];
+if(b2b3 > b3b2)
+then
+    d2d3 <--- b2b3;
+    d3d2 <--- b3b2;
+else
+    d2d3 <--- b3b2;
+    d3d2 <--- b2b3;
+endif
+return [d2d3, d3d2];
+end
+
+
+_function2
+input parameter list [int c4c5, int c5c4]
+output parameter list [int d4d5, int d5d4];
+if(c4c5 > c5c4)
+then
+    c4c5 <--- d5d4;
+    c5c4 <--- d4d5;
+else
+    c4c5 <--- d4d5;
+    c5c4 <--- d5d4;
+endif
+return [d4d5, d5d4];
+end
+
 _main
-	type int: b3;
-    type int: c4;
-    type int: d5;
-    type int: b6;
-    type int: b2;
-    d5 <--- 5;
-	d5<--- d5+1;
-	write(d5);
+type int: b4d333;
+type int : c3ddd34; type int:c2d3; type int: c2d4;
+type int: c5d666;
+type int : c6ddd75; type int:b2c3; type int: b2c4;
+read(b4d333); read(c3ddd34);
+read(c5d666); read(c6ddd75);
+[c2d3, c2d4]<--- call _function1 with parameters [b4d333, c3ddd34];
+[b2c3, b2c4]<--- call _function1 with parameters [c5d666, c6ddd75];
+write(c2d3); write(c2d4);
+write(b2c3); write(b2c4);
 return;
 end

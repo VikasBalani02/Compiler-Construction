@@ -1,3 +1,24 @@
+/* 
+Tushar Garg - 2019A7PS0104P
+Vikas Balani - 2019A7PS0054P
+Ruchir Jain - 2019A7PS0067P
+Usneek Singh - 2019A7PS0127P
+Abhijith S Raj - 2019A7PS0055P 
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #include "typeCheckerDef.h"
 typeInfo *get_typeInfo(Type type, char *ruid);
 void populate_Identifier_type(ast_node *id_node, Error *err_list, symbolTable* table,symbolTable* global);

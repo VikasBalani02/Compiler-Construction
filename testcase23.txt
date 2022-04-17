@@ -1,17 +1,28 @@
 _main
-    type int: b3;
-    type int: c4;
-    type int: d5;
-    type int: b6;
-    type int: b2;
-    c4 <--- 4;
-    b3 <--- 3;
-    d5 <--- 5;
-    b2 <--- c4-b3+1;
-	b6<---12;
-    while(c4<=b6)
-        c4 <--- c4+1;
-		write(c4);
-    endwhile
+union #student
+type int: rollno;
+type real:marks;
+type int: age;
+endunion
+
+definetype union #student as #newname
+
+record #taggedunionexample
+type int: tagvalue;
+type #newname: field;
+endrecord
+
+type record #taggedunionexample: b7bc34;
+type record #taggedunionexample: b7bc35;
+type record #taggedunionexample: b7bc36;
+
+b7bc34.tagvalue <--- 1;
+b7bc34.field.rollno <--- 23;
+
+b7bc35.tagvalue <--- 3;
+b7bc34.field.age <--- 21;
+
+b7bc36 <--- b7bc35 + b7bc34;
+
 return;
 end

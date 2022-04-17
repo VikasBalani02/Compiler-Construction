@@ -1,0 +1,13 @@
+_main
+		type real: b3;
+    type int: c4;
+    type int: d5;
+    type int: b6;
+    type int: b2;
+    %c4 <--- 4;
+    b3 <--- 3.00;
+    d5 <--- 5;
+	b3<--- d5/b3;
+	write(b3);
+return;
+end

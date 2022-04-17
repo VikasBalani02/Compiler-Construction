@@ -1,16 +1,26 @@
 _main
-		type int: b2d : global;
-		type int: b3d : global;
-		type real : b2d4;
-		b2d <--- 5;
-		b3d <--- 4;
-		b2d4 <--- 6.25;
-		write(b2d4);
-		if(b2d<b3d)
-		then
-			write(b2d);
-		else
-			write(b3d);
-		endif
-return;
+	
+record #book
+    type int : edition;
+    type real: price;
+endrecord
+
+    type record #book: b2;
+    type int: b3;
+    type int: c4;
+    type int: d5;
+    type int: b6;
+    type int: b34;
+  
+    if((~(c4>=b3)) @@@ (c4 < b3))
+    then
+        %c4 <--- 3;
+        write(b34);
+    %else
+    %if(d5<=b3)
+    %then
+        %write(d5);
+    %endif
+    endif
+	return;
 end

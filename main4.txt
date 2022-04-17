@@ -8,8 +8,10 @@ _main
     b3 <--- 3;
     d5 <--- 5;
     b2 <--- c4-b3+1;
+	b6<---12;
     while(c4<=b6)
-        c4 <--- b2+1;
+        c4 <--- c4+1;
+		write(c4);
     endwhile
 return;
 end
