@@ -1,87 +1,21 @@
-%Test Case 5: The following source code is expected to be syntactically correct as per the modified grammar.
-%If any line has syntax error, please inform me as that error needs to be fixed in this test case.
+%VARIANT RECORD CHECK - SEMANTICALLY CORRECT
+_function1 input parameter list [int d2]
+output parameter list [int d4];
+    record #two
+		type int : tagvalue;
+		type #point: beginpoint;
+	endrecord
+    
 
-_unionfunction  input parameter list [record #two d5cc34, #point b2d567]  
-output parameter list[real d3];
-	record #one
+d4 <--- d3+d2;
+return [d4];
+end
+
+_main
+    union #o
 		type real:x;
 		type real:y;
-	endrecord	
+	endunion	
 	definetype record #one as #point
-
-	record #two
-		type #point: beginpoint;
-		type #point: endpoint;
-	endrecord
-
-
-	type record #two : b5b567;
-	type record #one : b3;
-	type #point: d5;
-	b5b567 <--- c6*2;
-	b3 <--- c6-c3;
-	while ( b5b567 <= d5cc34)
-		read(c3bd);
-		d3 <--- d3 + c3bd;
-		b5b567 <--- b5b567 + 1;
-	endwhile
-	return [d3];
-end
-_unionfunction  input parameter list [record #two d5cc34, #point b2d567]  
-output parameter list[real d3];
-	record #one
-		type real:x;
-		type real:y;
-	endrecord	
-	definetype record #one as #point
-
-	record #two
-		type #point: beginpoint;
-		type #point: endpoint;
-	endrecord
-
-
-	type record #two : b5b567;
-	type record #one : b3;
-	type #point: d5;
-	b5b567 <--- c6*2;
-	b3 <--- c6-c3;
-	while ( b5b567 <= d5cc34)
-		read(c3bd);
-		d3 <--- d3 + c3bd;
-		b5b567 <--- b5b567 + 1;
-	endwhile
-	return [d3];
-end
-% type checking will be required in stage 2. Despite some type errors, undeclared variables etc the code is syntactically correct
-%in this function.
-_main 
-	definetype record #two as #line
-	record #three 
-		type #line: base;
-		type #line: height;
-	endrecord
-	definetype record #three as #triangle
-	union #four
-		type #line : ln; 
-		type #point: pt; 
-		type #triangle:tr;
-	endunion
-	definetype union #four as #shape
-	record #variantrecord
-		type int: tagvalue;
-		type #shape: s;
-	endrecord
-
-	type record #variantrecord : d4;
-	type int : b5;
-	type int : d5cb34567;
-	type record #variantrecord: b5c6;
-	b5c6 <--- b5c6.tag + d4.s.ln.beginpoint.x - b5c6.s.tr.base.beginpoint.y; 
-	b5 <--- b5 +1;
-	d4 <--- b5c6 / d5cb34567;
-	write(d4);
-	write(d4.s.ln.beginpoint.x );
-	write(b5c6.tag );
-	return;
+return;
 end

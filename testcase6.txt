@@ -1,6 +1,17 @@
+_function1 input parameter list [int d2, int d3]
+output parameter list [int d4];
+d4 <--- d3+d2;
+return [d4];
+end
+
 _main
-type int: b7;
-b7 <--- 3;
-write(b7);
+type int : d3;
+type int : d2;
+type int : d4;
+type real: d2b567;
+d3 <--- 2;
+d2 <--- 3;
+[d4] <--- call _function1 with parameters [d3, d2];
+write(d4);
 return;
 end

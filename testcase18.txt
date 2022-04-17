@@ -1,21 +1,15 @@
-%VARIANT RECORD CHECK - SEMANTICALLY CORRECT
-_function1 input parameter list [int d2]
-output parameter list [int d4];
-    record #two
-		type int : tagvalue;
-		type #point: beginpoint;
-	endrecord
-    
-
-d4 <--- d3+d2;
-return [d4];
-end
-
 _main
-    union #o
-		type real:x;
-		type real:y;
-	endunion	
-	definetype record #one as #point
+    type int: b3;
+    type int: c4;
+    type int: d5;
+    type int: b6;
+    type int: b2;
+    c4 <--- 4;
+    b3 <--- 3;
+    d5 <--- 5;
+    b2 <--- c4-b3+1;
+    while(c4<=b6)
+        c4 <--- b2+1;
+    endwhile
 return;
 end

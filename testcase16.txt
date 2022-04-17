@@ -1,21 +1,28 @@
-%VARIANT RECORD CHECK
-_function1 input parameter list [int d2]
-output parameter list [int d4];
-    record #two
-		type real : tagvalue;
-		type #point: beginpoint;
-	endrecord
-    
-
-d4 <--- d3+d2;
-return [d4];
-end
-
 _main
-    union #one
-		type real:x;
-		type real:y;
-	endunion	
-	definetype record #one as #point
+union #student
+type int: rollno;
+type real:marks;
+type int: age;
+endunion
+
+definetype union #student as #newname
+
+record #taggedunionexample
+type int: tagvalue;
+type #newname: field;
+endrecord
+
+type record #taggedunionexample: b7bc34;
+type record #taggedunionexample: b7bc35;
+type record #taggedunionexample: b7bc36;
+
+b7bc34.tagvalue <--- 1;
+b7bc34.field.rollno <--- 23;
+
+b7bc35.tagvalue <--- 3;
+b7bc34.field.age <--- 21;
+
+b7bc36 <--- b7bc35 + b7bc34;
+
 return;
 end
