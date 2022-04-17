@@ -36,7 +36,7 @@ lexeme_decomp *decompose_lexeme(char *lex)
     char *lexptr = lex_copy;
     while (*lexptr != '\0')
     {
-        if (*lexptr == '.')
+        if (*lexptr == '_')
         {
             *lexptr = '\0';
             temptr->next = get_lexdecomp_struct(lexptr + 1);
@@ -1651,8 +1651,9 @@ void generate_code(tupleList *intermediateCode, symbolTable *global, FILE *outpu
             {
                 fprintf(assemblyFile, "\t\t%s: dd 0.0\n", entry->lexeme);
             }
-            else if (entry->type == RECORD || entry->type == VARIANTRECORD)
+            else if ((entry->type_ruid!=NULL) &&(entry->type == RECORD || entry->type == VARIANTRECORD))
             {
+
                 insideRecord *record_fields = getRecordDetails(entry->lexeme, entry->type_ruid, GLOBAL);
                 insideRecord *ptr = record_fields;
                 while (ptr)

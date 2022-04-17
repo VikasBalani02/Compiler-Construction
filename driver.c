@@ -87,7 +87,7 @@ int main(int argc, char **argv)
     printf("\n\033[0;35m****IMPLEMENTATION DETAILS****\n1. FIRST and FOLLOW set automated\n2. Both lexical and syntax analysis modules implemented\n3. In-order traversal of parse tree can be printed in the provided file.\n4. The option 2 cannot be run more than once per execution of the driver.\n5. For error recovery, we are checking the lookahead in the first sets of the non-terminal on the stack and the next nonterminal on the stack and if it doesn't match with either of them then we skip the lookahead and keep searching until we find a match.\nIn case the lookahead is in the first set of the next non-terminal on the stack after the top we simply pop the top element of the stack and continue parsing\033[0m");
     clock_t start_time, end_time;
     double total_CPU_time, total_CPU_time_in_seconds;
-    start_time = clock();
+    // start_time = clock();
 
     FILE *fp;
     fp = fopen("./grammar.txt", "r");
@@ -102,9 +102,9 @@ int main(int argc, char **argv)
     Tree *tr = parseInputSourceCode(argv[1], pt);
     ast_create(tr->root);
     symbolTable * global;
-    end_time = clock();
-    total_CPU_time = (double)(end_time - start_time);
-    total_CPU_time_in_seconds = total_CPU_time / CLOCKS_PER_SEC;
+    // end_time = clock();
+    // total_CPU_time = (double)(end_time - start_time);
+    // total_CPU_time_in_seconds = total_CPU_time / CLOCKS_PER_SEC;
 
     // printf("total_CPU_time: %f" , total_CPU_time);
     // printf("\ntotal_CPU_time_in_seconds: %f" , total_CPU_time_in_seconds);
@@ -179,7 +179,11 @@ int main(int argc, char **argv)
             printglobalrecords(global);
             break;
         case 9: 
+            start_time = clock();
             type_checker(tr->root->addr,err,global,global,-1);
+            end_time = clock();
+            total_CPU_time = (double)(end_time - start_time);
+            total_CPU_time_in_seconds = total_CPU_time / CLOCKS_PER_SEC;
             print_error_list(err);
             printf("\ntotal_cpu_time: %f",total_CPU_time);
             printf("\ntotal_cpu_time_in_seconds: %f", total_CPU_time_in_seconds);
@@ -188,7 +192,13 @@ int main(int argc, char **argv)
             complist = get_intermediate_list(tr->root->addr, global);
             
             f = fopen("assembly.asm", "w");
+            start_time = clock();
             generate_code(complist, global,f);
+            end_time = clock();
+            total_CPU_time = (double)(end_time - start_time);
+            total_CPU_time_in_seconds = total_CPU_time / CLOCKS_PER_SEC;
+            printf("\ntotal_cpu_time: %f",total_CPU_time);
+            printf("\ntotal_cpu_time_in_seconds: %f", total_CPU_time_in_seconds);
             fclose(f); break;
         case 11:
             printf("******************Intermediate Code******************\n");
