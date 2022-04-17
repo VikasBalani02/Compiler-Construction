@@ -12,7 +12,7 @@ stack *st;
 FILE *assemblyFile;
 #include <stdio.h>
 #include <stdlib.h>
-symbolTable *GLOBAL;
+symbolTable *GLOBAL, *local;
 lexeme_decomp *get_lexdecomp_struct(char *lex)
 {
     lexeme_decomp *new_temp = (lexeme_decomp *)malloc(sizeof(lexeme_decomp));
@@ -135,10 +135,56 @@ lex_info *get_lexinfo(char *lex, struct symbolTable *local_table, struct symbolT
 }
 void return_code_gen(tuple *tup)
 {
-    symbolTable *local = (symbolTable *)st->head->t_node;
+    // symbolTable *local = (symbolTable *)st->head->t_node;
+    SymbolTableRecord *entry = getSymbolInfo(tup->arg1, GLOBAL);
+    typeInfo *inp_param = entry->function_field->InputHead;
+    while (inp_param)
+    {
+
+        char *lex = inp_param->lexeme;
+        if (inp_param->type == RECORD || inp_param->type == VARIANTRECORD)
+        {
+            insideRecord *record_lexemes = getRecordDetails(lex, inp_param->type_ruid, GLOBAL);
+            insideRecord *ptr = record_lexemes;
+            while (ptr)
+            {
+                copyback_param_code_gen(ptr->lex, local);
+                ptr = ptr->next;
+            }
+        }
+        else
+        {
+            copyback_param_code_gen(lex, local);
+        }
+
+        inp_param = inp_param->next;
+    }
+
+    typeInfo *out_param = entry->function_field->OutputHead;
+    while (out_param)
+    {
+
+        char *lex = out_param->lexeme;
+        if (out_param->type == RECORD || out_param->type == VARIANTRECORD)
+        {
+            insideRecord *record_lexemes = getRecordDetails(lex, out_param->type_ruid, GLOBAL);
+            insideRecord *ptr = record_lexemes;
+            while (ptr)
+            {
+                copyback_param_code_gen(ptr->lex, local);
+                ptr = ptr->next;
+            }
+        }
+        else
+        {
+            copyback_param_code_gen(lex, local);
+        }
+
+        out_param = out_param->next;
+    }
     fprintf(assemblyFile, "\t\t\t\t;Deallocate space given to I/O variables on stack\n");
     fprintf(assemblyFile, "\t\t\t\tadd ESP, %d\n", local->currentOffset);
-    fprintf(assemblyFile, "\t\t\t\tLEAVE\n");
+    fprintf(assemblyFile, "\t\t\t\tLEAVE\nRET\n");
     pop_tree_node(st);
 }
 void get_offset_util(lexeme_decomp *lexList, SymbolTableRecord *sym_info, struct symbolTable *local_table, struct symbolTable *global_table)
@@ -153,6 +199,7 @@ void get_offset_util(lexeme_decomp *lexList, SymbolTableRecord *sym_info, struct
             lexList->info->offset = fields->offset;
             break;
         }
+        fields = fields->next;
     }
     if (fields == NULL)
     {
@@ -211,7 +258,7 @@ Type getNumType(char *str)
 
 void param_code_gen(tuple *tup)
 {
-    struct symbolTable *local = (symbolTable *)st->head->t_node;
+    // struct symbolTable *local = (symbolTable *)st->head->t_node;
     lex_info *info = get_lexinfo(tup->arg1, local, GLOBAL);
     if (info->type == INT)
     {
@@ -226,13 +273,144 @@ void param_code_gen(tuple *tup)
         fprintf(assemblyFile, "push dword [EBP-%d]\n", info->offset);
     }
 }
+void copy_param_code_gen(char *lex, char *loc)
+{
+    SymbolTableRecord *entry = getSymbolInfo(loc, GLOBAL);
+    // symbolTable * local = entry->functionTable;
+    lex_info *info = get_lexinfo(lex, local, GLOBAL);
+    int offset_in_caller = info->offset - info->width + 8; // 4 is for adjusting for EBP
+    int offset_in_callee = info->offset;
+    if (info->type == INT)
+    {
+        // MOV the input parameter from caller to AX register
+        fprintf(assemblyFile, "MOV AX, word [EBP+%d]\n", offset_in_caller);
+        // MOV the copied value to callee's activation record
+        fprintf(assemblyFile, "MOV word [EBP-%d], AX\n", offset_in_callee);
+    }
+    else
+    {
+        // type is real
+        // movss for moving floating point data
+        fprintf(assemblyFile, "MOVSS XMM0, dword [EBP+%d]", offset_in_caller);
+        fprintf(assemblyFile, "MOVSS dword [EBP-%d], XMM0", offset_in_callee);
+    }
+}
+void copyback_param_code_gen(char *lex, struct symbolTable *local)
+{
+    lex_info *info = get_lexinfo(lex, local, GLOBAL);
+    int offset_in_caller = info->offset - info->width + 8; // 4 is for adjusting for EBP
+    int offset_in_callee = info->offset;
+    if (info->type == INT)
+    {
+        // MOV the input parameter from caller to AX register
+        fprintf(assemblyFile, "MOV AX, word [EBP-%d]\n", offset_in_callee);
+        // MOV the copied value to callee's activation record
+        fprintf(assemblyFile, "MOV word [EBP+%d], AX\n", offset_in_caller);
+    }
+    else
+    {
+        // type is real
+        // movss for moving floating point data
+        fprintf(assemblyFile, "MOVSS XMM0, dword [EBP-%d]", offset_in_callee);
+        fprintf(assemblyFile, "MOVSS dword [EBP+%d], XMM0", offset_in_caller);
+    }
+}
+void pop_param_code_gen(char *lex, struct symbolTable *local)
+{
+    lex_info *info = get_lexinfo(lex, local, GLOBAL);
+    if (info->type == INT)
+    {
+        // MOV the input parameter from caller to AX register
+        fprintf(assemblyFile, "add esp,2\n");
+    }
+    else
+    {
+        // type is real
+        // movss for moving floating point data
+        fprintf(assemblyFile, "add esp,4\n");
+    }
+}
+void placeback_code_gen(tuple *tup)
+{
+    // symbolTable *local = (symbolTable *)st->head->t_node;
+    lex_info *info = get_lexinfo(tup->arg1, local, GLOBAL);
+    if (info->offset == -1)
+    {
+        // global variable
+        if (info->type == INT)
+        {
+            fprintf(assemblyFile, "mov eax,0\n\
+            mov ax,word[ESP]\n\
+            add esp,2\n\
+            mov word[%s],ax\n",
+                    tup->arg1);
+        }
+        else
+        {
+            fprintf(assemblyFile, "movss xmm0,0\n\
+            movss xmm0,dword[ESP]\n\
+            add esp,4\n\
+            movss dword[%s],xmm0\n",
+                    tup->arg1);
+        }
+    }
+    else
+    {
+        if (info->type == INT)
+        {
+            fprintf(assemblyFile, "mov eax,0\n\
+            mov ax,word[ESP]\n\
+            add esp,2\n\
+            mov word[EBP-%d],ax\n",
+                    info->offset);
+        }
+        else
+        {
+            fprintf(assemblyFile, "movss xmm0,0\n\
+            movss xmm0,dword[ESP]\n\
+            add esp,4\n\
+            movss dword[EBP-%d],xmm0\n",
+                    info->offset);
+        }
+    }
+}
+void call_code_gen(tuple *tup)
+{
+    fprintf(assemblyFile, "call %s\n", tup->arg1);
+    // symbolTable *local = (symbolTable *)st->head->t_node;
+    SymbolTableRecord *entry = getSymbolInfo(tup->arg1, GLOBAL);
+    symbolTable *local = entry->functionTable;
+    // push_stack_node(st, get_stack_node((tNode *)entry->functionTable));
+    typeInfo *inp_param = entry->function_field->InputHead;
+    while (inp_param)
+    {
 
+        char *lex = inp_param->lexeme;
+        if (inp_param->type == RECORD || inp_param->type == VARIANTRECORD)
+        {
+            insideRecord *record_lexemes = getRecordDetails(lex, inp_param->type_ruid, GLOBAL);
+            insideRecord *ptr = record_lexemes;
+            while (ptr)
+            {
+                pop_param_code_gen(ptr->lex, local);
+                ptr = ptr->next;
+            }
+        }
+        else
+        {
+            pop_param_code_gen(lex, local);
+        }
+
+        inp_param = inp_param->next;
+    }
+}
 void fn_space_code_gen(tuple *tup)
 {
     /**
      * @brief Reserve number of bytes equal to offset value
      * of this function, Also output function's label
      */
+
     if (strcmp(tup->arg1, "_main") == 0)
     {
         fprintf(assemblyFile, "main:\n"); // gcc requires the label main
@@ -242,10 +420,11 @@ void fn_space_code_gen(tuple *tup)
 
     // get the function record from global symbol table and push the function's symbol table on the stack
     SymbolTableRecord *entry = getSymbolInfo(tup->arg1, GLOBAL);
-    push_stack_node(st, get_stack_node((tNode *)entry->functionTable));
+    local = entry->functionTable;
+    // push_stack_node(st, get_stack_node((tNode *)entry->functionTable));
 
     // local symbol table is now on top of stack
-    struct symbolTable *local = (symbolTable *)st->head->t_node;
+    // struct symbolTable *local = (symbolTable *)st->head->t_node;
 
     // reserve space for activation record
     fprintf(assemblyFile, "\t\t\t\tENTER %d, 0\n", entry->functionTable->currentOffset);
@@ -260,46 +439,46 @@ void fn_space_code_gen(tuple *tup)
     typeInfo *inp_param = entry->function_field->InputHead;
     while (inp_param)
     {
+
         char *lex = inp_param->lexeme;
-        lex_info *info = get_lexinfo(lex, local, GLOBAL);
-        int offset_in_caller = info->offset - info->width + 4; // 4 is for adjusting for EBP
-        int offset_in_callee = info->offset;
-        if (info->type == INT)
+        if (inp_param->type == RECORD || inp_param->type == VARIANTRECORD)
         {
-            // MOV the input parameter from caller to AX register
-            fprintf(assemblyFile, "MOV AX, word [EBP+%d]\n", offset_in_caller);
-            // MOV the copied value to callee's activation record
-            fprintf(assemblyFile, "MOV word [EBP-%d], AX\n", offset_in_callee);
+            insideRecord *record_lexemes = getRecordDetails(lex, inp_param->type_ruid, GLOBAL);
+            insideRecord *ptr = record_lexemes;
+            while (ptr)
+            {
+                copy_param_code_gen(ptr->lex, tup->arg1);
+                ptr = ptr->next;
+            }
         }
         else
         {
-            // type is real
-            // movss for moving floating point data
-            fprintf(assemblyFile, "MOVSS XMM0, dword [EBP+%d]", offset_in_caller);
-            fprintf(assemblyFile, "MOVSS dword [EBP-%d], XMM0", offset_in_callee);
+            copy_param_code_gen(lex, tup->arg1);
         }
+
         inp_param = inp_param->next;
     }
 
     typeInfo *out_param = entry->function_field->OutputHead;
     while (out_param)
     {
-        char *lex = inp_param->lexeme;
-        lex_info *info = get_lexinfo(lex, local, GLOBAL);
-        int offset_in_caller = info->offset - info->width + 4; // 4 is for adjusting for EBP
-        int offset_in_callee = info->offset;
-        if (info->type == INT)
+
+        char *lex = out_param->lexeme;
+        if (out_param->type == RECORD || out_param->type == VARIANTRECORD)
         {
-            fprintf(assemblyFile, "MOV AX, word [EBP+%d]\n", offset_in_caller);
-            fprintf(assemblyFile, "MOV [EBP-%d], AX\n", offset_in_callee);
+            insideRecord *record_lexemes = getRecordDetails(lex, out_param->type_ruid, GLOBAL);
+            insideRecord *ptr = record_lexemes;
+            while (ptr)
+            {
+                copy_param_code_gen(ptr->lex, tup->arg1);
+                ptr = ptr->next;
+            }
         }
         else
         {
-            // type is real
-            // check this //movss
-            fprintf(assemblyFile, "MOVSS XMM0, dword[EBP+%d]", offset_in_caller);
-            fprintf(assemblyFile, "MOVSS dword [EBP-%d], XMM0", offset_in_callee);
+            copy_param_code_gen(lex, tup->arg1);
         }
+
         out_param = out_param->next;
     }
 
@@ -483,6 +662,7 @@ void fn_space_code_gen(tuple *tup)
 
 void one_var_output_code_gen(Type type, int offset)
 {
+
     switch (type)
     {
     case INT:
@@ -490,8 +670,8 @@ void one_var_output_code_gen(Type type, int offset)
         fprintf(assemblyFile, "\
                 mov EDX, EBP\n\
                 sub EDX, %d     ; make EDX to point at location of variable on the stack\n\
-                push word [EDX]  ; for integer, value stored at offset should be passed to printf\n\
                 push word [zero] ;\n\
+                push word [EDX]  ; for integer, value stored at offset should be passed to printf\n\
                 push dword int_fmt\n\
                 call printf \n\
                 add ESP, 8\n\
@@ -511,7 +691,7 @@ void one_var_output_code_gen(Type type, int offset)
                 push dword [flttmp]         \n\
                 push dword real_fmt \n\
                 call printf \n\
-                add ESP,12 \
+                add ESP,12 \n\
                 ",
                 offset);
     }
@@ -526,8 +706,8 @@ void one_var_output_code_gen_global(Type type, char *name)
     case INT:
     {
         fprintf(assemblyFile, "\
-                push word [%s]  ; for integer, value stored at offset should be passed to printf\n\
                 push word [zero] ;\n\
+                push word [%s]  ; for integer, value stored at offset should be passed to printf\n\
                 push dword int_fmt\n\
                 call printf \n\
                 add ESP, 8\n\
@@ -545,7 +725,7 @@ void one_var_output_code_gen_global(Type type, char *name)
                 push dword [flttmp]         \n\
                 push dword real_fmt \n\
                 call printf \n\
-                add ESP,12 \
+                add ESP,12 \n\
                 ",
                 name);
     }
@@ -555,27 +735,28 @@ void one_var_output_code_gen_global(Type type, char *name)
 
 void output_code_gen(tuple *intermediateCode)
 {
-    SymbolTableRecord *entry = getSymbolInfo(intermediateCode->arg1, (symbolTable *)st->head->t_node);
-    if (entry == NULL)
+    // struct symbolTable *local = (symbolTable *)st->head->t_node;
+    lex_info *info = get_lexinfo(intermediateCode->arg1, local, GLOBAL);
+    // SymbolTableRecord *entry = getSymbolInfo(intermediateCode->arg1, (symbolTable *)st->head->t_node);
+    if (info->offset == -1)
     {
-        entry = getSymbolInfo(intermediateCode->arg1, GLOBAL);
-        one_var_output_code_gen_global(entry->type, entry->lexeme);
+        // entry = getSymbolInfo(intermediateCode->arg1, GLOBAL);
+        one_var_output_code_gen_global(info->type, intermediateCode->arg1);
     }
     else
     {
-        Type type = entry->type;
-        // if(var_type_ptr == NULL){       // if a value has to be printed
-        //     fprintf(assemblyFile, "\t\t\t\tprint_str \"%s\"\n", quad.arg1);
-        //     return;
-        // }
-        // print_a_type(var_type_ptr);
-        int offset = entry->offset;
-        int width;
+        // Type type = entry->type;
+        //  if(var_type_ptr == NULL){       // if a value has to be printed
+        //      fprintf(assemblyFile, "\t\t\t\tprint_str \"%s\"\n", quad.arg1);
+        //      return;
+        //  }
+        //  print_a_type(var_type_ptr);
+        int offset = info->offset;
         // fprintf(assemblyFile, "\t\t\t\t; Code to output value(s) of %s\n", quad.arg1);
         // fprintf(assemblyFile, "\t\t\t\tprint_str \"\"\n");
         // fprintf(assemblyFile, "\t\t\t\tprint_str_no_new_line \"Output: \"\n");
         // fprintf(assemblyFile, "\t\t\t\tpush_all\n");
-        switch (type)
+        switch (info->type)
         {
         case INT:
         {
@@ -852,7 +1033,7 @@ void goto_code_gen(tuple *intermediateCode, struct symbolTable *local, struct sy
 
 void last_attempt_at_making_arith_expr(tuple *intermediateCode)
 {
-    struct symbolTable *local = (symbolTable *)st->head->t_node;
+    // struct symbolTable *local = (symbolTable *)st->head->t_node;
 
     lex_info *arg1_info = get_lexinfo(intermediateCode->arg1, local, GLOBAL);
     lex_info *arg2_info = get_lexinfo(intermediateCode->arg2, local, GLOBAL);
@@ -881,7 +1062,7 @@ void last_attempt_at_making_arith_expr(tuple *intermediateCode)
             {
                 fprintf(assemblyFile, "MOV AX, word[EBP-%d]\n", arg1_info->offset); // load integer in AX register
             }
-            fprintf(assemblyFile, "sub esp,4\n");           // allocate space on stack temporarily
+            fprintf(assemblyFile, "sub esp,4\n");         // allocate space on stack temporarily
             fprintf(assemblyFile, "mov word[esp], AX\n"); // move the integer to the stack
             fprintf(assemblyFile, "fild word[esp]\n");
             fprintf(assemblyFile, "fstp dword[esp]\n");
@@ -894,18 +1075,18 @@ void last_attempt_at_making_arith_expr(tuple *intermediateCode)
             if (arg1_info->offset == -1)
             {
                 // arg1 corresponds to a global variable
-                fprintf(assemblyFile,"movss xmm0,dword[%s]\n", intermediateCode->arg1);
-                //snprintf(arg1_str, MAX_LEXEME_LEN, "dword[%s]", intermediateCode->arg1); // directly use the global variable lex as it will have a label associated with it
+                fprintf(assemblyFile, "movss xmm0,dword[%s]\n", intermediateCode->arg1);
+                // snprintf(arg1_str, MAX_LEXEME_LEN, "dword[%s]", intermediateCode->arg1); // directly use the global variable lex as it will have a label associated with it
             }
             else if (arg1_info->offset == -2)
             {
                 fprintf(assemblyFile, "MOV EAX, __?float32?__(%s)\nMOVD XMM0,EAX\n", intermediateCode->arg1); // load the immediate value in XMM3 for operand 1
-                //snprintf(arg1_str, MAX_LEXEME_LEN, "XMM3");                                                   // immediate value
+                // snprintf(arg1_str, MAX_LEXEME_LEN, "XMM3");                                                   // immediate value
             }
             else
             {
-                fprintf(assemblyFile,"movss xmm0,dword[EBP-%d]\n",arg1_info->offset);
-               // snprintf(arg1_str, MAX_LEXEME_LEN, "dword[EBP-%d]", arg1_info->offset); // access the variable value from offset
+                fprintf(assemblyFile, "movss xmm0,dword[EBP-%d]\n", arg1_info->offset);
+                // snprintf(arg1_str, MAX_LEXEME_LEN, "dword[EBP-%d]", arg1_info->offset); // access the variable value from offset
             }
         }
 
@@ -925,7 +1106,7 @@ void last_attempt_at_making_arith_expr(tuple *intermediateCode)
             {
                 fprintf(assemblyFile, "MOV AX, word[EBP-%d]\n", arg2_info->offset); // load integer in AX register
             }
-            fprintf(assemblyFile, "sub esp,4\n");           // allocate space on stack temporarily
+            fprintf(assemblyFile, "sub esp,4\n");         // allocate space on stack temporarily
             fprintf(assemblyFile, "mov word[esp], AX\n"); // move the integer to the stack
             fprintf(assemblyFile, "fild word[esp]\n");
             fprintf(assemblyFile, "fstp dword[esp]\n");
@@ -938,18 +1119,18 @@ void last_attempt_at_making_arith_expr(tuple *intermediateCode)
             if (arg2_info->offset == -1)
             {
                 // arg2 corresponds to a global variable
-                fprintf(assemblyFile,"movss xmm1,dword[%s]\n", intermediateCode->arg2);
-                //snprintf(arg2_str, MAX_LEXEME_LEN, "dword[%s]", intermediateCode->arg2); // directly use the global variable lex as it will have a label associated with it
+                fprintf(assemblyFile, "movss xmm1,dword[%s]\n", intermediateCode->arg2);
+                // snprintf(arg2_str, MAX_LEXEME_LEN, "dword[%s]", intermediateCode->arg2); // directly use the global variable lex as it will have a label associated with it
             }
             else if (arg2_info->offset == -2)
             {
                 fprintf(assemblyFile, "MOV EAX, __?float32?__(%s)\nMOVD XMM1,EAX\n", intermediateCode->arg2); // load the immediate value in XMM3 for operand 1
-                //snprintf(arg2_str, MAX_LEXEME_LEN, "XMM3");                                                   // immediate value
+                // snprintf(arg2_str, MAX_LEXEME_LEN, "XMM3");                                                   // immediate value
             }
             else
             {
-                fprintf(assemblyFile,"movss xmm1,dword[EBP-%d]\n",arg2_info->offset);
-               // snprintf(arg2_str, MAX_LEXEME_LEN, "dword[EBP-%d]", arg2_info->offset); // access the variable value from offset
+                fprintf(assemblyFile, "movss xmm1,dword[EBP-%d]\n", arg2_info->offset);
+                // snprintf(arg2_str, MAX_LEXEME_LEN, "dword[EBP-%d]", arg2_info->offset); // access the variable value from offset
             }
         }
         if (arg3_info->offset == -1)
@@ -962,8 +1143,8 @@ void last_attempt_at_making_arith_expr(tuple *intermediateCode)
             snprintf(arg3_str, MAX_LEXEME_LEN, "dword [EBP-%d]", arg3_info->offset); // access the variable value from offset
             // do not need keyword "word as we are moving to this destination"
         }
-        fprintf(assemblyFile,"divss xmm0,xmm1\n");
-        fprintf(assemblyFile,"movss %s, xmm0\n",arg3_str);
+        fprintf(assemblyFile, "divss xmm0,xmm1\n");
+        fprintf(assemblyFile, "movss %s, xmm0\n", arg3_str);
     }
     else if (arg1_info->type == INT)
     {
@@ -1209,7 +1390,7 @@ void arithexpr_code_gen(tuple *intermediateCode, struct symbolTable *local, stru
 }
 void assignment_stmt(tuple *intermediateCode)
 {
-    struct symbolTable *local = (symbolTable *)st->head->t_node;
+    // struct symbolTable *local = (symbolTable *)st->head->t_node;
 
     lex_info *arg1_info = get_lexinfo(intermediateCode->arg1, local, GLOBAL);
     lex_info *arg3_info = get_lexinfo(intermediateCode->arg3, local, GLOBAL);
@@ -1355,6 +1536,24 @@ void generate_code(tupleList *intermediateCode, symbolTable *global, FILE *outpu
             {
                 fprintf(assemblyFile, "\t\t%s: dd 0.0\n", entry->lexeme);
             }
+            else if (entry->type == RECORD || entry->type == VARIANTRECORD)
+            {
+                insideRecord *record_fields = getRecordDetails(entry->lexeme, entry->type_ruid, GLOBAL);
+                insideRecord *ptr = record_fields;
+                while (ptr)
+                {
+                    lex_info *info = get_lexinfo(ptr->lex, GLOBAL, GLOBAL);
+                    if (info->type == INT)
+                    {
+                        fprintf(assemblyFile, "\t\t%s: dw 0\n", ptr->lex);
+                    }
+                    else if (info->type == REAL)
+                    {
+                        fprintf(assemblyFile, "\t\t%s: dd 0.0\n", ptr->lex);
+                    }
+                    ptr = ptr->next;
+                }
+            }
             // add for record later
             entry = entry->next;
         }
@@ -1362,14 +1561,13 @@ void generate_code(tupleList *intermediateCode, symbolTable *global, FILE *outpu
     // fprintf(assemblyFile, "\t\tffour_reg_fmt: db `EAX = %%ld, EBX = %%ld, ECX = %%ld, EDX = %%ld`, 10, 0\n");
     // fprintf(assemblyFile, "\t\tlfour_reg_fmt: db `ESP = %%ld, EBP = %%ld, ESI = %%ld, EDI = %%ld\\n`, 10, 0\n");
     fprintf(assemblyFile, "\t\tint_fmt: db \"%%d\", 10, 0\n");
-    fprintf(assemblyFile, "\t\treal_fmt: db \"%%lf\", 10, 0\n");
+    fprintf(assemblyFile, "\t\treal_fmt: db \"%%.2lf\", 10, 0\n");
     fprintf(assemblyFile, "\t\tzero: dw 0\n");
     fprintf(assemblyFile, "\t\tflttmp: dq 0.0\n");
     fprintf(assemblyFile, "section .text\n");
     fprintf(assemblyFile, "global main\n");
-    fprintf(assemblyFile, "main:\n");
     tuple *tup = intermediateCode->head;
-    while (tup->next != NULL)
+    while (tup != NULL)
     {
         switch (tup->op)
         {
@@ -1401,6 +1599,23 @@ void generate_code(tupleList *intermediateCode, symbolTable *global, FILE *outpu
             break;
         case LABEL:
             label_code_gen(tup, (symbolTable *)st->head->t_node, GLOBAL);
+            break;
+        case PARAMI:
+        case PARAMO:
+            param_code_gen(tup);
+            break;
+        case CALL:
+            call_code_gen(tup);
+            break;
+        case PLACEBACK:
+            placeback_code_gen(tup);
+            break;
+
+        case PLUS:
+        case MINUS:
+        case MUL:
+        case DIV:
+            last_attempt_at_making_arith_expr(tup);
             break;
         }
         tup = tup->next;

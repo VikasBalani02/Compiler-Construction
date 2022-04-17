@@ -293,6 +293,16 @@ void IR_funct_call(ast_node *root, symbolTable *localTable, symbolTable *global)
     tuple *newT = newTuple(CALL, funid, NULL, NULL, NULL);
     // after pushing all the parameters we need to call the function
     addTupleEnd(newL, newT);
+
+    list_new1 = reverseList(list_new1);
+    t = list_new1;
+    // iterate through output parameter lexemes in reverse order and push them on stack (PARAMO)
+    while (t)
+    {
+        tuple *newT = newTuple(PLACEBACK, t->lex, NULL, NULL, NULL);
+        addTupleEnd(newL, newT);
+        t = t->next;
+    }
     root->list = newL;
 }
 void IR_function(ast_node *root, symbolTable *localTable, symbolTable *global)
@@ -447,7 +457,7 @@ void IR_assignmentStmt(ast_node *root, symbolTable *localTable, symbolTable *glo
         head2 = getRecordDetails(child2->place, child2->node_type->type_ruid, global);
         while (head1 != NULL && head2 != NULL)
         {
-            newT = newTuple(ASSIGN, head1->lex, NULL, head2->lex, NULL);
+            newT = newTuple(ASSIGN, head2->lex, NULL, head1->lex, NULL);
             addTupleEnd(newL, newT);
             head1 = head1->next;
             head2 = head2->next;
@@ -1187,7 +1197,8 @@ char *op_map[] = {
     "READ",
     "WRITE",
     "FUNCT",
-    "RET"};
+    "RET",
+    "PLACEBACK"};
 
 void print_tuple(tuple *t)
 {

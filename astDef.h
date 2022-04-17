@@ -112,7 +112,8 @@ typedef enum OP{
     READ,
     WRITE,
     FUNCT,
-    RET
+    RET,
+    PLACEBACK
 }OP;
 #define DESCRIPTION_SIZE 200
 typedef struct Error{

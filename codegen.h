@@ -13,6 +13,7 @@ lex_info* get_offset(lexeme_decomp *lex, struct symbolTable *local_table, struct
 void get_offset_util(lexeme_decomp *lexList, SymbolTableRecord *sym_info, struct symbolTable *local_table, struct symbolTable *global_table);
 void generate_code(tupleList* intermediateCode, symbolTable * global, FILE * output);
 Type getNumType(char *str);
+void copyback_param_code_gen(char *lex, struct symbolTable *local);
 // char* OP_MAP[] = {
 //     "MUL",
 //     "DIV",

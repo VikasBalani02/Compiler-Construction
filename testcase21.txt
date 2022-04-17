@@ -1,0 +1,11 @@
+_main
+	type int: b3;
+    type int: c4;
+    type int: d5;
+    type int: b6;
+    type int: b2;
+    d5 <--- 5;
+	d5<--- d5+1;
+	write(d5);
+return;
+end
