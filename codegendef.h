@@ -1,3 +1,10 @@
+/* 
+Tushar Garg - 2019A7PS0104P
+Vikas Balani - 2019A7PS0054P
+Ruchir Jain - 2019A7PS0067P
+Usneek Singh - 2019A7PS0127P
+Abhijith S Raj - 2019A7PS0055P 
+*/
 #include "intermediate_code.h"
 #include <stdlib.h>
 struct lex_info{

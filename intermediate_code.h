@@ -1,3 +1,10 @@
+/* 
+Tushar Garg - 2019A7PS0104P
+Vikas Balani - 2019A7PS0054P
+Ruchir Jain - 2019A7PS0067P
+Usneek Singh - 2019A7PS0127P
+Abhijith S Raj - 2019A7PS0055P 
+*/
 #include "typeChecker.h"
 char *concat(char *str1, char *str2);
 tuple *newTuple(OP op, char *arg1, char *arg2, char *arg3, tuple *next);
