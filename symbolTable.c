@@ -760,6 +760,7 @@ symbolTable * populateSymbolTable(ast_node * root,Error* err){
     flag=0;
     //if(traverseSymbolTable(globalTable)==-1) return NULL; //MARKER: CHANGE THIS LATER IF IT BREAKS
     traverseSymbolTable(globalTable);
+    traverseNode2(root,globalTable);
     ast_node * function = root->firstChild;
     int i=0;
     while(function!=NULL){
