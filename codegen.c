@@ -291,8 +291,8 @@ void copy_param_code_gen(char *lex, char *loc)
     {
         // type is real
         // movss for moving floating point data
-        fprintf(assemblyFile, "MOVSS XMM0, dword [EBP+%d]", offset_in_caller);
-        fprintf(assemblyFile, "MOVSS dword [EBP-%d], XMM0", offset_in_callee);
+        fprintf(assemblyFile, "MOVSS XMM0, dword [EBP+%d]\n", offset_in_caller);
+        fprintf(assemblyFile, "MOVSS dword [EBP-%d], XMM0\n", offset_in_callee);
     }
 }
 void copyback_param_code_gen(char *lex, struct symbolTable *local)
@@ -311,8 +311,8 @@ void copyback_param_code_gen(char *lex, struct symbolTable *local)
     {
         // type is real
         // movss for moving floating point data
-        fprintf(assemblyFile, "MOVSS XMM0, dword [EBP-%d]", offset_in_callee);
-        fprintf(assemblyFile, "MOVSS dword [EBP+%d], XMM0", offset_in_caller);
+        fprintf(assemblyFile, "MOVSS XMM0, dword [EBP-%d]\n", offset_in_callee);
+        fprintf(assemblyFile, "MOVSS dword [EBP+%d], XMM0\n", offset_in_caller);
     }
 }
 void pop_param_code_gen(char *lex, struct symbolTable *local)
@@ -347,7 +347,7 @@ void placeback_code_gen(tuple *tup)
         }
         else
         {
-            fprintf(assemblyFile, "movss xmm0,0\n\
+            fprintf(assemblyFile, "MOV EAX, __?float32?__(0.0)\nMOVD XMM0,EAX\n\
             movss xmm0,dword[ESP]\n\
             add esp,4\n\
             movss dword[%s],xmm0\n",
@@ -366,7 +366,7 @@ void placeback_code_gen(tuple *tup)
         }
         else
         {
-            fprintf(assemblyFile, "movss xmm0,0\n\
+            fprintf(assemblyFile, "MOV EAX, __?float32?__(0.00)\nMOVD XMM0,EAX\n\n\
             movss xmm0,dword[ESP]\n\
             add esp,4\n\
             movss dword[EBP-%d],xmm0\n",
@@ -766,6 +766,121 @@ void output_code_gen(tuple *intermediateCode)
         case REAL:
         {
             one_var_output_code_gen(REAL, offset);
+        }
+        break;
+        default:
+        {
+            fprintf(assemblyFile, "\t\t\t\t		;type error, cannot take input \"%%d\" \n");
+        }
+        break;
+        }
+        // fprintf(assemblyFile, "\t\t\t\tpop_all\n");
+        // fprintf(assemblyFile, "\t\t\t\tprint_str \"\" ;print a newline after output\n");
+
+        /**
+         * ToDo:
+         * There are unmatching push and pops coming in the generated code
+         */
+    }
+}
+
+void one_var_input_code_gen(Type type, int offset)
+{
+
+    switch (type)
+    {
+    case INT:
+    {
+        fprintf(assemblyFile, "\
+                push dword intSCAN  ; for integer, value stored at offset should be passed to printf\n\
+                push dword int_fmt\n\
+                call scanf \n\
+                mov EAX, dword[intSCAN]\n\
+                mov word[EBP-%d], AX\n\
+                add ESP, 8\n\
+                ",
+                offset);
+    }
+    break;
+    case REAL:
+    {
+        fprintf(assemblyFile, "\
+                mov EDX , EBP\n\
+                sub EDX, %d\n\
+                push dword EDX         \n\
+                push dword real_fmt_new \n\
+                call scanf \n\
+                add ESP,12 \n\
+                ",
+                offset);
+    }
+    break;
+    }
+}
+void one_var_input_code_gen_global(Type type, char *name)
+{
+    switch (type)
+    {
+    case INT:
+    {
+        fprintf(assemblyFile, "\
+                push dword intSCAN  ; for integer, value stored at offset should be passed to printf\n\
+                push dword int_fmt\n\
+                call scanf \n\
+                mov EAX, dword[intSCAN]\n\
+                mov word[%s], AX\n\
+                add ESP, 8\n\
+                ",
+                name);
+    }
+    break;
+    case REAL:
+    {
+        fprintf(assemblyFile, "\
+                push dword %s         \n\
+                push dword real_fmt_new \n\
+                call scanf \n\
+                add ESP,12 \n\
+                ",
+                name);
+    }
+    break;
+    }
+}
+
+void input_code_gen(tuple *intermediateCode)
+{
+    // struct symbolTable *local = (symbolTable *)st->head->t_node;
+    lex_info *info = get_lexinfo(intermediateCode->arg1, local, GLOBAL);
+    // SymbolTableRecord *entry = getSymbolInfo(intermediateCode->arg1, (symbolTable *)st->head->t_node);
+    if (info->offset == -1)
+    {
+        // entry = getSymbolInfo(intermediateCode->arg1, GLOBAL);
+        one_var_input_code_gen_global(info->type, intermediateCode->arg1);
+    }
+    else
+    {
+        // Type type = entry->type;
+        //  if(var_type_ptr == NULL){       // if a value has to be printed
+        //      fprintf(assemblyFile, "\t\t\t\tprint_str \"%s\"\n", quad.arg1);
+        //      return;
+        //  }
+        //  print_a_type(var_type_ptr);
+        int offset = info->offset;
+        // fprintf(assemblyFile, "\t\t\t\t; Code to output value(s) of %s\n", quad.arg1);
+        // fprintf(assemblyFile, "\t\t\t\tprint_str \"\"\n");
+        // fprintf(assemblyFile, "\t\t\t\tprint_str_no_new_line \"Output: \"\n");
+        // fprintf(assemblyFile, "\t\t\t\tpush_all\n");
+        switch (info->type)
+        {
+        case INT:
+        {
+            one_var_input_code_gen(INT, offset);
+        }
+        break;
+        case REAL:
+        {
+            one_var_input_code_gen(REAL, offset);
         }
         break;
         default:
@@ -1562,6 +1677,8 @@ void generate_code(tupleList *intermediateCode, symbolTable *global, FILE *outpu
     // fprintf(assemblyFile, "\t\tlfour_reg_fmt: db `ESP = %%ld, EBP = %%ld, ESI = %%ld, EDI = %%ld\\n`, 10, 0\n");
     fprintf(assemblyFile, "\t\tint_fmt: db \"%%d\", 10, 0\n");
     fprintf(assemblyFile, "\t\treal_fmt: db \"%%.2lf\", 10, 0\n");
+    fprintf(assemblyFile, "\t\treal_fmt_new: db \"%%f\", 10, 0\n");
+    fprintf(assemblyFile, "\t\tintSCAN: dd 0\n");
     fprintf(assemblyFile, "\t\tzero: dw 0\n");
     fprintf(assemblyFile, "\t\tflttmp: dq 0.0\n");
     fprintf(assemblyFile, "section .text\n");
@@ -1616,6 +1733,10 @@ void generate_code(tupleList *intermediateCode, symbolTable *global, FILE *outpu
         case MUL:
         case DIV:
             last_attempt_at_making_arith_expr(tup);
+            break;
+        
+        case READ:
+            input_code_gen(tup);
             break;
         }
         tup = tup->next;
