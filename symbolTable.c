@@ -100,7 +100,7 @@ int global_check(symbolTable *global, char *key){
 typeInfo* add_function_par(typeInfo * typeInfoList, Type type, char* lexeme, char *ruid, symbolTable* global){
     if(global_check(global,lexeme)){
 
-        log_error(err_list,"Redeclaration of global variable %s\n",lexeme);
+        log_error(err_list,"Redeclaration of global variable %s",lexeme);
         return NULL;
     }
     else{
@@ -209,7 +209,7 @@ int traverseNode(ast_node * current, symbolTable* global){
             // temp->width = offset
             SymbolTableRecord * entry = getSymbolInfo(temp->lexeme,global);
             if(entry != NULL){
-                log_error(err_list,"Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d\n", temp->line_no, temp->lexeme, entry->line_no);
+                log_error(err_list,"Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d", temp->line_no, temp->lexeme, entry->line_no);
                 flag=1;
             }
             else{
@@ -286,7 +286,7 @@ int traverseNode(ast_node * current, symbolTable* global){
             temp->width = -1;
             SymbolTableRecord * entry = getSymbolInfo(temp->lexeme,global);
             if(entry != NULL){
-                log_error(err_list,"Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d\n", temp->line_no, temp->lexeme, entry->line_no);
+                log_error(err_list,"Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d", temp->line_no, temp->lexeme, entry->line_no);
                 flag=1;
             }
             else{
@@ -325,7 +325,7 @@ int traverseNode(ast_node * current, symbolTable* global){
             else if (info->union_or_record==TK_RECORD){
                 SymbolTableRecord * entry = getSymbolInfo(info->ruid,global);
                 if(entry == NULL){
-                    log_error(err_list,"Line No: %d, No type definition found corresponding to this type %s\n",info->lineNum,info->ruid);
+                    log_error(err_list,"Line No: %d, No type definition found corresponding to this type %s",info->lineNum,info->ruid);
                     flag=1;
                 }
                 else{
@@ -339,7 +339,7 @@ int traverseNode(ast_node * current, symbolTable* global){
             else if (info->union_or_record == -1){
                 SymbolTableRecord * entry = getSymbolInfo(info->ruid,global);
                 if(entry==NULL || entry->type !=RUID){
-                    log_error(err_list,"Line No: %d, No type definition found corresponding to this type %s\n",info->lineNum,info->ruid);
+                    log_error(err_list,"Line No: %d, No type definition found corresponding to this type %s",info->lineNum,info->ruid);
                     flag=1;
                 }
                 else{
@@ -360,7 +360,7 @@ int traverseNode(ast_node * current, symbolTable* global){
         if(info->isGlobal){
             SymbolTableRecord * entry = getSymbolInfo(temp->lexeme,global);
             if(entry != NULL){
-                log_error(err_list,"Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d\n", temp->line_no, temp->lexeme, entry->line_no);
+                log_error(err_list,"Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d", temp->line_no, temp->lexeme, entry->line_no);
                 flag=1;
             }
             else{
@@ -381,7 +381,7 @@ int traverseNode(ast_node * current, symbolTable* global){
         entry->line_no = to->lineNum;
         SymbolTableRecord * entry2 = getSymbolInfo(entry->lexeme,global);
             if(entry2 != NULL){
-                log_error(err_list,"Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d\n", entry->line_no, entry->lexeme, entry2->line_no);
+                log_error(err_list,"Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d", entry->line_no, entry->lexeme, entry2->line_no);
                 flag=1;
             }
             else{
@@ -407,7 +407,7 @@ int checkTagValue(symbolTable * global, SymbolTableRecord * entry){
         field_ptr = field_ptr->next;
     }
     if(flag_2 ==1) return 0;
-    log_error(err_list,"Line No: %d, ERROR: Variant Records must have a tagvalue field of type int\n",entry->line_no);
+    log_error(err_list,"Line No: %d, ERROR: Variant Records must have a tagvalue field of type int",entry->line_no);
     return -1;
 }
 int calculateWidth(symbolTable * global, SymbolTableRecord * entry){
@@ -428,12 +428,12 @@ int calculateWidth(symbolTable * global, SymbolTableRecord * entry){
             else if (field_ptr->type == RUID){
                 SymbolTableRecord * recordEntryRUID = getSymbolInfo(field_ptr->ruid,global);
                 if(recordEntryRUID==NULL){
-                    log_error(err_list,"Line No:%d, ERROR : No definition found for the field type %s\n", field_ptr->line_no, field_ptr->ruid);
+                    log_error(err_list,"Line No:%d, ERROR : No definition found for the field type %s", field_ptr->line_no, field_ptr->ruid);
                     return -1;
                 }
                 SymbolTableRecord* ruidOriginal = getSymbolInfo(recordEntryRUID->type_ruid, global);
                 if(ruidOriginal==NULL){
-                    log_error(err_list,"Line No:%d, ERROR :Error: There is no record definition corresponding to the ruid %s\n", field_ptr->line_no, recordEntryRUID->type_ruid);
+                    log_error(err_list,"Line No:%d, ERROR :Error: There is no record definition corresponding to the ruid %s", field_ptr->line_no, recordEntryRUID->type_ruid);
                     return -1;
                 }
 
@@ -484,12 +484,12 @@ int calculateWidth(symbolTable * global, SymbolTableRecord * entry){
             else if (field_ptr->type == RUID){
                 SymbolTableRecord * recordEntryRUID = getSymbolInfo(field_ptr->ruid,global);
                 if(recordEntryRUID==NULL){
-                    log_error(err_list,"Line No:%d, ERROR : No definition found for the field type %s\n", field_ptr->line_no, field_ptr->ruid);
+                    log_error(err_list,"Line No:%d, ERROR : No definition found for the field type %s", field_ptr->line_no, field_ptr->ruid);
                     return -1;
                 }
                 SymbolTableRecord* ruidOriginal = getSymbolInfo(recordEntryRUID->type_ruid, global);
                 if(ruidOriginal==NULL){
-                    log_error(err_list,"Line No:%d, ERROR :Error: There is no record definition corresponding to the ruid %s\n", field_ptr->line_no, recordEntryRUID->type_ruid);
+                    log_error(err_list,"Line No:%d, ERROR :Error: There is no record definition corresponding to the ruid %s", field_ptr->line_no, recordEntryRUID->type_ruid);
                     return -1;
                 }
 
@@ -566,7 +566,7 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
                     lineNo = info->lineNum;
                     SymbolTableRecord * entry = getSymbolInfo(ruid,global);
                     if(entry==NULL){
-                        log_error(err_list,"Line Num: %d, Error: Couldn't find definition for this constructed datatype.\n",lineNo);
+                        log_error(err_list,"Line Num: %d, Error: Couldn't find definition for this constructed datatype.",lineNo);
                         flag=1;
                     }
                     else{
@@ -575,14 +575,14 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
                 }
                 else if(info->union_or_record == TK_UNION) 
                 {
-                    log_error(err_list,"Line No: %d, Union %s cannot be declared in this manner\n",info->lineNum,info->ruid);
+                    log_error(err_list,"Line No: %d, Union %s cannot be declared in this manner",info->lineNum,info->ruid);
                     flag=1;
                 }
                 else if (info->union_or_record == -1){
                     lineNo = info->lineNum;
                     SymbolTableRecord * entry = getSymbolInfo(ruid,global);
                     if(entry==NULL){
-                        log_error(err_list,"Line Num: %d, Error: Couldn't find definition for this constructed datatype.\n",lineNo);
+                        log_error(err_list,"Line Num: %d, Error: Couldn't find definition for this constructed datatype.",lineNo);
                         flag=1;
                     }
                     else{
@@ -591,7 +591,7 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
                     }
                     SymbolTableRecord * entry2 = getSymbolInfo(entry->type_ruid,global);
                     if(entry2!=NULL && entry2->type==4){
-                       log_error(err_list,"Line No: %d, Union %s cannot be declared in this manner \n",info->lineNum,info->ruid);
+                       log_error(err_list,"Line No: %d, Union %s cannot be declared in this manner",info->lineNum,info->ruid);
                        flag=1;
                     }
                     else{
@@ -616,12 +616,12 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
             }
             SymbolTableRecord * entry = getSymbolInfo(record->lexeme,table);
             if(entry != NULL){
-                log_error(err_list,"Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d\n", record->line_no, record->lexeme, entry->line_no);
+                log_error(err_list,"Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d", record->line_no, record->lexeme, entry->line_no);
                 flag=1;
             }
             SymbolTableRecord * entry_2 = getSymbolInfo(record->lexeme,global);
             if(entry_2!= NULL){
-                log_error(err_list,"Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d\n", record->line_no, record->lexeme, entry_2->line_no);
+                log_error(err_list,"Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d", record->line_no, record->lexeme, entry_2->line_no);
                 flag=1;
             }
             if(entry==NULL && entry_2==NULL){
@@ -664,14 +664,14 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
                 temp->width = entry->width;
                 temp->type_ruid = info->ruid;
                 temp->line_no = info->lineNum;*/
-                log_error(err_list,"Line No: %d, Union %s cannot be declared in this manner\n",info->lineNum,info->ruid);
+                log_error(err_list,"Line No: %d, Union %s cannot be declared in this manner",info->lineNum,info->ruid);
                 flag=1;
 
             }
             else if (info->union_or_record==TK_RECORD){
                 SymbolTableRecord * entry = getSymbolInfo(info->ruid,global);
                 if(entry == NULL){
-                    log_error(err_list,"Line No: %d, No type definition found corresponding to this type %s\n",info->lineNum,info->ruid);
+                    log_error(err_list,"Line No: %d, No type definition found corresponding to this type %s",info->lineNum,info->ruid);
                     flag=1;
                 }
                 else{
@@ -684,14 +684,14 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
             else if (info->union_or_record == -1){
                 SymbolTableRecord * entry = getSymbolInfo(info->ruid,global);
                 if(entry==NULL || entry->type !=RUID){
-                    log_error(err_list,"Line No: %d, No type definition found corresponding to this type %s\n",info->lineNum,info->ruid);
+                    log_error(err_list,"Line No: %d, No type definition found corresponding to this type %s",info->lineNum,info->ruid);
                     flag=1;
                 }
                 temp->type = entry->type;
                 temp->type_ruid = entry->type_ruid;
                 SymbolTableRecord * entry2 = getSymbolInfo(entry->type_ruid,global);
                 if(entry2->type==4){
-                    log_error(err_list,"Line No: %d, Union %s cannot be declared in this manner \n",info->lineNum,info->ruid);
+                    log_error(err_list,"Line No: %d, Union %s cannot be declared in this manner",info->lineNum,info->ruid);
                     return 1;
                 }
                 else{
@@ -712,11 +712,11 @@ int traverseNodeFunction(ast_node * current, symbolTable* table, symbolTable* gl
         SymbolTableRecord * entry = getSymbolInfo(temp->lexeme,table);
         SymbolTableRecord * entry_2 = getSymbolInfo(temp->lexeme,global);
         if(entry != NULL){
-            log_error(err_list,"Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d\n", temp->line_no, temp->lexeme, entry->line_no);
+            log_error(err_list,"Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d", temp->line_no, temp->lexeme, entry->line_no);
             flag=1;
         }
         if(entry_2 != NULL){
-            log_error(err_list,"Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d\n", temp->line_no, temp->lexeme, entry_2->line_no);
+            log_error(err_list,"Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d", temp->line_no, temp->lexeme, entry_2->line_no);
             flag=1;
         }
         if(entry==NULL && entry_2==NULL){
@@ -752,7 +752,7 @@ symbolTable * populateSymbolTable(ast_node * root,Error* err){
         symbolTable * funTable = newSymbolTable(SLOTS);
         FunEntry->functionTable = funTable;
         if(checkSymbol(globalTable,info->funID)){
-            log_error(err_list,"Function already exists\n");
+            log_error(err_list,"Function already exists");
             // return NULL;  //MARKER
         }
         else{
