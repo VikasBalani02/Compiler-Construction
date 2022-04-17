@@ -297,76 +297,79 @@ int traverseNode(ast_node * current, symbolTable* global){
     else if(current->construct == declaration_){
         SymbolTableRecord * temp = (SymbolTableRecord*) malloc(sizeof(SymbolTableRecord));
         struct id_struct * info = (struct id_struct *)current->ninf;
-        temp->lexeme = info->lexID;
-        temp->line_no = info->lineNum;
-        ast_node * dataType = current->firstChild;
-        if(dataType->construct == primitiveDatatype_){
-            struct primitive_type_struct *info =(struct primitive_type_struct *) dataType->ninf;
+        if(info->isGlobal == 1){
+            temp->lexeme = info->lexID;
             temp->line_no = info->lineNum;
-            temp->usage = LOCAL;
-            if(info->int_or_real==TK_INT){
-                temp->type = INT;
-                temp->type_ruid = NULL;
-                temp->width = INTWIDTH;
-            }
-            else if(info->int_or_real==TK_REAL){
-                temp->type=REAL;
-                temp->type_ruid = NULL;
-                temp->width = REALWIDTH;
-            }
-        }
-        else if (dataType->construct==constructedDatatype_){
-            struct constructed_type_struct *info = (struct constructed_type_struct *)dataType->ninf;
-            if(info->union_or_record==TK_UNION){
-                log_error(err_list,"Line No: %d, Union %s cannot be declared in this manner\n",info->lineNum,info->ruid);
-                flag=1;
-
-            }
-            else if (info->union_or_record==TK_RECORD){
-                SymbolTableRecord * entry = getSymbolInfo(info->ruid,global);
-                if(entry == NULL){
-                    log_error(err_list,"Line No: %d, No type definition found corresponding to this type %s",info->lineNum,info->ruid);
-                    flag=1;
-                }
-                else{
-                   temp->type = entry->type;
-                   temp->type_ruid = info->ruid;
-                   temp->line_no = info->lineNum;
-                   temp->width = entry->width;
-                }
-                
-            }
-            else if (info->union_or_record == -1){
-                SymbolTableRecord * entry = getSymbolInfo(info->ruid,global);
-                if(entry==NULL || entry->type !=RUID){
-                    log_error(err_list,"Line No: %d, No type definition found corresponding to this type %s",info->lineNum,info->ruid);
-                    flag=1;
-                }
-                else{
-                temp->type = entry->type;
-                temp->type_ruid = entry->type_ruid;
-                }
-                SymbolTableRecord * entry2 = getSymbolInfo(entry->type_ruid,global);
-                if(entry2 != NULL && entry2->type==4){
-                    log_error(err_list,"Line No: %d, Union %s cannot be declared in this manner \n",info->lineNum,info->ruid);
-                    flag=1;
-                }
-                else if(entry2 != NULL){
+            ast_node * dataType = current->firstChild;
+            if(dataType->construct == primitiveDatatype_){
+                struct primitive_type_struct *info =(struct primitive_type_struct *) dataType->ninf;
                 temp->line_no = info->lineNum;
-                temp->width = entry2->width;
+                temp->usage = LOCAL;
+                if(info->int_or_real==TK_INT){
+                    temp->type = INT;
+                    temp->type_ruid = NULL;
+                    temp->width = INTWIDTH;
+                }
+                else if(info->int_or_real==TK_REAL){
+                    temp->type=REAL;
+                    temp->type_ruid = NULL;
+                    temp->width = REALWIDTH;
                 }
             }
-        }
-        if(info->isGlobal){
-            SymbolTableRecord * entry = getSymbolInfo(temp->lexeme,global);
-            if(entry != NULL){
-                log_error(err_list,"Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d", temp->line_no, temp->lexeme, entry->line_no);
-                flag=1;
+            else if (dataType->construct==constructedDatatype_){
+                struct constructed_type_struct *info = (struct constructed_type_struct *)dataType->ninf;
+                if(info->union_or_record==TK_UNION){
+                    log_error(err_list,"Line No: %d, Union %s cannot be declared in this manner\n",info->lineNum,info->ruid);
+                    flag=1;
+
+                }
+                else if (info->union_or_record==TK_RECORD){
+                    SymbolTableRecord * entry = getSymbolInfo(info->ruid,global);
+                    if(entry == NULL){
+                        log_error(err_list,"Line No: %d, No type definition found corresponding to this type %s",info->lineNum,info->ruid);
+                        flag=1;
+                    }
+                    else{
+                    temp->type = entry->type;
+                    temp->type_ruid = info->ruid;
+                    temp->line_no = info->lineNum;
+                    temp->width = entry->width;
+                    }
+                    
+                }
+                else if (info->union_or_record == -1){
+                    SymbolTableRecord * entry = getSymbolInfo(info->ruid,global);
+                    if(entry==NULL || entry->type !=RUID){
+                        log_error(err_list,"Line No: %d, No type definition found corresponding to this type %s",info->lineNum,info->ruid);
+                        flag=1;
+                    }
+                    else{
+                    temp->type = entry->type;
+                    temp->type_ruid = entry->type_ruid;
+                    }
+                    SymbolTableRecord * entry2 = getSymbolInfo(entry->type_ruid,global);
+                    if(entry2 != NULL && entry2->type==4){
+                        log_error(err_list,"Line No: %d, Union %s cannot be declared in this manner \n",info->lineNum,info->ruid);
+                        flag=1;
+                    }
+                    else if(entry2 != NULL){
+                    temp->line_no = info->lineNum;
+                    temp->width = entry2->width;
+                    }
+                }
             }
-            else{
-            addSymbol(global,temp->lexeme, temp);
+            if(info->isGlobal){
+                SymbolTableRecord * entry = getSymbolInfo(temp->lexeme,global);
+                if(entry != NULL){
+                    log_error(err_list,"Line NO: %d, Redeclaration of same identifier %s, previous declaration found on line %d", temp->line_no, temp->lexeme, entry->line_no);
+                    flag=1;
+                }
+                else{
+                addSymbol(global,temp->lexeme, temp);
+                }
             }
-        }
+    }
+        
     
     }
 
@@ -739,7 +742,7 @@ symbolTable * populateSymbolTable(ast_node * root,Error* err){
     err_list=err;
     traverseNode(root,globalTable);
     flag=0;
-    //if(traverseSymbolTable(globalTable)==-1) return globalTable; //MARKER: CHANGE THIS LATER IF IT BREAKS
+    //if(traverseSymbolTable(globalTable)==-1) return NULL; //MARKER: CHANGE THIS LATER IF IT BREAKS
     traverseSymbolTable(globalTable);
     ast_node * function = root->firstChild;
     int i=0;
@@ -763,6 +766,7 @@ symbolTable * populateSymbolTable(ast_node * root,Error* err){
         FunEntry->function_field->num=i;
         i++;
         FunEntry->width =0;
+        traverseNodeFunction(function,funTable,globalTable,FunEntry);
         }
         // addSymbol(globalTable,FunEntry->lexeme,FunEntry);
         // FunEntry->function_field = (struct function_field *)malloc(sizeof(struct function_field));
@@ -772,7 +776,7 @@ symbolTable * populateSymbolTable(ast_node * root,Error* err){
         // i++;
         // FunEntry->width =0;
         //if(traverseNodeFunction(function,funTable,globalTable,FunEntry)==1) exit(0);
-        traverseNodeFunction(function,funTable,globalTable,FunEntry); //MARKER 3
+         //MARKER 3
         function = function->nextSib;
     }
     return globalTable;
@@ -960,11 +964,13 @@ void printglobalrecords(symbolTable *global){
         SymbolTableRecord * entry = global->list[i]->head;
         while(entry!=NULL){
             if(entry->type == RECORD || entry->type == VARIANTRECORD || entry->type == RUID){
+                if(entry->type_ruid==NULL){
                 printf("Name: %s ",entry->lexeme);
                 printf("Type Expression: ");
                 printTypeExpression(entry, global);
-                printf("Offset: %d ", entry->offset);
+                printf("Width: %d ", entry->width);
                 printf("\n");
+                }
 
             }
             entry = entry->next;
