@@ -4,23 +4,6 @@ _main
 		type int : b2d4;
 		b2d <--- 5;
 		b3d <--- 4;
-<<<<<<< HEAD
-		b2d4 <--- 6.26;
-		write(b2d4);
-		while(b2d<20)
-			%if(b2d>10)
-			%	then
-			%		b2d<---25;
-			%endif
-			%if(b2d<10)
-			%then 
-			%	b2d<---15;
-			%endif
-			write(b2d);
-
-		endwhile
-
-=======
 		b2d4 <--- 6;
 		write(b2d4);
 		if(b2d<b3d)
@@ -29,6 +12,5 @@ _main
 		else
 			write(b3d);
 		endif
->>>>>>> e4ec893d8547ab62e2dcab5b9ac38e0c0f3a725b
 return;
 end

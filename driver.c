@@ -116,7 +116,7 @@ int main(int argc, char **argv)
     printf("%s\n", menu);
     struct Error* err=(Error*)malloc(sizeof(Error));
     err->next=NULL;
-    global = populateSymbolTable(tr->root->addr);
+    global = populateSymbolTable(tr->root->addr,err);
     tupleList* complist;
     FILE * f;
     int ast_product, pt_product;
