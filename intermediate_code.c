@@ -21,7 +21,7 @@ char *concat(char *str1, char *str2)
     temp = (char *)malloc(l1 * sizeof(char));
     memset(temp, '\0', sizeof(temp));
     temp = strcat(temp, str1);
-    temp = strcat(temp, "_");
+    temp = strcat(temp, ".");
     temp = strcat(temp, str2);
     // free karna ho to yaha par kar dena
     return temp;

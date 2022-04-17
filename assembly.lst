@@ -2,60 +2,57 @@
      2                                  section .data
      3 00000000 25640A00                		int_fmt: db "%d", 10, 0
      4 00000004 252E326C660A00          		real_fmt: db "%.2lf", 10, 0
-     5 0000000B 0000                    		zero: dw 0
-     6 0000000D 0000000000000000        		flttmp: dq 0.0
-     7                                  section .text
-     8                                  global main
-     9                                  _sum:
-    10 00000000 C8080000                				ENTER 8, 0
-    11                                  				;reserve space for the input/output params of fn, later flush this space
-    12 00000004 668B4508                MOV AX, word [EBP+8]
-    13 00000008 668945FE                MOV word [EBP-2], AX
-    14 0000000C 668B450A                MOV AX, word [EBP+10]
-    15 00000010 668945FC                MOV word [EBP-4], AX
-    16 00000014 668B450C                MOV AX, word [EBP+12]
-    17 00000018 668945FA                MOV word [EBP-6], AX
-    18 0000001C 668B45FE                				mov AX, word[EBP-2]
-    19 00000020 668B5DFC                                mov BX, word[EBP-4]
-    20 00000024 6601D8                                  add AX, BX 
-    21 00000027 668945F8                                mov word [EBP-8], AX 
-    22 0000002B 668B45F8                MOV AX, word[EBP-8]
-    23 0000002F 668945FA                MOV word [EBP-6], AX
-    24 00000033 668B45FE                MOV AX, word [EBP-2]
-    25 00000037 66894508                MOV word [EBP+8], AX
-    26 0000003B 668B45FC                MOV AX, word [EBP-4]
-    27 0000003F 6689450A                MOV word [EBP+10], AX
-    28 00000043 668B45FA                MOV AX, word [EBP-6]
-    29 00000047 6689450C                MOV word [EBP+12], AX
-    30                                  				;Deallocate space given to I/O variables on stack
-    31 0000004B 83C408                  				add ESP, 8
-    32 0000004E C9                      				LEAVE
-    33 0000004F C3                      RET
-    34                                  main:
-    35 00000050 C8060000                				ENTER 6, 0
-    36                                  				;reserve space for the input/output params of fn, later flush this space
-    37 00000054 66B80200                MOV AX, 2
-    38 00000058 668945FE                MOV word [EBP-2], AX
-    39 0000005C 66B80300                MOV AX, 3
-    40 00000060 668945FC                MOV word [EBP-4], AX
-    41 00000064 66FF75FA                push word [EBP-6]
-    42 00000068 66FF75FC                push word [EBP-4]
-    43 0000006C 66FF75FE                push word [EBP-2]
-    44 00000070 E88BFFFFFF              call _sum
-    45 00000075 83C402                  add esp,2
-    46 00000078 83C402                  add esp,2
-    47 0000007B B800000000              mov eax,0
-    48 00000080 668B0424                            mov ax,word[ESP]
-    49 00000084 83C402                              add esp,2
-    50 00000087 668945FA                            mov word[EBP-6],ax
-    51 0000008B 89EA                                    mov EDX, EBP
-    52 0000008D 83EA06                                  sub EDX, 6     ; make EDX to point at location of variable on the stack
-    53 00000090 66FF35[0B000000]                        push word [zero] ;
-    54 00000097 66FF32                                  push word [EDX]  ; for integer, value stored at offset should be passed to printf
-    55 0000009A 68[00000000]                            push dword int_fmt
-    56 0000009F E8(00000000)                            call printf 
-    57 000000A4 83C408                                  add ESP, 8
-    58                                                  				;Deallocate space given to I/O variables on stack
-    59 000000A7 83C406                  				add ESP, 6
-    60 000000AA C9                      				LEAVE
-    61 000000AB C3                      RET
+     5 0000000B 25660A00                		real_fmt_new: db "%f", 10, 0
+     6 0000000F 00000000                		intSCAN: dd 0
+     7 00000013 0000                    		zero: dw 0
+     8 00000015 0000000000000000        		flttmp: dq 0.0
+     9                                  section .text
+    10                                  global main
+    11                                  main:
+    12 00000000 C81E0000                				ENTER 30, 0
+    13                                  				;reserve space for the input/output params of fn, later flush this space
+    14 00000004 66B80300                MOV AX, 3
+    15 00000008 668945FE                MOV word [EBP-2], AX
+    16 0000000C B89A99C741              MOV EAX, __?float32?__(24.95)
+    17 00000011 660F6ED8                MOVD XMM3,EAX
+    18 00000015 F30F10C3                MOVSS XMM0, XMM3
+    19 00000019 F30F1145FA              MOVSS dword[EBP-6], XMM0
+    20 0000001E 66B80200                MOV AX, 2
+    21 00000022 668945F8                MOV word [EBP-8], AX
+    22 00000026 B89A99C542              MOV EAX, __?float32?__(98.80)
+    23 0000002B 660F6ED8                MOVD XMM3,EAX
+    24 0000002F F30F10C3                MOVSS XMM0, XMM3
+    25 00000033 F30F1145F4              MOVSS dword[EBP-12], XMM0
+    26 00000038 668B45FE                				mov AX, word[EBP-2]
+    27 0000003C 668B5DF8                                mov BX, word[EBP-8]
+    28 00000040 6601D8                                  add AX, BX 
+    29 00000043 668945E6                                mov word [EBP-26], AX 
+    30 00000047 F30F1045FA              				movss XMM0, dword[EBP-6]
+    31 0000004C F30F104DF4                              movss XMM1, dword[EBP-12]
+    32 00000051 F30F58C1                                addss XMM0, XMM1 
+    33 00000055 F30F1145E2                              movss dword[EBP-30], XMM0 
+    34 0000005A 668B45E6                MOV AX, word[EBP-26]
+    35 0000005E 668945F2                MOV word [EBP-14], AX
+    36 00000062 F30F1045E2              MOVSS XMM0, dword[EBP-30]
+    37 00000067 F30F1145EE              MOVSS dword[EBP-18], XMM0
+    38 0000006C 89EA                                    mov EDX, EBP
+    39 0000006E 83EA0E                                  sub EDX, 14     ; make EDX to point at location of variable on the stack
+    40 00000071 66FF35[13000000]                        push word [zero] ;
+    41 00000078 66FF32                                  push word [EDX]  ; for integer, value stored at offset should be passed to printf
+    42 0000007B 68[00000000]                            push dword int_fmt
+    43 00000080 E8(00000000)                            call printf 
+    44 00000085 83C408                                  add ESP, 8
+    45 00000088 89EA                                                    mov EDX, EBP
+    46 0000008A 83EA12                                  sub EDX, 18     ; make EDX to point at location of variable on the stack
+    47 0000008D D902                                    fld	dword [EDX]	            ; need to convert 32-bit to 64-bit 
+    48 0000008F DD1D[15000000]          	            fstp	qword [flttmp]      ; floating load makes 80-bit,
+    49                                  	                                        ; store as 64-bit 
+    50 00000095 FF35[19000000]                          push dword [flttmp+4]       
+    51 0000009B FF35[15000000]                          push dword [flttmp]         
+    52 000000A1 68[04000000]                            push dword real_fmt 
+    53 000000A6 E8(00000000)                            call printf 
+    54 000000AB 83C40C                                  add ESP,12 
+    55                                                  				;Deallocate space given to I/O variables on stack
+    56 000000AE 83C41E                  				add ESP, 30
+    57 000000B1 C9                      				LEAVE
+    58 000000B2 C3                      RET

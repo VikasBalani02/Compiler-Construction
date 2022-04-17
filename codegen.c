@@ -36,7 +36,7 @@ lexeme_decomp *decompose_lexeme(char *lex)
     char *lexptr = lex_copy;
     while (*lexptr != '\0')
     {
-        if (*lexptr == '_')
+        if (*lexptr == '.')
         {
             *lexptr = '\0';
             temptr->next = get_lexdecomp_struct(lexptr + 1);
@@ -47,12 +47,9 @@ lexeme_decomp *decompose_lexeme(char *lex)
 }
 lex_info *get_lexinfo(char *lex, struct symbolTable *local_table, struct symbolTable *global_table)
 {
-    // returns lexInfo with offset -1 if lexeme is not in local table
-    //  get a lexeme for a identitfier/temporary and find its offset.
-    // lexeme can be of form t1.a.b.c where t1 is of type record
+
     lexeme_decomp *lexList = decompose_lexeme(lex);
 
-    // if lexeme is an immediate value the offset is set to -2, its type and width are set in the returned lex_info struct
     if (lex[0] >= '0' && lex[0] <= '9')
     {
         lexList->info->offset = -2;
@@ -258,18 +255,16 @@ Type getNumType(char *str)
 
 void param_code_gen(tuple *tup)
 {
-    // struct symbolTable *local = (symbolTable *)st->head->t_node;
+
     lex_info *info = get_lexinfo(tup->arg1, local, GLOBAL);
     if (info->type == INT)
     {
-        // pushing int size 2 bytes
-        // fprintf(assemblyFile,"MOV AX, word [EBP-%d]\n",info->offset);
+
         fprintf(assemblyFile, "push word [EBP-%d]\n", info->offset);
     }
     else if (info->type == REAL)
     {
-        // pushing a real size 4 bytes
-        // fprintf(assemblyFile,"MOVSS XMM0, dword [EBP-%d]\n",info->offset);
+        
         fprintf(assemblyFile, "push dword [EBP-%d]\n", info->offset);
     }
 }
@@ -282,15 +277,14 @@ void copy_param_code_gen(char *lex, char *loc)
     int offset_in_callee = info->offset;
     if (info->type == INT)
     {
-        // MOV the input parameter from caller to AX register
+     
         fprintf(assemblyFile, "MOV AX, word [EBP+%d]\n", offset_in_caller);
-        // MOV the copied value to callee's activation record
+       
         fprintf(assemblyFile, "MOV word [EBP-%d], AX\n", offset_in_callee);
     }
     else
     {
-        // type is real
-        // movss for moving floating point data
+        
         fprintf(assemblyFile, "MOVSS XMM0, dword [EBP+%d]\n", offset_in_caller);
         fprintf(assemblyFile, "MOVSS dword [EBP-%d], XMM0\n", offset_in_callee);
     }
@@ -406,11 +400,7 @@ void call_code_gen(tuple *tup)
 }
 void fn_space_code_gen(tuple *tup)
 {
-    /**
-     * @brief Reserve number of bytes equal to offset value
-     * of this function, Also output function's label
-     */
-
+   
     if (strcmp(tup->arg1, "_main") == 0)
     {
         fprintf(assemblyFile, "main:\n"); // gcc requires the label main
@@ -421,12 +411,7 @@ void fn_space_code_gen(tuple *tup)
     // get the function record from global symbol table and push the function's symbol table on the stack
     SymbolTableRecord *entry = getSymbolInfo(tup->arg1, GLOBAL);
     local = entry->functionTable;
-    // push_stack_node(st, get_stack_node((tNode *)entry->functionTable));
-
-    // local symbol table is now on top of stack
-    // struct symbolTable *local = (symbolTable *)st->head->t_node;
-
-    // reserve space for activation record
+   
     fprintf(assemblyFile, "\t\t\t\tENTER %d, 0\n", entry->functionTable->currentOffset);
     fprintf(assemblyFile, "\t\t\t\t;reserve space for the input/output params of fn, later flush this space\n");
     /**
@@ -482,183 +467,9 @@ void fn_space_code_gen(tuple *tup)
         out_param = out_param->next;
     }
 
-    //     char *param_str = inp_param->param_name;
-
-    //     type *param_type  = inp_param->t;
-
-    //     /**
-    //      * @brief Check if param type is dynamic array, copy the range values from stack
-    //      * And if static, do range checking
-    //      */
-
-    //     param_type->offset = quad.encl_fun_type_ptr->typeinfo.module.curr_offset;
-    //     param_type->offset_used = quad.encl_fun_type_ptr->typeinfo.module.curr_offset_used;
-    //     // printf("Assigned offset %d to a param %s\n", param_type->offset_used, param_str);
-    //     quad.encl_fun_type_ptr->typeinfo.module.curr_offset += param_type->width;
-    //     quad.encl_fun_type_ptr->typeinfo.module.curr_offset_used += WIDTH_POINTER;
-
-    //     hash_insert_ptr_val(quad.curr_scope_table_ptr->table, param_str, param_type);
-
-    //     fprintf(assemblyFile, "\t\t\t\t; Allocating space to %s inp param on stack\n", inp_param->param_name);
-    //     fprintf(assemblyFile, "\t\t\t\tmov RAX, [RBP + 16 + 8 + 8*%d]; copy value of this param from caller\n", inp_param_num);
-    //     fprintf(assemblyFile, "\t\t\t\tmov RAX, [RAX] ;copy to my local space for the param\n");
-    //     fprintf(assemblyFile, "\t\t\t\tmov [RBP - %d], RAX ;copy to my local space for the param\n", param_type->offset_used);
-
-    //     inp_param_num++;
-    //     inp_param = inp_param->next;
-    // }
-
-    // while(outp_param){
-
-    //     char *param_str = outp_param->param_name;
-
-    //     type *param_type  = outp_param->t;
-    //     param_type->offset = quad.encl_fun_type_ptr->typeinfo.module.curr_offset;
-    //     param_type->offset_used = quad.encl_fun_type_ptr->typeinfo.module.curr_offset_used;
-    //     quad.encl_fun_type_ptr->typeinfo.module.curr_offset += param_type->width;
-    //     quad.encl_fun_type_ptr->typeinfo.module.curr_offset_used += WIDTH_POINTER;
-    //     hash_insert_ptr_val(quad.curr_scope_table_ptr->table, param_str, param_type);
-    //     outp_param_num++;
-    //     outp_param = outp_param->next;
-    // }
+    
 }
 
-// void arithexpr_code_gen(tuple* tuple){
-//     /**
-//      * @brief Check the operator and generate code
-//      */
-
-//     /*
-//         Integers are returned in rax or rdx:rax, and floating point values are returned in xmm0 or xmm1:xmm0
-//         Note: The floating point instructions have an sd suffix (i.e. convert single s to double precision d)
-//     */
-
-//     SymbolTableRecord * res = getSymbolInfo(tuple->arg1, (symbolTable *)st->head->t_node);
-//     SymbolTableRecord * operand1 = getSymbolInfo(tuple->arg2, (symbolTable *)st->head->t_node);
-//     SymbolTableRecord * operand2 = getSymbolInfo(tuple->arg3, (symbolTable *)st->head->t_node);
-//     char *arg1_str, *arg2_str, *res_str;
-
-//     arg1_str = (char*)malloc(sizeof(char) * MAX_LEXEME_LEN);
-//     arg2_str = (char*)malloc(sizeof(char) * MAX_LEXEME_LEN);
-
-//     // fprintf(assemblyFile, "\t\t\t\tpush_all\n");
-
-//     if(res->type == INT)
-
-//     {
-
-//          if(res){ //found in local table//
-//             snprintf(res_str, MAX_LEXEME_LEN, "word [EBP - %d]", res->offset);
-//         }
-//         else{ //found in global table//
-//             strncpy(res_str, res->lexeme, MAX_LEXEME_LEN);
-//         }
-
-//         if(operand1){ //found in local table//
-//             snprintf(arg1_str, MAX_LEXEME_LEN, "word [EBP - %d]", operand1->offset);
-//         }
-//         else{ //found in global table or immediate value//
-//             strncpy(arg1_str, operand1->lexeme, MAX_LEXEME_LEN);
-//         }
-//         if(operand2){ //found in local table//
-//             snprintf(arg2_str, MAX_LEXEME_LEN, "word [EBP - %d]", operand2->offset);
-//         }
-//         else{ //found in global table or immediate value//
-//             strncpy(arg2_str, operand2->lexeme, MAX_LEXEME_LEN);
-//         }
-
-//         switch(tuple->op)
-//         {
-//             case PLUS:
-//             // fprintf(assemblyFile, "\t\t\t\t;Addition of integers\n");
-//             fprintf(assemblyFile, "\t\t\t\tmov AX, %s\n\
-//                 mov BX, %s\n\
-//                 add AX, BX \n\
-//                 mov %s, AX \n", arg1_str, arg2_str, res_str);
-//             break;
-
-//             case MINUS:
-//             fprintf(assemblyFile, "\t\t\t\t;Subtraction of integers\n");
-//             fprintf(assemblyFile, "\t\t\t\tmov AX, %s\n\
-//                 mov BX, %s\n\
-//                 sub AX, BX \n\
-//                 mov %s, AX \n", arg1_str, arg2_str, res_str);
-//             break;
-
-//             case MUL:
-//             fprintf(assemblyFile, "\t\t\t\t;Multiplication of integers\n");
-//             fprintf(assemblyFile, "\t\t\t\tmov AX, %s\n\
-//                 mov BX, %s\n\
-//                 mul BX \n\
-//                 mov %s, AX \n", arg1_str, arg2_str, res_str);
-//             break;
-
-//             case DIV:
-//             fprintf(assemblyFile, "\t\t\t\t;Division of integers\n");
-//             fprintf(assemblyFile, "\t\t\t\tmov DX, 0\n\
-//                 mov AX, %s\n\
-//                 mov BX, %s\n\
-//                 div BX \n\
-//                 mov %s, AX \n", arg1_str, arg2_str, res_str);
-//             break;
-
-//         }
-//     }
-//     // else if(res->type == REAL)
-//     // {
-//     //     if(!arg1_type_ptr)  // immediate value
-//     //     {
-//     //         char *real1_str = newlabel();
-//     //         fprintf(assemblyFile,"\t\t\t\tsection .data\n");
-//     //         fprintf(assemblyFile,"\t\t\t\t%s: dq %s\n", real1_str, arg1_str);
-//     //         fprintf(assemblyFile,"\t\t\t\tsection .text\n");
-//     //         fprintf(assemblyFile, "\t\t\t\tmovsd XMM0, [%s]\n", real1_str);
-//     //     }
-//     //     else
-//     //         fprintf(assemblyFile, "\t\t\t\tmovsd XMM0, %s\n", arg1_str);
-
-//     //     if(!arg2_type_ptr)  // immediate value
-//     //     {
-//     //         char *real2_str = newlabel();
-//     //         fprintf(assemblyFile,"\t\t\t\tsection .data\n");
-//     //         fprintf(assemblyFile,"\t\t\t\t%s: dq %s\n", real2_str, arg2_str);
-//     //         fprintf(assemblyFile,"\t\t\t\tsection .text\n");
-//     //         fprintf(assemblyFile, "\t\t\t\tmovsd XMM2, [%s]\n", real2_str);
-//     //     }
-//     //     else
-//     //         fprintf(assemblyFile, "\t\t\t\tmovsd XMM2, %s\n", arg2_str);
-
-//     //     switch(quad.op)
-//     //     {
-//     //         case PLUS_OP:
-//     //         fprintf(assemblyFile, "\t\t\t\t;Addition of reals\n");
-//     //         fprintf(assemblyFile,"\t\t\t\taddsd XMM0, XMM2 \n\
-//     //             movsd [EBP - %d], XMM0 \n",offset_result);
-//     //         break;
-
-//     //         case MINUS_OP:
-//     //         fprintf(assemblyFile, "\t\t\t\t;Subtraction of reals\n");
-//     //         fprintf(assemblyFile,"\t\t\t\tsubsd XMM0, XMM2 \n\
-//     //             movsd [EBP - %d], XMM0 \n", offset_result);
-//     //         break;
-
-//     //         case MUL_OP:
-//     //         fprintf(assemblyFile, "\t\t\t\t;Multiplication of reals\n");
-//     //         fprintf(assemblyFile,"\t\t\t\tmulsd XMM0, XMM2 \n\
-//     //             movsd [EBP - %d], XMM0 \n",offset_result);
-//     //         break;
-
-//     //         case DIV_OP:
-//     //         fprintf(assemblyFile, "\t\t\t\t;Division of reals\n");
-//     //         fprintf(assemblyFile,"\t\t\t\tdivsd XMM0, XMM2 \n\
-//     //             movsd [EBP - %d], XMM0 \n", offset_result);
-//     //         break;
-
-//     //     }
-//     // }
-
-//     fprintf(assemblyFile, "\t\t\t\tpop_all\n");
-// }
 
 void one_var_output_code_gen(Type type, int offset)
 {
@@ -774,13 +585,7 @@ void output_code_gen(tuple *intermediateCode)
         }
         break;
         }
-        // fprintf(assemblyFile, "\t\t\t\tpop_all\n");
-        // fprintf(assemblyFile, "\t\t\t\tprint_str \"\" ;print a newline after output\n");
-
-        /**
-         * ToDo:
-         * There are unmatching push and pops coming in the generated code
-         */
+       
     }
 }
 
@@ -860,17 +665,9 @@ void input_code_gen(tuple *intermediateCode)
     }
     else
     {
-        // Type type = entry->type;
-        //  if(var_type_ptr == NULL){       // if a value has to be printed
-        //      fprintf(assemblyFile, "\t\t\t\tprint_str \"%s\"\n", quad.arg1);
-        //      return;
-        //  }
-        //  print_a_type(var_type_ptr);
+        
         int offset = info->offset;
-        // fprintf(assemblyFile, "\t\t\t\t; Code to output value(s) of %s\n", quad.arg1);
-        // fprintf(assemblyFile, "\t\t\t\tprint_str \"\"\n");
-        // fprintf(assemblyFile, "\t\t\t\tprint_str_no_new_line \"Output: \"\n");
-        // fprintf(assemblyFile, "\t\t\t\tpush_all\n");
+     
         switch (info->type)
         {
         case INT:
@@ -1120,8 +917,7 @@ void if_code_gen(tuple *intermediateCode, struct symbolTable *local, struct symb
     // initializing the locations from where the values are to be picked up from / be stored
     if (arg1_info->offset == -1)
     {
-        // this branch will never be executed because temporaries are not stored in global table
-        //  arg1 corresponds to a global variable
+        
         snprintf(arg1_str, MAX_LEXEME_LEN, "word[%s]", intermediateCode->arg1); // directly use the global variable lex as it will have a label associated with it
     }
     else
@@ -1405,104 +1201,7 @@ void last_attempt_at_making_arith_expr(tuple *intermediateCode)
         }
     }
 }
-void arithexpr_code_gen(tuple *intermediateCode, struct symbolTable *local, struct symbolTable *global)
-{
-    lex_info *arg1_info = get_lexinfo(intermediateCode->arg1, local, global);
-    lex_info *arg2_info = get_lexinfo(intermediateCode->arg2, local, global);
-    lex_info *arg3_info = get_lexinfo(intermediateCode->arg3, local, global);
 
-    char *arg1_str = (char *)malloc(MAX_LEXEME_LEN);
-    char *arg2_str = (char *)malloc(MAX_LEXEME_LEN);
-    char *arg3_str = (char *)malloc(MAX_LEXEME_LEN);
-
-    // initializing the locations from where the values are to be picked up from / be stored
-    if (arg1_info->offset == -1)
-    {
-        // arg1 corresponds to a global variable
-        snprintf(arg1_str, MAX_LEXEME_LEN, "word[%s]", intermediateCode->arg1); // directly use the global variable lex as it will have a label associated with it
-    }
-    else
-    {
-        snprintf(arg1_str, MAX_LEXEME_LEN, "word[EBP-%d]", arg1_info->offset); // access the variable value from offset
-    }
-
-    if (arg2_info->offset == -1)
-    {
-        // arg2 corresponds to a global variable
-        snprintf(arg2_str, MAX_LEXEME_LEN, "word[%s]", intermediateCode->arg2); // directly use the global variable lex as it will have a label associated with it
-    }
-    else
-    {
-        snprintf(arg2_str, MAX_LEXEME_LEN, "word[EBP-%d]", arg2_info->offset); // access the variable value from offset
-    }
-
-    if (arg3_info->offset == -1)
-    {
-        // arg3 corresponds to a global variable
-        snprintf(arg3_str, MAX_LEXEME_LEN, "%s", intermediateCode->arg3); // directly use the global variable lex as it will have a label associated with it
-    }
-    else
-    {
-        snprintf(arg3_str, MAX_LEXEME_LEN, "[EBP-%d]", arg3_info->offset); // access the variable value from offset
-        // do not need keyword "word as we are moving to this destination"
-    }
-    // SymbolTableRecord * res = getSymbolInfo(tuple->arg1, (symbolTable *)st->head->t_node);
-    // SymbolTableRecord * operand1 = getSymbolInfo(tuple->arg2, (symbolTable *)st->head->t_node);
-    // SymbolTableRecord * operand2 = getSymbolInfo(tuple->arg3, (symbolTable *)st->head->t_node);
-
-    // fprintf(assemblyFile, "\t\t\t\tpush_all\n");
-    if (intermediateCode->op == DIV)
-    {
-        // code for handling division of two numbers
-        //  case DIV:
-        //      fprintf(assemblyFile, "\t\t\t\t;Division of integers\n");
-        //      fpri    ntf(assemblyFile, "\t\t\t\tmov DX, 0\n\
-        //         mov AX, %s\n\
-        //         mov BX, %s\n\
-        //         div BX \n\
-        //         mov %s, AX \n", arg1_str, arg2_str, res_str);
-        //      break;
-
-        // case DIV_OP:
-        //     fprintf(assemblyFile, "\t\t\t\t;Division of reals\n");
-        //     fprintf(assemblyFile,"\t\t\t\tdivsd XMM0, XMM2 \n\
-        //         movsd [EBP - %d], XMM0 \n", offset_result);
-        //     break;
-    }
-    else if (arg1_info->type == INT)
-    { // handle * - + on INT
-
-        switch (intermediateCode->op)
-        {
-        case PLUS:
-            // fprintf(assemblyFile, "\t\t\t\t;Addition of integers\n");
-            fprintf(assemblyFile, "\t\t\t\tmov AX, %s\n\
-                mov BX, %s\n\
-                add AX, BX \n\
-                mov %s, AX \n",
-                    arg1_str, arg2_str, arg3_str);
-            break;
-
-        case MINUS:
-            // fprintf(assemblyFile, "\t\t\t\t;Subtraction of integers\n");
-            fprintf(assemblyFile, "\t\t\t\tmov AX, %s\n\
-                mov BX, %s\n\
-                sub AX, BX \n\
-                mov %s, AX \n",
-                    arg1_str, arg2_str, arg3_str);
-            break;
-
-        case MUL:
-            // fprintf(assemblyFile, "\t\t\t\t;Multiplication of integers\n");
-            fprintf(assemblyFile, "\t\t\t\tmov AX, %s\n\
-                mov BX, %s\n\
-                mul BX \n\
-                mov %s, AX \n",
-                    arg1_str, arg2_str, arg3_str);
-            break;
-        }
-    }
-}
 void assignment_stmt(tuple *intermediateCode)
 {
     // struct symbolTable *local = (symbolTable *)st->head->t_node;
