@@ -782,6 +782,7 @@ symbolTable * populateSymbolTable(ast_node * root,Error* err){
         FunEntry->function_field->num=i;
         i++;
         FunEntry->width =0;
+        traverseNodeFunction(function,funTable,globalTable,FunEntry);
         }
         // addSymbol(globalTable,FunEntry->lexeme,FunEntry);
         // FunEntry->function_field = (struct function_field *)malloc(sizeof(struct function_field));
@@ -791,7 +792,7 @@ symbolTable * populateSymbolTable(ast_node * root,Error* err){
         // i++;
         // FunEntry->width =0;
         //if(traverseNodeFunction(function,funTable,globalTable,FunEntry)==1) exit(0);
-        traverseNodeFunction(function,funTable,globalTable,FunEntry); //MARKER 3
+         //MARKER 3
         function = function->nextSib;
     }
     return globalTable;
@@ -979,11 +980,13 @@ void printglobalrecords(symbolTable *global){
         SymbolTableRecord * entry = global->list[i]->head;
         while(entry!=NULL){
             if(entry->type == RECORD || entry->type == VARIANTRECORD || entry->type == RUID){
+                if(entry->type_ruid==NULL){
                 printf("Name: %s ",entry->lexeme);
                 printf("Type Expression: ");
                 printTypeExpression(entry, global);
-                printf("Offset: %d ", entry->offset);
+                printf("Width: %d ", entry->width);
                 printf("\n");
+                }
 
             }
             entry = entry->next;
